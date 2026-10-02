@@ -54,6 +54,11 @@ def ingest(
     city = unquote(request.headers.get("x-vercel-ip-city", "")) or None
     region = request.headers.get("x-vercel-ip-country-region") or None
     now = datetime.now(timezone.utc)
+    # Test accounts (public.test_phones) are kept out of real analytics.
+    is_test = False
+    if user and user.phone:
+        hit = db.execute("select 1 from public.test_phones where phone = %s", (user.phone,)).fetchone()
+        is_test = bool(hit)
     rows = []
     for e in batch.events:
         ts = e.ts if e.ts.tzinfo else e.ts.replace(tzinfo=timezone.utc)
@@ -63,14 +68,14 @@ def ingest(
         rows.append((
             tenant, user.id if user else None, batch.anon_id, batch.session_id, e.name, e.screen,
             json.dumps(props)[:4000], platform, ctx.os, ctx.browser, ctx.device, ctx.app_version,
-            ctx.standalone, city, region, ts,
+            ctx.standalone, city, region, ts, is_test,
         ))
     with db.cursor() as cur:
         cur.executemany(
             """insert into public.events
                (tenant_id, user_id, anon_id, session_id, name, screen, props, platform, os, browser,
-                device, app_version, standalone, city, region, ts)
-               values (%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                device, app_version, standalone, city, region, ts, is_test)
+               values (%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
             rows,
         )
     return {"stored": len(rows)}

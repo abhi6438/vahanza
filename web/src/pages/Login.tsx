@@ -15,7 +15,7 @@ export default function Login() {
   const [consent, setConsent] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  useEffect(() => trackScreen('login'), [])
+  useEffect(() => { trackScreen('login') }, [])
 
   const ok = isValidIndianMobile(phone) && consent
 
@@ -35,7 +35,7 @@ export default function Login() {
 
   return (
     <>
-      <TopBar title={t('login.title')} readText={`${t('login.title')}. ${t('login.sub')}`} />
+      <TopBar title={t('login.title')} />
       <Screen footer={<BigButton disabled={!ok || busy} onClick={submit}>{t('login.send')}</BigButton>}>
         <H>{t('login.title')}</H>
         <Sub>{t('login.sub')}</Sub>

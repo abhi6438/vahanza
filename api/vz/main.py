@@ -4,7 +4,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
-from .routes import events, hooks, me
+from .routes import drivers, events, geo, hooks, me, photo, posts
 
 logging.basicConfig(level=logging.INFO)
 API_VERSION = "1.0.0"
@@ -18,7 +18,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
     allow_credentials=False,
-    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Brand", "X-App-Version"],
 )
 
@@ -33,4 +33,8 @@ def health():
 v1.include_router(me.router)
 v1.include_router(events.router)
 v1.include_router(hooks.router)
+v1.include_router(geo.router)
+v1.include_router(photo.router)
+v1.include_router(drivers.router)
+v1.include_router(posts.router)
 app.include_router(v1)

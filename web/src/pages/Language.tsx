@@ -14,7 +14,7 @@ export default function Language() {
   const { t } = useTranslation()
   const { lang, setLang } = useAuth()
   const nav = useNavigate()
-  useEffect(() => trackScreen('language'), [])
+  useEffect(() => { trackScreen('language') }, [])
 
   return (
     <>

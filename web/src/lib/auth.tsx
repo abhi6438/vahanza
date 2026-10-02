@@ -1,7 +1,7 @@
 import type { Session } from '@supabase/supabase-js'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import i18n from '../i18n'
-import { ApiError, getMe, heartbeat, startMe, type Profile } from './api'
+import { ApiError, getMe, heartbeat, startMe, type DriverDetails, type FleetGroup, type Me, type Profile } from './api'
 import { storage } from './storage'
 import { isValidIndianMobile, supabase, toE164 } from './supabase'
 import { track } from './track'
@@ -14,6 +14,8 @@ interface AuthState {
   status: Status
   session: Session | null
   profile: Profile | null
+  driver: DriverDetails | null
+  fleet: FleetGroup[]
   lang: Lang
   pendingRole: Role | null
   setLang: (l: Lang) => Promise<void>
@@ -22,6 +24,9 @@ interface AuthState {
   verifyOtp: (phone10: string, code: string) => Promise<void>
   chooseRole: (r: Role) => Promise<void>
   logout: (everywhere?: boolean) => Promise<void>
+  /** Puts a fresh /me response (e.g. after saving the profile) into app state. */
+  applyMe: (me: Me) => void
+  setPhotoUrl: (url: string | null) => void
 }
 
 const Ctx = createContext<AuthState | null>(null)
@@ -30,14 +35,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<Status>('loading')
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [driver, setDriver] = useState<DriverDetails | null>(null)
+  const [fleet, setFleet] = useState<FleetGroup[]>([])
   const [lang, setLangState] = useState<Lang>('hi')
   const [pendingRole, setPendingRoleState] = useState<Role | null>(null)
+
+  const applyMe = useCallback((me: Me) => {
+    setProfile(me.profile)
+    setDriver(me.driver ?? null)
+    setFleet(me.fleet ?? [])
+  }, [])
+
+  const setPhotoUrl = useCallback((url: string | null) => {
+    setProfile((p) => (p ? { ...p, photo_url: url } : p))
+  }, [])
 
   const loadProfile = useCallback(async () => {
     try {
       const me = await getMe()
       if (me.exists && me.profile?.role) {
-        setProfile(me.profile)
+        applyMe(me)
         setStatus('ready')
       } else setStatus('needsRole')
     } catch (e) {
@@ -47,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else if (e instanceof ApiError && e.status === 403) setStatus('blocked')
       else throw e
     }
-  }, [])
+  }, [applyMe])
 
   // Start-up: restore language, role choice and the saved login session.
   useEffect(() => {
@@ -121,41 +138,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       track('otp_verified')
       const me = await getMe()
       if (me.exists && me.profile?.role) {
-        setProfile(me.profile)
+        applyMe(me)
         setStatus('ready')
         return
       }
       if (pendingRole) {
         const res = await startMe(pendingRole, lang)
-        setProfile(res.profile)
+        applyMe(res)
         setStatus('ready')
         track('signup_complete', { role: pendingRole })
         await storage.removeItem('pending-role')
       } else setStatus('needsRole')
     },
-    [pendingRole, lang],
+    [pendingRole, lang, applyMe],
   )
 
   const chooseRole = useCallback(
     async (r: Role) => {
       const res = await startMe(r, lang)
-      setProfile(res.profile)
+      applyMe(res)
       setStatus('ready')
       track('signup_complete', { role: r })
     },
-    [lang],
+    [lang, applyMe],
   )
 
   const logout = useCallback(async (everywhere = false) => {
     track(everywhere ? 'logout_all' : 'logout')
     await supabase.auth.signOut({ scope: everywhere ? 'global' : 'local' })
-    setProfile(null)
+    applyMe({ exists: false, profile: null })
     setStatus('signedOut')
-  }, [])
+  }, [applyMe])
 
   const value = useMemo(
-    () => ({ status, session, profile, lang, pendingRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout }),
-    [status, session, profile, lang, pendingRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout],
+    () => ({ status, session, profile, driver, fleet, lang, pendingRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout, applyMe, setPhotoUrl }),
+    [status, session, profile, driver, fleet, lang, pendingRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout, applyMe, setPhotoUrl],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

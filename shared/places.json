@@ -1,0 +1,675 @@
+{
+"states": {
+"Madhya Pradesh": "मध्य प्रदेश",
+"Chhattisgarh": "छत्तीसगढ़",
+"Uttar Pradesh": "उत्तर प्रदेश",
+"Maharashtra": "महाराष्ट्र",
+"Rajasthan": "राजस्थान",
+"Gujarat": "गुजरात",
+"Bihar": "बिहार",
+"Jharkhand": "झारखंड",
+"Odisha": "ओडिशा",
+"West Bengal": "पश्चिम बंगाल",
+"Telangana": "तेलंगाना",
+"Andhra Pradesh": "आंध्र प्रदेश",
+"Karnataka": "कर्नाटक",
+"Tamil Nadu": "तमिलनाडु",
+"Kerala": "केरल",
+"Punjab": "पंजाब",
+"Haryana": "हरियाणा",
+"Delhi": "दिल्ली",
+"Uttarakhand": "उत्तराखंड",
+"Himachal Pradesh": "हिमाचल प्रदेश",
+"Jammu and Kashmir": "जम्मू और कश्मीर",
+"Assam": "असम",
+"Goa": "गोवा",
+"Chandigarh": "चंडीगढ़"
+},
+"cities": [
+{
+"en": "Rewa",
+"hi": "रीवा",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Satna",
+"hi": "सतना",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Sidhi",
+"hi": "सीधी",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Singrauli",
+"hi": "सिंगरौली",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Shahdol",
+"hi": "शहडोल",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Katni",
+"hi": "कटनी",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Jabalpur",
+"hi": "जबलपुर",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Bhopal",
+"hi": "भोपाल",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Indore",
+"hi": "इंदौर",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Gwalior",
+"hi": "ग्वालियर",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Sagar",
+"hi": "सागर",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Ujjain",
+"hi": "उज्जैन",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Dewas",
+"hi": "देवास",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Ratlam",
+"hi": "रतलाम",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Chhindwara",
+"hi": "छिंदवाड़ा",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Panna",
+"hi": "पन्ना",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Chhatarpur",
+"hi": "छतरपुर",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Damoh",
+"hi": "दमोह",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Mandla",
+"hi": "मंडला",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Umaria",
+"hi": "उमरिया",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Anuppur",
+"hi": "अनूपपुर",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Morena",
+"hi": "मुरैना",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Guna",
+"hi": "गुना",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Vidisha",
+"hi": "विदिशा",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Hoshangabad",
+"hi": "होशंगाबाद",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Pithampur",
+"hi": "पीथमपुर",
+"state": "Madhya Pradesh"
+},
+{
+"en": "Raipur",
+"hi": "रायपुर",
+"state": "Chhattisgarh"
+},
+{
+"en": "Bilaspur",
+"hi": "बिलासपुर",
+"state": "Chhattisgarh"
+},
+{
+"en": "Durg",
+"hi": "दुर्ग",
+"state": "Chhattisgarh"
+},
+{
+"en": "Bhilai",
+"hi": "भिलाई",
+"state": "Chhattisgarh"
+},
+{
+"en": "Korba",
+"hi": "कोरबा",
+"state": "Chhattisgarh"
+},
+{
+"en": "Raigarh",
+"hi": "रायगढ़",
+"state": "Chhattisgarh"
+},
+{
+"en": "Ambikapur",
+"hi": "अंबिकापुर",
+"state": "Chhattisgarh"
+},
+{
+"en": "Jagdalpur",
+"hi": "जगदलपुर",
+"state": "Chhattisgarh"
+},
+{
+"en": "Rajnandgaon",
+"hi": "राजनांदगांव",
+"state": "Chhattisgarh"
+},
+{
+"en": "Dhamtari",
+"hi": "धमतरी",
+"state": "Chhattisgarh"
+},
+{
+"en": "Mahasamund",
+"hi": "महासमुंद",
+"state": "Chhattisgarh"
+},
+{
+"en": "Prayagraj",
+"hi": "प्रयागराज",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Varanasi",
+"hi": "वाराणसी",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Lucknow",
+"hi": "लखनऊ",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Kanpur",
+"hi": "कानपुर",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Agra",
+"hi": "आगरा",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Mirzapur",
+"hi": "मिर्ज़ापुर",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Jhansi",
+"hi": "झांसी",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Banda",
+"hi": "बांदा",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Gorakhpur",
+"hi": "गोरखपुर",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Ghaziabad",
+"hi": "गाज़ियाबाद",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Noida",
+"hi": "नोएडा",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Meerut",
+"hi": "मेरठ",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Aligarh",
+"hi": "अलीगढ़",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Bareilly",
+"hi": "बरेली",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Moradabad",
+"hi": "मुरादाबाद",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Mathura",
+"hi": "मथुरा",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Sonbhadra",
+"hi": "सोनभद्र",
+"state": "Uttar Pradesh"
+},
+{
+"en": "Mumbai",
+"hi": "मुंबई",
+"state": "Maharashtra"
+},
+{
+"en": "Pune",
+"hi": "पुणे",
+"state": "Maharashtra"
+},
+{
+"en": "Nagpur",
+"hi": "नागपुर",
+"state": "Maharashtra"
+},
+{
+"en": "Nashik",
+"hi": "नासिक",
+"state": "Maharashtra"
+},
+{
+"en": "Aurangabad",
+"hi": "औरंगाबाद",
+"state": "Maharashtra"
+},
+{
+"en": "Bhiwandi",
+"hi": "भिवंडी",
+"state": "Maharashtra"
+},
+{
+"en": "Navi Mumbai नवी",
+"hi": "मुंबई",
+"state": "Maharashtra"
+},
+{
+"en": "Chandrapur",
+"hi": "चंद्रपुर",
+"state": "Maharashtra"
+},
+{
+"en": "Amravati",
+"hi": "अमरावती",
+"state": "Maharashtra"
+},
+{
+"en": "Solapur",
+"hi": "सोलापुर",
+"state": "Maharashtra"
+},
+{
+"en": "Kolhapur",
+"hi": "कोल्हापुर",
+"state": "Maharashtra"
+},
+{
+"en": "Jaipur",
+"hi": "जयपुर",
+"state": "Rajasthan"
+},
+{
+"en": "Jodhpur",
+"hi": "जोधपुर",
+"state": "Rajasthan"
+},
+{
+"en": "Kota",
+"hi": "कोटा",
+"state": "Rajasthan"
+},
+{
+"en": "Udaipur",
+"hi": "उदयपुर",
+"state": "Rajasthan"
+},
+{
+"en": "Ajmer",
+"hi": "अजमेर",
+"state": "Rajasthan"
+},
+{
+"en": "Bhilwara",
+"hi": "भीलवाड़ा",
+"state": "Rajasthan"
+},
+{
+"en": "Alwar",
+"hi": "अलवर",
+"state": "Rajasthan"
+},
+{
+"en": "Bikaner",
+"hi": "बीकानेर",
+"state": "Rajasthan"
+},
+{
+"en": "Ahmedabad",
+"hi": "अहमदाबाद",
+"state": "Gujarat"
+},
+{
+"en": "Surat",
+"hi": "सूरत",
+"state": "Gujarat"
+},
+{
+"en": "Vadodara",
+"hi": "वडोदरा",
+"state": "Gujarat"
+},
+{
+"en": "Rajkot",
+"hi": "राजकोट",
+"state": "Gujarat"
+},
+{
+"en": "Gandhidham",
+"hi": "गांधीधाम",
+"state": "Gujarat"
+},
+{
+"en": "Mundra",
+"hi": "मुंद्रा",
+"state": "Gujarat"
+},
+{
+"en": "Vapi",
+"hi": "वापी",
+"state": "Gujarat"
+},
+{
+"en": "Jamnagar",
+"hi": "जामनगर",
+"state": "Gujarat"
+},
+{
+"en": "Patna",
+"hi": "पटना",
+"state": "Bihar"
+},
+{
+"en": "Gaya",
+"hi": "गया",
+"state": "Bihar"
+},
+{
+"en": "Muzaffarpur",
+"hi": "मुज़फ़्फ़रपुर",
+"state": "Bihar"
+},
+{
+"en": "Bhagalpur",
+"hi": "भागलपुर",
+"state": "Bihar"
+},
+{
+"en": "Ranchi",
+"hi": "रांची",
+"state": "Jharkhand"
+},
+{
+"en": "Jamshedpur",
+"hi": "जमशेदपुर",
+"state": "Jharkhand"
+},
+{
+"en": "Dhanbad",
+"hi": "धनबाद",
+"state": "Jharkhand"
+},
+{
+"en": "Bokaro",
+"hi": "बोकारो",
+"state": "Jharkhand"
+},
+{
+"en": "Bhubaneswar",
+"hi": "भुवनेश्वर",
+"state": "Odisha"
+},
+{
+"en": "Cuttack",
+"hi": "कटक",
+"state": "Odisha"
+},
+{
+"en": "Rourkela",
+"hi": "राउरकेला",
+"state": "Odisha"
+},
+{
+"en": "Sambalpur",
+"hi": "संबलपुर",
+"state": "Odisha"
+},
+{
+"en": "Jharsuguda",
+"hi": "झारसुगुड़ा",
+"state": "Odisha"
+},
+{
+"en": "Angul",
+"hi": "अंगुल",
+"state": "Odisha"
+},
+{
+"en": "Paradip",
+"hi": "पारादीप",
+"state": "Odisha"
+},
+{
+"en": "Kolkata",
+"hi": "कोलकाता",
+"state": "West Bengal"
+},
+{
+"en": "Howrah",
+"hi": "हावड़ा",
+"state": "West Bengal"
+},
+{
+"en": "Durgapur",
+"hi": "दुर्गापुर",
+"state": "West Bengal"
+},
+{
+"en": "Asansol",
+"hi": "आसनसोल",
+"state": "West Bengal"
+},
+{
+"en": "Siliguri",
+"hi": "सिलीगुड़ी",
+"state": "West Bengal"
+},
+{
+"en": "Hyderabad",
+"hi": "हैदराबाद",
+"state": "Telangana"
+},
+{
+"en": "Warangal",
+"hi": "वारंगल",
+"state": "Telangana"
+},
+{
+"en": "Visakhapatnam",
+"hi": "विशाखापत्तनम",
+"state": "Andhra Pradesh"
+},
+{
+"en": "Vijayawada",
+"hi": "विजयवाड़ा",
+"state": "Andhra Pradesh"
+},
+{
+"en": "Bengaluru",
+"hi": "बेंगलुरु",
+"state": "Karnataka"
+},
+{
+"en": "Hubballi",
+"hi": "हुबली",
+"state": "Karnataka"
+},
+{
+"en": "Mangaluru",
+"hi": "मंगलुरु",
+"state": "Karnataka"
+},
+{
+"en": "Chennai",
+"hi": "चेन्नई",
+"state": "Tamil Nadu"
+},
+{
+"en": "Coimbatore",
+"hi": "कोयंबटूर",
+"state": "Tamil Nadu"
+},
+{
+"en": "Tiruppur",
+"hi": "तिरुप्पुर",
+"state": "Tamil Nadu"
+},
+{
+"en": "Kochi",
+"hi": "कोच्चि",
+"state": "Kerala"
+},
+{
+"en": "Ludhiana",
+"hi": "लुधियाना",
+"state": "Punjab"
+},
+{
+"en": "Amritsar",
+"hi": "अमृतसर",
+"state": "Punjab"
+},
+{
+"en": "Jalandhar",
+"hi": "जालंधर",
+"state": "Punjab"
+},
+{
+"en": "Gurugram",
+"hi": "गुरुग्राम",
+"state": "Haryana"
+},
+{
+"en": "Faridabad",
+"hi": "फ़रीदाबाद",
+"state": "Haryana"
+},
+{
+"en": "Panipat",
+"hi": "पानीपत",
+"state": "Haryana"
+},
+{
+"en": "Sonipat",
+"hi": "सोनीपत",
+"state": "Haryana"
+},
+{
+"en": "Hisar",
+"hi": "हिसार",
+"state": "Haryana"
+},
+{
+"en": "Delhi",
+"hi": "दिल्ली",
+"state": "Delhi"
+},
+{
+"en": "Dehradun",
+"hi": "देहरादून",
+"state": "Uttarakhand"
+},
+{
+"en": "Haridwar",
+"hi": "हरिद्वार",
+"state": "Uttarakhand"
+},
+{
+"en": "Rudrapur",
+"hi": "रुद्रपुर",
+"state": "Uttarakhand"
+},
+{
+"en": "Baddi",
+"hi": "बद्दी",
+"state": "Himachal Pradesh"
+},
+{
+"en": "Jammu",
+"hi": "जम्मू",
+"state": "Jammu and Kashmir"
+},
+{
+"en": "Guwahati",
+"hi": "गुवाहाटी",
+"state": "Assam"
+},
+{
+"en": "Panaji",
+"hi": "पणजी",
+"state": "Goa"
+},
+{
+"en": "Chandigarh",
+"hi": "चंडीगढ़",
+"state": "Chandigarh"
+}
+]
+}

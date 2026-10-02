@@ -65,7 +65,7 @@ def test_me_requires_login(client):
 
 def test_me_new_user(client, db):
     r = client.get("/api/v1/me", headers=auth())
-    assert r.status_code == 200 and r.json() == {"exists": False, "profile": None}
+    assert r.status_code == 200 and r.json() == {"exists": False, "profile": None, "driver": None, "fleet": None}
 
 
 def test_me_start_driver(client, db):

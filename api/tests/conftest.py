@@ -25,7 +25,12 @@ class FakeResult:
         self._row = row
 
     def fetchone(self):
-        return self._row
+        return self._row[0] if isinstance(self._row, list) else self._row
+
+    def fetchall(self):
+        if self._row is None:
+            return []
+        return self._row if isinstance(self._row, list) else [self._row]
 
 
 class FakeCursor:

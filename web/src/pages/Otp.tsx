@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { BigButton, H, Screen, Sub, TopBar } from '../components/ui'
+import { ApiError } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { trackScreen } from '../lib/track'
 
@@ -18,7 +19,7 @@ export default function Otp() {
   const [left, setLeft] = useState(RESEND_AFTER)
   const input = useRef<HTMLInputElement>(null)
 
-  useEffect(() => trackScreen('otp'), [])
+  useEffect(() => { trackScreen('otp') }, [])
   useEffect(() => {
     if (left <= 0) return
     const id = window.setTimeout(() => setLeft(left - 1), 1000)
@@ -34,10 +35,15 @@ export default function Otp() {
     try {
       await verifyOtp(phone!, value)
       nav('/home', { replace: true })
-    } catch {
-      setError(t('otp.wrong'))
-      setCode('')
-      input.current?.focus()
+    } catch (e) {
+      // Wrong OTP comes from Supabase; ApiError / TypeError mean our API could not be reached or failed.
+      if (e instanceof ApiError || e instanceof TypeError) {
+        setError(e instanceof ApiError && e.status < 500 ? `${t('error.generic')} (${e.status})` : t('error.server'))
+      } else {
+        setError(t('otp.wrong'))
+        setCode('')
+        input.current?.focus()
+      }
     } finally {
       setBusy(false)
     }

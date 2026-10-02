@@ -25,7 +25,7 @@ export default function Role() {
   const nav = useNavigate()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  useEffect(() => trackScreen('role'), [])
+  useEffect(() => { trackScreen('role') }, [])
 
   async function pick(r: R) {
     setPendingRole(r)

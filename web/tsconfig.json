@@ -16,7 +16,7 @@
     "noEmit": true,
     "types": ["vite/client", "vite-plugin-pwa/client"],
     "baseUrl": ".",
-    "paths": { "@brands/*": ["../brands/*"] }
+    "paths": { "@brands/*": ["../brands/*"], "@shared/*": ["../shared/*"] }
   },
-  "include": ["src", "../brands/*.json"]
+  "include": ["src", "../brands/*.json", "../shared/*.json"]
 }

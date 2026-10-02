@@ -4,7 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # Reads .env from the repo root whether uvicorn is started in the root or in api/
+    model_config = SettingsConfigDict(env_file=(".env", "../.env"), extra="ignore")
 
     supabase_url: str = ""
     database_url: str = ""
@@ -16,6 +17,10 @@ class Settings(BaseSettings):
     msg91_otp_template_id: str = ""
     sms_dry_run: bool = True
     otp_max_per_hour: int = 5              # per phone number
+
+    # Vercel Blob (profile photos). Empty locally: photos are kept in a temp folder instead.
+    blob_read_write_token: str = ""
+    dev_upload_dir: str = "/tmp/vahanza-uploads"
 
     cors_origins: str = (
         "http://localhost:5173,http://localhost:4173,"

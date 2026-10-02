@@ -12,7 +12,12 @@ export default defineConfig(({ mode }) => {
 
   return {
     envDir: '..',
-    resolve: { alias: { '@brands': fileURLToPath(new URL('../brands', import.meta.url)) } },
+    resolve: {
+      alias: {
+        '@brands': fileURLToPath(new URL('../brands', import.meta.url)),
+        '@shared': fileURLToPath(new URL('../shared', import.meta.url)),
+      },
+    },
     plugins: [
       react(),
       tailwindcss(),
@@ -43,6 +48,7 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     define: { __BRAND_ID__: JSON.stringify(brandId), __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0') },
-    server: { proxy: { '/api': 'http://localhost:8000' } },
+    // brands/ and shared/ live one level up, next to api/
+    server: { proxy: { '/api': 'http://localhost:8000' }, fs: { allow: ['..'] } },
   }
 })
