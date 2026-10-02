@@ -4,7 +4,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
-from .routes import drivers, events, geo, hooks, me, photo, posts
+from .routes import admin, drivers, events, geo, hooks, me, photo, posts
 
 logging.basicConfig(level=logging.INFO)
 API_VERSION = "1.0.0"
@@ -37,4 +37,5 @@ v1.include_router(geo.router)
 v1.include_router(photo.router)
 v1.include_router(drivers.router)
 v1.include_router(posts.router)
+v1.include_router(admin.router)
 app.include_router(v1)

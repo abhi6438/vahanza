@@ -205,3 +205,39 @@ export const showInterest = (id: string) => api<{ interested: boolean }>(`/jobs/
 export const removeInterest = (id: string) => api<void>(`/jobs/${id}/interest`, { method: 'DELETE' })
 export const contactOwner = (id: string, via: 'call' | 'whatsapp') => api<{ phone: string }>(`/jobs/${id}/contact`, { method: 'POST', json: { via } })
 export const myInterests = () => api<{ items: Job[] }>('/me/interests')
+
+// ---- admin ----
+export interface AdminStats {
+  days: number
+  users: Record<'drivers' | 'owners' | 'new_today' | 'new_period' | 'active_today' | 'active_week' | 'online_now' | 'verified' | 'blocked' | 'drivers_listed', number>
+  posts: Record<'live' | 'under_check' | 'filled' | 'drivers_wanted', number>
+  interests: number
+  contacts: { calls: number; whatsapp: number }
+  signups: { day: string; drivers: number; owners: number }[]
+  platforms: { platform: string; devices: number }[]
+  installs: { pwa: number; apk: number; devices: number }
+  funnel: Record<'opened' | 'otp_requested' | 'logged_in' | 'profile_basic' | 'took_action', number>
+  time: { avg_minutes: number; sessions: number }
+  cities: { district: string; state: string; drivers: number; owners: number }[]
+  queue: number
+}
+export interface QueuePost { id: string; check_flags: string[]; savings_monthly: number; base_cities: string[]; created_at: string; owner_id: string; owner_name: string | null; business_name: string | null; owner_phone: string | null; district: string | null; state: string | null; drivers_needed: number }
+export interface QueueProfile { id: string; name: string | null; business_name: string | null; phone: string | null; role: string; district: string | null; state: string | null; check_flags: string[]; created_at: string }
+export interface QueueReport { id: string; target_type: string; target_id: string; reason: string; note: string | null; created_at: string; reporter_name: string | null }
+export interface AdminUser { id: string; name: string | null; business_name: string | null; phone: string | null; role: 'driver' | 'owner'; district: string | null; state: string | null; verified: boolean; blocked: boolean; is_test: boolean; setup_done: boolean; created_at: string; last_seen_at: string | null; posts: number; interests: number }
+
+export const admin = {
+  stats: (days: number) => api<AdminStats>(`/admin/stats?days=${days}`),
+  queue: () => api<{ posts: QueuePost[]; profiles: QueueProfile[]; reports: QueueReport[] }>('/admin/queue'),
+  reviewPost: (id: string, action: 'approve' | 'reject') => api(`/admin/posts/${id}/review`, { method: 'POST', json: { action } }),
+  reviewProfile: (id: string, action: 'clear' | 'block') => api(`/admin/profiles/${id}/review`, { method: 'POST', json: { action } }),
+  users: (q: { q?: string; role?: string | null; flag?: string | null; offset?: number }) => {
+    const p = new URLSearchParams()
+    if (q.q) p.set('q', q.q)
+    if (q.role) p.set('role', q.role)
+    if (q.flag) p.set('flag', q.flag)
+    if (q.offset) p.set('offset', String(q.offset))
+    return api<{ items: AdminUser[]; has_more: boolean }>(`/admin/users?${p}`)
+  },
+  patchUser: (id: string, patch: { verified?: boolean; blocked?: boolean }) => api<{ verified: boolean; blocked: boolean }>(`/admin/users/${id}`, { method: 'PATCH', json: patch }),
+}

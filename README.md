@@ -37,7 +37,7 @@ A white-label app for vehicle owners and drivers. One codebase serves the web/PW
 ## 1. Supabase setup (one time)
 
 1. Create a project in region **Mumbai (ap-south-1)**.
-2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql`, `0002_profile_setup.sql`, then `0003_test_accounts.sql`).
+2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql`).
 3. Auth → Providers → **Phone**: enable it. You can pick any SMS provider here because the hook below replaces it.
 4. Auth → Hooks → **Send SMS hook** → HTTPS:
    `https://<your-domain>/api/v1/hooks/send-sms`. Generate the secret and copy it into `SEND_SMS_HOOK_SECRET` (format `v1,whsec_...`).
@@ -120,13 +120,21 @@ npm run cap:open           # opens Android Studio → Build → Generate Signed 
 3. Build with `VITE_BRAND=<client>` and set `DEFAULT_TENANT=<client>` (or use one API for all brands; the app sends `X-Brand`).
 4. Replace the icons in `web/public/icons/`.
 
-## 7. Making a super admin
+## 7. Admin panel
 
-There is no admin UI yet (planned for a later sprint in R1). After logging in once:
+Log in once with your own number in the app, then in Supabase SQL Editor:
 
 ```sql
-update profiles set role = 'super_admin' where phone = '91XXXXXXXXXX';
+update profiles set role = 'super_admin' where phone = '91XXXXXXXXXX';   -- you (all brands)
+update profiles set role = 'admin'       where phone = '91YYYYYYYYYY';   -- client's staff (their brand only)
 ```
+
+Refresh the app: admins land on `/admin` with three tabs:
+- **Dashboard**: drivers / owners, active today, online now, new users per day, live posts and drivers wanted, interests, calls + WhatsApp, average time per visit, how far people get (open → OTP → login → profile → action), APK / mobile browser / computer / home-screen installs, users by city. Test accounts are never counted.
+- **Check queue**: posts held by the automatic checks (approve → live, reject → closed), flagged profiles (looks fine / block), reports.
+- **Users**: search by name or phone, filter (driver / owner / verified / blocked / test), give or remove the verified badge, block / unblock.
+
+Every admin action is saved in `admin_actions` (who, what, when).
 
 ## Folder map
 

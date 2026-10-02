@@ -5,6 +5,9 @@ import { useAuth } from './lib/auth'
 import Home from './pages/Home'
 import Language from './pages/Language'
 import Legal from './pages/Legal'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminQueue from './pages/admin/AdminQueue'
+import AdminUsers from './pages/admin/AdminUsers'
 import Login from './pages/Login'
 import Otp from './pages/Otp'
 import Role from './pages/Role'
@@ -33,6 +36,19 @@ export default function App() {
   if (status === 'needsRole' && loc.pathname !== '/role') return <Navigate to="/role" replace />
   if (status === 'signedOut' && !PUBLIC.includes(loc.pathname)) return <Navigate to="/language" replace />
   if (status === 'ready' && PUBLIC.includes(loc.pathname)) return <Navigate to="/home" replace />
+  // Admins get the admin panel only (and settings, to log out).
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
+  if (status === 'ready' && isAdmin) {
+    return (
+      <Routes>
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/queue" element={<AdminQueue />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
+      </Routes>
+    )
+  }
   // First-time setup comes before everything else (settings stay reachable, e.g. to log out).
   if (status === 'ready' && profile && !profile.setup_done && !['/setup', '/settings'].includes(loc.pathname)) return <Navigate to="/setup" replace />
 
