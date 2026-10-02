@@ -1,0 +1,45 @@
+{
+  "id": "vahanza",
+  "name": "Vahanza",
+  "nameHi": "वाहनज़ा",
+  "taglineHi": "ड्राइवर और गाड़ी मालिक, एक जगह",
+  "taglineEn": "Drivers and vehicle owners, in one place",
+  "appId": "in.vahanza.app",
+  "supportPhone": "+910000000000",
+  "grievanceOfficer": { "name": "To be confirmed", "email": "grievance@example.in" },
+  "colors": {
+    "light": {
+      "brand": "#0E5A6B",
+      "brandDark": "#0A4452",
+      "brandSoft": "#DCEEF1",
+      "header": "#0E5A6B",
+      "accent": "#F4A21A",
+      "accentSoft": "#FFF1D6",
+      "accentInk": "#6B4500",
+      "call": "#1E8E4F",
+      "ink": "#13252A",
+      "muted": "#5B6E73",
+      "line": "#DCE5E7",
+      "bg": "#F4F7F7",
+      "card": "#FFFFFF",
+      "danger": "#C8372D"
+    },
+    "dark": {
+      "brand": "#2A93A8",
+      "brandDark": "#8FD6E3",
+      "brandSoft": "#123A42",
+      "header": "#12424D",
+      "accent": "#F2AE33",
+      "accentSoft": "#3A2E14",
+      "accentInk": "#F6D9A0",
+      "call": "#23A35C",
+      "ink": "#E4EEF0",
+      "muted": "#9DB3B8",
+      "line": "#26393E",
+      "bg": "#0D1618",
+      "card": "#152327",
+      "danger": "#E5675C"
+    }
+  },
+  "languages": ["hi", "en"]
+}

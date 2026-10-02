@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+__pycache__/
+.pytest_cache/
+.venv/
+.vercel/
+web/android/
+web/ios/
+*.keystore
+*.jks
