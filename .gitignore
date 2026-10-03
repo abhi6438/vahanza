@@ -14,3 +14,7 @@ web/ios/
 
 # Firebase config (per brand, not committed)
 google-services.json
+
+# Android test builds and files to remove
+*.apk
+_to_delete/

@@ -112,12 +112,25 @@ function DesktopShell({ title, sub, actions, back, width = 'default', adminQueue
   )
 }
 
+/** Log out icon + "Log out?" confirm. Sidebar user card on desktop; admin's phone header (admins have no Profile tab). */
+export function LogoutButton({ tone = 'plain' }: { tone?: 'plain' | 'onDark' }) {
+  const { t } = useTranslation()
+  const { logout } = useAuth()
+  const [confirm, setConfirm] = useState(false)
+  return (
+    <>
+      <IconButton tone={tone} label={t('settings.logout')} onClick={() => setConfirm(true)}>{Icon.logout}</IconButton>
+      <ConfirmDialog open={confirm} title={t('settings.logoutQ')} confirmLabel={t('settings.logout')}
+        onCancel={() => setConfirm(false)} onConfirm={() => { setConfirm(false); void logout(false) }} />
+    </>
+  )
+}
+
 function Sidebar({ adminQueue }: { adminQueue?: number }) {
   const { t } = useTranslation()
-  const { profile, logout } = useAuth()
+  const { profile } = useAuth()
   const items = useNavItems(adminQueue)
   const unread = useUnread()
-  const [confirm, setConfirm] = useState(false)
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
   const item = ({ isActive }: { isActive: boolean }) =>
     `group relative flex min-h-11 items-center gap-3 rounded-md px-3 font-medium transition-colors ${isActive ? 'bg-primary-soft text-primary' : 'text-text-2 hover:bg-surface-2 hover:text-text'}`
@@ -164,10 +177,8 @@ function Sidebar({ adminQueue }: { adminQueue?: number }) {
           <p className="truncate font-semibold leading-tight">{profile?.business_name || profile?.name || '—'}</p>
           <p className="truncate text-xs text-text-2">{profile?.role ? t(`role.${profile.role}`, { defaultValue: profile.role }) : ''}</p>
         </div>
-        <IconButton label={t('settings.logout')} onClick={() => setConfirm(true)}>{Icon.logout}</IconButton>
+        <LogoutButton />
       </div>
-      <ConfirmDialog open={confirm} title={t('settings.logoutQ')} confirmLabel={t('settings.logout')}
-        onCancel={() => setConfirm(false)} onConfirm={() => { setConfirm(false); void logout(false) }} />
     </aside>
     </div>
   )
@@ -212,6 +223,14 @@ function MobileShell({ title, hero, back, mobileActions, adminQueue, children, t
                 {mobileActions}
                 {!admin && <Bell tone="onDark" />}
                 <ThemeToggle tone="onDark" />
+                {/* admins have no Profile tab on phones: settings and log out sit in the header */}
+                {admin && (
+                  <>
+                    <Link to="/settings" aria-label={t('settings.title')} title={t('settings.title')}
+                      className="grid size-11 shrink-0 place-items-center rounded-md text-[1.1rem] text-white transition-colors hover:bg-white/15 active:bg-white/20">{Icon.settings}</Link>
+                    <LogoutButton tone="onDark" />
+                  </>
+                )}
               </div>
             )}
           </div>

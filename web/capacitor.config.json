@@ -1,0 +1,8 @@
+{
+  "appId": "in.vahanza.app",
+  "appName": "Vahanza",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  }
+}

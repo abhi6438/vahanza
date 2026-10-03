@@ -8,8 +8,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "cap:sync": "npm run build && npx cap sync android",
-    "cap:open": "npx cap open android"
+    "cap:sync": "node scripts/cap-config.mjs && tsc --noEmit && vite build --mode apk && npx cap sync android",
+    "cap:open": "npx cap open android",
+    "apk": "npm run cap:sync && cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
