@@ -22,6 +22,9 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       VitePWA({
+        // The APK ships its files inside the app, so it needs no offline cache. A cache there would keep
+        // showing the OLD screens after an app update; in the APK build the worker removes itself instead.
+        selfDestroying: mode === 'apk',
         registerType: 'autoUpdate',
         includeAssets: ['icons/icon.svg'],
         manifest: {
@@ -48,7 +51,7 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
-    define: { __BRAND_ID__: JSON.stringify(brandId), __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0') },
+    define: { __BRAND_ID__: JSON.stringify(brandId), __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || process.env.npm_package_version || '1.0.0') },
     // brands/ and shared/ live one level up, next to api/
     server: { proxy: { '/api': 'http://localhost:8000' }, fs: { allow: ['..'] } },
   }
