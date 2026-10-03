@@ -26,11 +26,11 @@ import Soon from './pages/Soon'
 import Setup from './pages/Setup'
 import Splash from './pages/Splash'
 
-const PUBLIC = ['/language', '/role', '/login', '/otp']
+const PUBLIC = ['/language', '/login', '/otp']
 const OPEN = ['/legal'] // reachable in any state
 
 export default function App() {
-  const { status, profile } = useAuth()
+  const { status, profile, langChosen } = useAuth()
   const { t } = useTranslation()
   const loc = useLocation()
 
@@ -64,7 +64,9 @@ export default function App() {
   if (status === 'blocked') return <div className="grid h-full place-items-center p-6 text-center text-lg">{t('error.blocked')}</div>
   if (OPEN.includes(loc.pathname)) return <Routes><Route path="/legal" element={<Legal />} /></Routes>
   if (status === 'needsRole' && loc.pathname !== '/role') return <Navigate to="/role" replace />
-  if (status === 'signedOut' && !PUBLIC.includes(loc.pathname)) return <Navigate to="/language" replace />
+  // signed out: language first only the very first time; after that straight to the number
+  if (status === 'signedOut' && !PUBLIC.includes(loc.pathname)) return <Navigate to={langChosen ? '/login' : '/language'} replace />
+  if (status === 'ready' && loc.pathname === '/role') return <Navigate to="/home" replace />
   if (status === 'ready' && PUBLIC.includes(loc.pathname)) return <Navigate to="/home" replace />
   // Admins get the admin panel only (and settings, to log out).
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'

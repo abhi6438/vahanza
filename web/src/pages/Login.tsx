@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/auth-layout'
-import { BigButton, H, Sub } from '../components/ui'
+import { BigButton, H, Segmented, Sub } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { brand } from '../lib/brand'
 import { isValidIndianMobile } from '../lib/supabase'
@@ -10,7 +10,7 @@ import { trackScreen } from '../lib/track'
 
 export default function Login() {
   const { t } = useTranslation()
-  const { sendOtp } = useAuth()
+  const { sendOtp, lang, setLang } = useAuth()
   const nav = useNavigate()
   const [phone, setPhone] = useState('')
   const [consent, setConsent] = useState(true)
@@ -35,7 +35,11 @@ export default function Login() {
   }
 
   return (
-    <AuthLayout title={t('login.title')} footer={<BigButton disabled={!ok || busy} onClick={submit}>{t('login.send')}</BigButton>}>
+    <AuthLayout title={t('login.title')} back={false} footer={<BigButton disabled={!ok || busy} onClick={submit}>{t('login.send')}</BigButton>}>
+        <div className="mb-5 flex justify-end">
+          <Segmented label={t('settings.language')} value={lang} onChange={(l) => void setLang(l)}
+            options={[{ key: 'hi', label: 'हिंदी' }, { key: 'en', label: 'English' }]} />
+        </div>
         <H>{t('login.title')}</H>
         <Sub>{t('login.sub')}</Sub>
         <label className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 focus-within:border-brand">

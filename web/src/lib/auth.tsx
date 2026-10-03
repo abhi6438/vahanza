@@ -17,6 +17,8 @@ interface AuthState {
   driver: DriverDetails | null
   fleet: FleetGroup[]
   lang: Lang
+  /** The person has picked a language before on this phone (returning users skip that screen). */
+  langChosen: boolean
   pendingRole: Role | null
   setLang: (l: Lang) => Promise<void>
   setPendingRole: (r: Role) => void
@@ -38,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [driver, setDriver] = useState<DriverDetails | null>(null)
   const [fleet, setFleet] = useState<FleetGroup[]>([])
   const [lang, setLangState] = useState<Lang>('hi')
+  const [langChosen, setLangChosen] = useState(false)
   const [pendingRole, setPendingRoleState] = useState<Role | null>(null)
 
   const applyMe = useCallback((me: Me) => {
@@ -70,7 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let alive = true
     ;(async () => {
-      const l = ((await storage.getItem('lang')) as Lang | null) || 'hi'
+      const saved = (await storage.getItem('lang')) as Lang | null
+      const l = saved || 'hi'
+      setLangChosen(!!saved)
       setLangState(l)
       await i18n.changeLanguage(l)
       const r = (await storage.getItem('pending-role')) as Role | null
@@ -111,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setLang = useCallback(async (l: Lang) => {
     setLangState(l)
+    setLangChosen(true)
     await i18n.changeLanguage(l)
     document.documentElement.lang = l
     await storage.setItem('lang', l)
@@ -142,15 +148,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus('ready')
         return
       }
-      if (pendingRole) {
-        const res = await startMe(pendingRole, lang)
-        applyMe(res)
-        setStatus('ready')
-        track('signup_complete', { role: pendingRole })
-        await storage.removeItem('pending-role')
-      } else setStatus('needsRole')
+      // new number: ask "who are you?" now (only once, ever)
+      await storage.removeItem('pending-role')
+      setStatus('needsRole')
     },
-    [pendingRole, lang, applyMe],
+    [applyMe],
   )
 
   const chooseRole = useCallback(
@@ -173,8 +175,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [applyMe])
 
   const value = useMemo(
-    () => ({ status, session, profile, driver, fleet, lang, pendingRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout, applyMe, setPhotoUrl }),
-    [status, session, profile, driver, fleet, lang, pendingRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout, applyMe, setPhotoUrl],
+    () => ({ status, session, profile, driver, fleet, lang, langChosen, pendingRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout, applyMe, setPhotoUrl }),
+    [status, session, profile, driver, fleet, lang, langChosen, pendingRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout, applyMe, setPhotoUrl],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

@@ -6,7 +6,7 @@
   "lang.sub": "अपनी भाषा चुनें",
   "lang.soon": "More languages soon",
   "role.title": "Who are you?",
-  "role.sub": "Pick one. To change it later, contact support.",
+  "role.sub": "New account, tell us once. To change it later, contact support.",
   "role.owner": "Vehicle owner",
   "role.ownerSub": "I need a driver",
   "role.driver": "Driver",
@@ -568,5 +568,6 @@
   "auth.point.checked": "Checked people, ratings and reporting",
   "admin.imp.step1": "1. Get the ready-to-fill Excel file",
   "admin.imp.step1Sub": "City and vehicles are picked from lists, nothing to type. Excel itself stops a wrong mobile number. Send this file to the union / transporter.",
-  "admin.imp.step2": "2. Upload the filled file here"
+  "admin.imp.step2": "2. Upload the filled file here",
+  "role.otherNumber": "Log in with another number"
 }

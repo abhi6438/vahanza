@@ -18,7 +18,7 @@ export default function Language() {
   useEffect(() => { trackScreen('language') }, [])
 
   return (
-    <AuthLayout title={"भाषा चुनें · Language"} back={false} footer={<BigButton onClick={() => nav('/role')}>{t('continue')}</BigButton>}>
+    <AuthLayout title={"भाषा चुनें · Language"} back={false} footer={<BigButton onClick={() => { void setLang(lang); nav('/login') }}>{t('continue')}</BigButton>}>
         <H>{t('lang.title')}</H>
         <Sub>{t('lang.sub')}</Sub>
         <div className="flex flex-col gap-3">

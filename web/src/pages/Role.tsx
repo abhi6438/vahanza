@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/auth-layout'
 import { H, Sub } from '../components/ui'
 import { useAuth, type Role as R } from '../lib/auth'
@@ -22,8 +21,7 @@ const Wheel = () => (
 
 export default function Role() {
   const { t } = useTranslation()
-  const { status, setPendingRole, chooseRole } = useAuth()
-  const nav = useNavigate()
+  const { setPendingRole, chooseRole, logout } = useAuth()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const invited = (() => { try { return sessionStorage.getItem('vz-inv') as R | null } catch { return null } })()
@@ -32,25 +30,23 @@ export default function Role() {
     if (invited) track('invite_open', { role: invited })
   }, [invited])
 
+  // Shown once, right after the first OTP of a new number. Returning users never see it.
   async function pick(r: R) {
     setPendingRole(r)
-    if (status === 'needsRole') {
-      // Already logged in (e.g. app reinstalled): create the profile now.
-      setBusy(true)
-      try {
-        await chooseRole(r)
-      } catch {
-        setError(t('error.generic'))
-      } finally {
-        setBusy(false)
-      }
-    } else nav('/login')
+    setBusy(true)
+    try {
+      await chooseRole(r)
+    } catch {
+      setError(t('error.generic'))
+    } finally {
+      setBusy(false)
+    }
   }
 
   const card = 'relative flex w-full items-center gap-3.5 rounded-lg border border-border bg-surface p-3 text-left disabled:opacity-60 data-[invited=true]:border-brand data-[invited=true]:ring-2 data-[invited=true]:ring-brand/30'
   const forYou = (r: R) => invited === r && <span className="absolute -top-2.5 right-3 rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">{t('role.forYou')}</span>
   return (
-    <AuthLayout title={t('role.title')} back={status !== 'needsRole'}>
+    <AuthLayout title={t('role.title')} back={false}>
         <H>{t('role.title')}</H>
         <Sub>{t('role.sub')}</Sub>
         <div className="flex flex-col gap-3">
@@ -74,6 +70,7 @@ export default function Role() {
           </button>
         </div>
         {error && <p className="mt-4 text-error">{error}</p>}
+        <button type="button" onClick={() => void logout(false)} className="mt-6 min-h-10 text-sm font-medium text-text-2 underline hover:text-text">{t('role.otherNumber')}</button>
       </AuthLayout>
   )
 }

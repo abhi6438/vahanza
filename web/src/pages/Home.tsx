@@ -168,7 +168,7 @@ function OwnerHome() {
 function AvailabilitySwitch({ onDark }: { onDark?: boolean }) {
   const { t } = useTranslation()
   const toast = useToast()
-  const { profile, driver, applyMe } = useAuth()
+  const { profile, driver, fleet, applyMe } = useAuth()
   const [available, setAvailable] = useState(driver?.is_available ?? true)
   const [busy, setBusy] = useState(false)
   async function toggle(next: boolean) {
@@ -176,7 +176,7 @@ function AvailabilitySwitch({ onDark }: { onDark?: boolean }) {
     setBusy(true)
     try {
       await setAvailability(next)
-      if (driver && profile) applyMe({ exists: true, profile, driver: { ...driver, is_available: next }, fleet: [] })
+      if (driver && profile) applyMe({ exists: true, profile, driver: { ...driver, is_available: next }, fleet })
       track('availability_set', { on: next })
       toast(next ? t('home.availableToast') : t('home.notAvailableToast'), { tone: 'success' })
     } catch {
