@@ -108,6 +108,21 @@
   --c-error-soft: color-mix(in srgb, var(--c-danger) 16%, var(--c-card));
 }
 
+/*
+ * Tailwind 4 resets buttons to the default arrow cursor. Everything you can click shows the hand,
+ * including file pickers and checkbox labels; disabled controls show "not allowed".
+ */
+@layer base {
+  button, [role="button"], [role="switch"], [role="radio"], [role="tab"], summary, select,
+  a[href], label:has(> input[type="file"]), label:has(> input[type="checkbox"]), label:has(> input[type="radio"]),
+  input[type="checkbox"], input[type="radio"], input[type="file"] {
+    cursor: pointer;
+  }
+  button:disabled, [aria-disabled="true"], input:disabled, select:disabled, fieldset:disabled * {
+    cursor: not-allowed;
+  }
+}
+
 html, body, #root { height: 100%; }
 body {
   margin: 0;
