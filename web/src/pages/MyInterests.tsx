@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { TabPage } from '../components/home'
 import { JobItem } from '../components/jobs'
+import { PushAsk } from '../components/notify'
 import { myInterests, type Job } from '../lib/api'
 import { trackScreen } from '../lib/track'
 
@@ -26,6 +27,7 @@ export default function MyInterests() {
         {items === null && !error && <div className="h-48 animate-pulse rounded-2xl bg-card" />}
         {error && <p className="rounded-xl bg-card p-4 text-muted">{t('error.server')}</p>}
         {items?.length === 0 && <p className="rounded-2xl border border-dashed border-line bg-card p-4 text-muted">{t('job.noInterests')}</p>}
+        {!!items?.length && <PushAsk from="interests" why={t('notif.whyDriverSeen')} />}
         {items?.map((j) => <JobItem key={j.id} job={j} showStatus />)}
       </main>
     </TabPage>

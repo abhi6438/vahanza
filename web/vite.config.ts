@@ -40,6 +40,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
+          importScripts: ['push-sw.js'],
           navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
             { urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/, handler: 'CacheFirst', options: { cacheName: 'fonts' } },

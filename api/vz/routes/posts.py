@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ..auth import AuthUser, current_user
 from ..deps import get_db, tenant_id
+from .. import notify
 from .trust import is_blocked
 
 router = APIRouter(tags=["posts"])
@@ -86,7 +87,7 @@ def post_flags(p: PostIn) -> list[str]:
 
 def _me(db, user: AuthUser, tenant: str) -> dict:
     me = db.execute(
-        "select id, tenant_id, role, is_test, blocked, setup_done, district, location, name, phone "
+        "select id, tenant_id, role, is_test, blocked, setup_done, district, location, name, business_name, phone "
         "from public.profiles where id = %s",
         (user.id,),
     ).fetchone()
@@ -169,6 +170,8 @@ def create_post(body: PostIn, user: AuthUser = Depends(current_user), db=Depends
             "insert into public.post_groups (post_id, fleet_group_id, drivers_needed) values (%s, %s, %s)",
             [(row["id"], g.fleet_group_id, g.drivers_needed) for g in body.groups],
         )
+    if row["status"] == "live":
+        notify.safe(db, notify.new_post, str(row["id"]))
     return {"id": str(row["id"]), "status": row["status"], "check_flags": flags}
 
 
@@ -237,7 +240,12 @@ def post_interests(post_id: str, user: AuthUser = Depends(current_user), db=Depe
         """,
         (post_id, user.id, user.id),
     ).fetchall() or []
-    db.execute("update public.interests set status = 'seen' where post_id = %s and status = 'sent'", (post_id,))
+    seen = db.execute(
+        "update public.interests set status = 'seen' where post_id = %s and status = 'sent' returning driver_id", (post_id,)
+    ).fetchall() or []
+    owner = me.get("business_name") or me.get("name") or ""
+    for r in seen:
+        notify.safe(db, notify.to_user, tenant, str(r["driver_id"]), "interest_seen", {"owner": owner, "post_id": post_id})
     out = []
     for r in rows:
         r = dict(r)
@@ -322,10 +330,14 @@ def show_interest(post_id: str, user: AuthUser = Depends(current_user), db=Depen
     post = _live_post(db, post_id, tenant, me["is_test"])
     if is_blocked(db, user.id, str(post["owner_id"])):
         raise HTTPException(404, "Job not available")
-    db.execute(
-        "insert into public.interests (tenant_id, post_id, driver_id) values (%s, %s, %s) on conflict (post_id, driver_id) do nothing",
+    added = db.execute(
+        "insert into public.interests (tenant_id, post_id, driver_id) values (%s, %s, %s) "
+        "on conflict (post_id, driver_id) do nothing returning id",
         (tenant, post_id, user.id),
-    )
+    ).fetchone()
+    if added:
+        notify.safe(db, notify.to_user, tenant, str(post["owner_id"]), "new_interest",
+                    {"driver": me.get("name") or "", "post_id": post_id, "driver_id": str(user.id)})
     return {"post_id": post_id, "interested": True}
 
 

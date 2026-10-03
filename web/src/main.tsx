@@ -10,6 +10,11 @@ import { initTracking } from './lib/track'
 import './styles.css'
 
 applyBrandColors()
+// invite link from a bulk-import SMS / WhatsApp (…/?inv=driver): remember the role before any redirect
+try {
+  const inv = new URLSearchParams(window.location.search).get('inv')
+  if (inv === 'driver' || inv === 'owner') sessionStorage.setItem('vz-inv', inv)
+} catch { /* storage blocked: the person just picks the role */ }
 void loadTheme()
 void initTracking()
 

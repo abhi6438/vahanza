@@ -2,7 +2,7 @@ node_modules/
 dist/
 .env
 .env.*
-.env.example
+!.env.example
 __pycache__/
 .pytest_cache/
 .venv/
@@ -11,3 +11,6 @@ web/android/
 web/ios/
 *.keystore
 *.jks
+
+# Firebase config (per brand, not committed)
+google-services.json

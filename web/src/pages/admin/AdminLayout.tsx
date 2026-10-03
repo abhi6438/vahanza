@@ -27,6 +27,7 @@ export function AdminLayout({ children, queue }: { children: ReactNode; queue?: 
             {!!queue && <span className="ml-1.5 rounded-full bg-accent px-1.5 text-xs font-bold text-accent-ink">{queue}</span>}
           </NavLink>
           <NavLink to="/admin/users" className={tab}>{t('admin.tab.users')}</NavLink>
+          <NavLink to="/admin/import" className={tab}>{t('admin.tab.import')}</NavLink>
         </nav>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-5">{children}</main>
@@ -35,14 +36,4 @@ export function AdminLayout({ children, queue }: { children: ReactNode; queue?: 
 }
 
 export const nf = (n: number | null | undefined) => (n ?? 0).toLocaleString('en-IN')
-export function ago(iso: string | null, lang: string) {
-  if (!iso) return '—'
-  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
-  const en = lang === 'en'
-  if (m < 2) return en ? 'just now' : 'अभी'
-  if (m < 60) return en ? `${m} min ago` : `${m} मिनट पहले`
-  const h = Math.round(m / 60)
-  if (h < 24) return en ? `${h} h ago` : `${h} घंटे पहले`
-  const d = Math.round(h / 24)
-  return en ? `${d} d ago` : `${d} दिन पहले`
-}
+export { ago } from '../../lib/time'

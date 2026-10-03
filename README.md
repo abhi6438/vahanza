@@ -37,7 +37,7 @@ A white-label app for vehicle owners and drivers. One codebase serves the web/PW
 ## 1. Supabase setup (one time)
 
 1. Create a project in region **Mumbai (ap-south-1)**.
-2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql`).
+2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql`).
 3. Auth → Providers → **Phone**: enable it. You can pick any SMS provider here because the hook below replaces it.
 4. Auth → Hooks → **Send SMS hook** → HTTPS:
    `https://<your-domain>/api/v1/hooks/send-sms`. Generate the secret and copy it into `SEND_SMS_HOOK_SECRET` (format `v1,whsec_...`).
@@ -72,6 +72,41 @@ Vercel → Storage → Create **Blob** store → connect it to the project. This
 - When **2 different people** report the same profile or post, it goes to the admin **check queue** automatically (a live post is paused as "under check"). Admin can dismiss, close the post, or block the person; all open reports on that target close together.
 - **Block** works both ways: neither sees the other in lists, and numbers can't be revealed. Undo from Profile → Blocked people.
 - **Ratings** (1–5 stars + quick tags) are only possible between people who were really in touch (a number was revealed by Call / WhatsApp, or the owner opened a driver's interest). Home asks "How was …?" a few hours after the contact. Cards show ★ average (count).
+
+## Notifications
+
+- **🔔 Bell** on home with the unread count. The list opens the right screen (a driver's interest opens that post with the list already open).
+- Who gets what:
+  - **Driver**: new job near them (same vehicle type, in a base city of the post or within 150 km; max 5 a day), and "owner saw your profile".
+  - **Owner**: a driver is interested; post approved / not approved after the admin check.
+- Blocked people, test vs real accounts and each person's switches (Settings → Notifications) are respected.
+- **Phone push** is asked at useful moments (bell page, My posts, My interests, Settings) and never on the first screen. Without the keys below the bell still works, there is just no phone alert.
+
+### 1d. Push keys
+
+**Web / PWA (Chrome on Android, iPhone when added to home screen)**
+
+```bash
+python scripts/make_vapid_keys.py     # prints VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY
+```
+
+Put both into `.env` and Vercel, plus `VAPID_SUBJECT=mailto:<your support email>`. Make them once: new keys mean every phone has to allow alerts again. Keep the private key secret.
+
+**Android APK (Firebase)**
+
+1. console.firebase.google.com → Add project → Add app → Android, package name = `appId` from the brand JSON.
+2. Download `google-services.json` into `web/android/app/` (not committed; it is per brand).
+3. Project settings → Service accounts → **Generate new private key**. Put the whole JSON on one line into `FCM_SERVICE_ACCOUNT` (Vercel env only, never in git).
+4. `npm run cap:sync`, then build the APK. On Android 13+ the app asks for permission when the user taps "Turn on".
+
+## Bulk import (admin → डेटा जोड़ें)
+
+1. Pick **drivers** or **owners / transporters**, optionally say where the list came from, and choose an Excel (.xlsx) or CSV file. Only a mobile number column is needed; column names can be Hindi or English in any order (नाम, मोबाइल, शहर, राज्य, गाड़ी, फर्म, गाड़ियों की संख्या …). "Download a sample file" gives the right columns. Up to 5,000 rows / 2 MB per file.
+2. The preview shows what will happen to each row: **new**, **already in the list** (empty details are filled in), **already on the app** (left alone) or **skipped** (wrong number, repeated row), plus notes such as "place not found". Nothing is saved until you tap **Add N people**.
+3. **Invite**: the WhatsApp button opens your own WhatsApp with a ready Hindi message and the app link (free, one person at a time). **SMS to everyone ready** sends in bulk through MSG91 and needs its own DLT template (below). A person is invited at most 3 times, at least 7 days apart; "Said no" stops invites for good.
+4. When an imported number logs in, the app suggests the right role ("आपके लिए") and the first setup screen comes pre-filled with their name, place (and vehicles for drivers). They only confirm. Past files show how many were invited and how many joined.
+
+Settings: `PUBLIC_APP_URL` (the address in invites, e.g. `https://vahanza.in`) and `MSG91_INVITE_TEMPLATE_ID` (DLT template with variables `##name##` and `##link##`, e.g. "नमस्ते ##name## जी, Vahanza पर पास का काम / ड्राइवर देखें, मुफ़्त। जुड़ें: ##link##").
 
 ## 2. MSG91
 
@@ -148,10 +183,12 @@ Every admin action is saved in `admin_actions` (who, what, when).
 ```
 api/            FastAPI app (vz/), tests/
   index.py      Vercel entry
-  vz/routes/    me.py, events.py, hooks.py, geo.py, photo.py
+  vz/routes/    me, events, hooks, geo, photo, drivers, posts, admin, trust, notifications
+  vz/notify.py  who gets which notification; vz/push.py sends web push / FCM
 brands/         brand JSON (colours light/dark, names, appId)
 shared/         places.json: transport cities with Hindi names (used by app and API)
-scripts/        import_pincodes.py
+scripts/        import_pincodes.py, make_vapid_keys.py
+                (bulk import lives in api/vz/importer.py + routes/imports.py)
 supabase/       SQL migrations
 web/src/
   lib/          auth, api, supabase, track (analytics), brand, theme, storage, platform
@@ -161,9 +198,9 @@ web/src/
 vercel.json     one deploy: web + api, Mumbai
 ```
 
-## Next (Sprint 3)
+## Next
 
-Owner posts (pick fleet groups, drivers needed per group, monthly savings, optional pay mix, base cities + coverage, optional facilities) with automatic checks, and the driver's job list with call / WhatsApp.
+See `claude/vahanza-decisions.md` in the Claude project for the sprint list and decisions so far.
 
 ## Placeholders to replace before launch
 

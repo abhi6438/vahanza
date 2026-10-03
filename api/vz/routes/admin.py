@@ -11,6 +11,7 @@ from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field
 
 from ..auth import AuthUser, current_user
+from .. import notify
 from ..deps import get_db, tenant_id
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -25,7 +26,7 @@ def admin_ctx(user: AuthUser = Depends(current_user), db=Depends(get_db), tenant
     return {"id": str(me["id"]), "role": me["role"], "tenant": tenant}
 
 
-def _audit(db, ctx: dict, action: str, target_type: str, target_id: str, note: Optional[str] = None) -> None:
+def _audit(db, ctx: dict, action: str, target_type: str, target_id: Optional[str], note: Optional[str] = None) -> None:
     db.execute(
         "insert into public.admin_actions (tenant_id, admin_id, action, target_type, target_id, note) values (%s, %s, %s, %s, %s, %s)",
         (ctx["tenant"], ctx["id"], action, target_type, target_id, note),
@@ -222,12 +223,17 @@ def review_post(post_id: str, body: Review, ctx: dict = Depends(admin_ctx), db=D
     row = db.execute(
         "update public.posts set status = %s, check_flags = case when %s = 'live' then '[]'::jsonb else check_flags end, "
         "expires_at = case when %s = 'live' then now() + interval '30 days' else expires_at end "
-        "where id = %s and tenant_id = %s and status = 'under_check' returning id",
+        "where id = %s and tenant_id = %s and status = 'under_check' returning id, owner_id",
         (new, new, new, post_id, ctx["tenant"]),
     ).fetchone()
     if not row:
         raise HTTPException(404, "Post not in the check queue")
     _audit(db, ctx, f"{body.action}_post", "post", post_id, body.note)
+    if row.get("owner_id"):
+        kind = "post_live" if new == "live" else "post_rejected"
+        notify.safe(db, notify.to_user, ctx["tenant"], str(row["owner_id"]), kind, {"post_id": post_id}, pref="post_status")
+    if new == "live":
+        notify.safe(db, notify.new_post, post_id)
     return {"id": post_id, "status": new}
 
 
@@ -312,7 +318,7 @@ def actions(ctx: dict = Depends(admin_ctx), db=Depends(get_db)):
         where a.tenant_id = %s order by a.created_at desc limit 100
         """, (ctx["tenant"],))
     for r in rows:
-        r["target_id"] = str(r["target_id"])
+        r["target_id"] = str(r["target_id"]) if r["target_id"] else None
         r["created_at"] = r["created_at"].isoformat()
     return {"items": rows}
 

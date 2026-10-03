@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { H, Screen, Sub, TopBar } from '../components/ui'
 import { useAuth, type Role as R } from '../lib/auth'
-import { trackScreen } from '../lib/track'
+import { track, trackScreen } from '../lib/track'
 
 const Truck = () => (
   <svg viewBox="0 0 80 50" width="80" height="50" aria-hidden>
@@ -25,7 +25,11 @@ export default function Role() {
   const nav = useNavigate()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  useEffect(() => { trackScreen('role') }, [])
+  const invited = (() => { try { return sessionStorage.getItem('vz-inv') as R | null } catch { return null } })()
+  useEffect(() => {
+    trackScreen('role')
+    if (invited) track('invite_open', { role: invited })
+  }, [invited])
 
   async function pick(r: R) {
     setPendingRole(r)
@@ -42,7 +46,8 @@ export default function Role() {
     } else nav('/login')
   }
 
-  const card = 'relative flex w-full items-center gap-3.5 rounded-2xl border-2 border-line bg-card p-3 text-left disabled:opacity-60'
+  const card = 'relative flex w-full items-center gap-3.5 rounded-2xl border-2 border-line bg-card p-3 text-left disabled:opacity-60 data-[invited=true]:border-brand data-[invited=true]:ring-2 data-[invited=true]:ring-brand/30'
+  const forYou = (r: R) => invited === r && <span className="absolute -top-2.5 right-3 rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">{t('role.forYou')}</span>
   return (
     <>
       <TopBar title={t('role.title')} back={status !== 'needsRole'} />
@@ -50,11 +55,13 @@ export default function Role() {
         <H>{t('role.title')}</H>
         <Sub>{t('role.sub')}</Sub>
         <div className="flex flex-col gap-3">
-          <button className={card} disabled={busy} onClick={() => pick('owner')}>
+          <button className={card} disabled={busy} data-invited={invited === 'owner'} onClick={() => pick('owner')}>
+            {forYou('owner')}
             <span className="grid h-[72px] w-[92px] place-items-center rounded-xl bg-accent-soft"><Truck /></span>
             <span><strong className="block text-[21px]">{t('role.owner')}</strong><span className="text-sm text-muted">{t('role.ownerSub')}</span></span>
           </button>
-          <button className={card} disabled={busy} onClick={() => pick('driver')}>
+          <button className={`${card} ${invited === 'driver' ? 'order-first' : ''}`} disabled={busy} data-invited={invited === 'driver'} onClick={() => pick('driver')}>
+            {forYou('driver')}
             <span className="grid h-[72px] w-[92px] place-items-center rounded-xl bg-brand-soft"><Wheel /></span>
             <span><strong className="block text-[21px]">{t('role.driver')}</strong><span className="text-sm text-muted">{t('role.driverSub')}</span></span>
           </button>

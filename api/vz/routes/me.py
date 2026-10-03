@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ..auth import AuthUser, current_user
 from ..checks import clean_name, fleet_flags, name_error, profile_flags
+from .. import prospects
 from ..deps import get_db, tenant_id
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -199,6 +200,9 @@ def start(body: StartBody, user: AuthUser = Depends(current_user), db=Depends(ge
             "insert into public.driver_details (profile_id, tenant_id) values (%s, %s) on conflict do nothing",
             (user.id, tenant),
         )
+    # imported earlier (bulk import)? link it and pre-fill name / place / vehicles
+    if not row.get("setup_done") and prospects.claim(db, tenant, user.id, row.get("phone") or user.phone, row["role"]):
+        row = db.execute(f"select {PROFILE_COLS} from public.profiles where id = %s", (user.id,)).fetchone() or row
     return _load(db, user.id, row)
 
 

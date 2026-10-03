@@ -245,6 +245,46 @@ export const admin = {
     return api<{ items: AdminUser[]; has_more: boolean }>(`/admin/users?${p}`)
   },
   patchUser: (id: string, patch: { verified?: boolean; blocked?: boolean }) => api<{ verified: boolean; blocked: boolean }>(`/admin/users/${id}`, { method: 'PATCH', json: patch }),
+  // bulk import (Sprint 7)
+  upload: (role: 'driver' | 'owner', file: File, dryRun: boolean, source = '') => {
+    const p = new URLSearchParams({ role, dry_run: String(dryRun), filename: file.name.slice(0, 120), source: source.slice(0, 120) })
+    return api<ImportResult>(`/admin/imports?${p}`, { method: 'POST', body: file, headers: { 'Content-Type': 'application/octet-stream' } })
+  },
+  imports: () => api<{ items: ImportRow[] }>('/admin/imports'),
+  template: (role: 'driver' | 'owner') => api<{ headers: string[]; sample: string[][] }>(`/admin/imports/template?role=${role}`),
+  prospects: (q: { status?: ProspectStatus; role?: string | null; q?: string; import_id?: number | null; offset?: number }) => {
+    const p = new URLSearchParams()
+    if (q.status) p.set('status', q.status)
+    if (q.role) p.set('role', q.role)
+    if (q.q) p.set('q', q.q)
+    if (q.import_id) p.set('import_id', String(q.import_id))
+    if (q.offset) p.set('offset', String(q.offset))
+    return api<{ items: Prospect[]; counts: Record<ProspectStatus, number>; has_more: boolean }>(`/admin/prospects?${p}`)
+  },
+  inviteConfig: () => api<{ sms: boolean; sms_dry_run: boolean; app_url: string | null; max_invites: number; gap_days: number }>('/admin/invite-config'),
+  inviteSms: (body: { ids?: number[]; role?: string | null; import_id?: number | null }) => api<{ sent: number }>('/admin/prospects/invite-sms', { method: 'POST', json: body }),
+  inviteWhatsapp: (id: number) => api<{ url: string; text: string }>(`/admin/prospects/${id}/whatsapp`, { method: 'POST', json: { app_url: window.location.origin } }),
+  optOut: (id: number, opted_out: boolean) => api<{ opted_out: boolean }>(`/admin/prospects/${id}`, { method: 'PATCH', json: { opted_out } }),
+}
+
+export type ProspectStatus = 'all' | 'ready' | 'invited' | 'joined' | 'opted_out'
+export interface ImportPreviewRow {
+  row: number; status: 'new' | 'update' | 'on_app' | 'bad'; reason?: 'wrong_number' | 'repeated'
+  phone: string | null; raw_phone: string; name: string | null; business_name: string | null
+  district: string | null; state: string | null; vehicles: string[]; vehicle_count: number | null; warnings: string[]
+}
+export interface ImportResult {
+  id?: number
+  columns?: Record<string, string>
+  ignored?: string[]
+  counts: { new: number; update: number; on_app: number; bad: number; warnings: number; total: number }
+  rows?: ImportPreviewRow[]
+}
+export interface ImportRow { id: number; role: 'driver' | 'owner'; filename: string | null; source: string | null; total: number; added: number; updated: number; on_app: number; bad: number; created_at: string; admin_name: string | null; people: number; invited: number; joined: number }
+export interface Prospect {
+  id: number; role: 'driver' | 'owner'; phone: string; name: string | null; business_name: string | null; district: string | null; state: string | null
+  vehicles: string[]; vehicle_count: number | null; invites: number; last_invited_at: string | null; last_channel: 'sms' | 'whatsapp' | null
+  opted_out: boolean; joined_at: string | null; created_at: string; can_invite: boolean
 }
 
 // ---- trust: reports, blocks, ratings ----
@@ -258,3 +298,25 @@ export const myBlocks = () => api<{ items: BlockedPerson[] }>('/me/blocks')
 export interface ToRate { id: string; name: string | null; business_name: string | null; role: 'driver' | 'owner'; photo_url: string | null; last_contact: string }
 export const toRate = () => api<{ items: ToRate[] }>('/me/to-rate')
 export const ratePerson = (ratee_id: string, stars: number, tags: string[]) => api<{ rated: boolean }>('/ratings', { method: 'POST', json: { ratee_id, stars, tags } })
+
+// ---------------------------------------------------------------- notifications (Sprint 6)
+export type NotifKind = 'new_post' | 'new_interest' | 'interest_seen' | 'post_live' | 'post_rejected'
+export interface Notif {
+  id: number
+  kind: NotifKind
+  data: { post_id?: string; owner?: string; driver?: string; driver_id?: string; vehicles_raw?: string[]; n?: number; savings?: string }
+  read_at: string | null
+  created_at: string
+}
+export type NotifyPrefs = { new_post: boolean; new_interest: boolean; interest_seen: boolean }
+export const notifications = {
+  list: (before?: number) => api<{ items: Notif[]; unread: number; has_more: boolean }>(`/notifications${before ? `?before=${before}` : ''}`),
+  unread: () => api<{ unread: number }>('/notifications/unread'),
+  read: (ids?: number[]) => api<void>('/notifications/read', { method: 'POST', json: { ids } }),
+  pushConfig: () => api<{ webpush: boolean; fcm: boolean; vapid_public_key: string | null }>('/push/config', { auth: false }),
+  subscribe: (kind: 'webpush' | 'fcm', endpoint: string, keys: Record<string, string> = {}) =>
+    api<{ subscribed: boolean }>('/push/subscribe', { method: 'POST', json: { kind, endpoint, keys } }),
+  unsubscribe: (endpoint: string) => api<void>('/push/unsubscribe', { method: 'POST', json: { endpoint } }),
+  prefs: () => api<NotifyPrefs>('/me/notify-prefs'),
+  setPrefs: (p: Partial<NotifyPrefs>) => api<NotifyPrefs>('/me/notify-prefs', { method: 'PATCH', json: p }),
+}

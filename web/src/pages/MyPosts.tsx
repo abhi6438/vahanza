@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { DriverCard, JobCard } from '../components/cards'
 import { Note } from '../components/form'
 import { DriverContact, TabPage } from '../components/home'
+import { PushAsk } from '../components/notify'
 import { CardMenu } from '../components/trust'
 import { Icon } from '../components/ui'
 import { myPosts, postInterests, setPostStatus, type InterestedDriver, type MyPost } from '../lib/api'
@@ -16,6 +17,7 @@ export default function MyPosts() {
   const { t } = useTranslation()
   const { fleet } = useAuth()
   const created = (useLocation().state as { created?: string } | null)?.created
+  const openId = useSearchParams()[0].get('open')
   const [items, setItems] = useState<MyPost[] | null>(null)
   const [error, setError] = useState(false)
   const load = useCallback(() => {
@@ -37,21 +39,23 @@ export default function MyPosts() {
       </div>
       <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-4">
         {created && <Note tone={created === 'live' ? 'info' : 'warn'}>{created === 'live' ? t('post.createdLive') : t('post.createdCheck')}</Note>}
+        {!!items?.length && <PushAsk from={created ? 'post_created' : 'my_posts'} why={t('notif.whyOwner')} />}
         {items === null && !error && <div className="h-48 animate-pulse rounded-2xl bg-card" />}
         {error && <p className="rounded-xl bg-card p-4 text-muted">{t('error.server')}</p>}
         {items?.length === 0 && <p className="rounded-2xl border border-dashed border-line bg-card p-4 text-muted">{t('post.none')}</p>}
-        {items?.map((p) => <PostItem key={p.id} post={p} onChange={load} />)}
+        {items?.map((p) => <PostItem key={p.id} post={p} onChange={load} startOpen={p.id === openId} />)}
       </main>
     </TabPage>
   )
 }
 
-function PostItem({ post, onChange }: { post: MyPost; onChange: () => void }) {
+function PostItem({ post, onChange, startOpen = false }: { post: MyPost; onChange: () => void; startOpen?: boolean }) {
   const { t, i18n } = useTranslation()
   const { profile } = useAuth()
   const [open, setOpen] = useState(false)
   const [drivers, setDrivers] = useState<InterestedDriver[] | null>(null)
   const [busy, setBusy] = useState(false)
+  const list = useRef<HTMLDivElement>(null)
 
   async function toggleList() {
     const next = !open
@@ -62,6 +66,14 @@ function PostItem({ post, onChange }: { post: MyPost; onChange: () => void }) {
       track('interested_open', { count: r.items.length })
     }
   }
+  // opened from a "driver is interested" notification: show the list right away
+  useEffect(() => {
+    if (startOpen) void toggleList()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startOpen])
+  useEffect(() => {
+    if (startOpen && drivers !== null) list.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [startOpen, drivers])
   async function status(s: 'live' | 'paused' | 'filled' | 'closed') {
     setBusy(true)
     try {
@@ -94,7 +106,7 @@ function PostItem({ post, onChange }: { post: MyPost; onChange: () => void }) {
           </>
         } />
       {open && (
-        <div className="mt-3 flex flex-col gap-3 border-l-4 border-brand-soft pl-3">
+        <div ref={list} className="mt-3 flex scroll-mt-20 flex-col gap-3 border-l-4 border-brand-soft pl-3">
           {drivers === null && <div className="h-32 animate-pulse rounded-2xl bg-card" />}
           {drivers?.length === 0 && <p className="text-sm text-muted">{t('post.noInterest')}</p>}
           {drivers?.map((d) => (

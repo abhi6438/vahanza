@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { pick, placeName, VEHICLES } from '../lib/catalog'
 import { track } from '../lib/track'
 import { VehicleArt } from './form'
+import { Bell } from './notify'
 import { Icon, ThemeToggle } from './ui'
 
 /** Compact teal header: greeting and light/dark switch. Location lives in the list title. */
@@ -20,6 +21,7 @@ export function HomeHeader({ children }: { children?: ReactNode }) {
         <div className="flex items-center gap-2">
           <h1 className="min-w-0 flex-1 truncate font-display text-[23px] font-bold">{t('home.hello')}{first ? `, ${first}` : ''}</h1>
           {profile?.is_test && <span className="shrink-0 rounded-md bg-accent px-1.5 py-0.5 text-xs font-bold text-accent-ink">{t('home.testAccount')}</span>}
+          <Bell className={btn} />
           <ThemeToggle className={btn} />
         </div>
         {children && <div className="mt-3">{children}</div>}

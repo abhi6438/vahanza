@@ -1,7 +1,9 @@
 import { useEffect } from 'react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './lib/auth'
+import { listenNativeTaps } from './lib/push'
+import Notifications from './pages/Notifications'
 import Home from './pages/Home'
 import Language from './pages/Language'
 import Legal from './pages/Legal'
@@ -9,6 +11,7 @@ import Blocked from './pages/Blocked'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminQueue from './pages/admin/AdminQueue'
 import AdminUsers from './pages/admin/AdminUsers'
+import AdminImport from './pages/admin/AdminImport'
 import Login from './pages/Login'
 import Otp from './pages/Otp'
 import Role from './pages/Role'
@@ -29,7 +32,17 @@ export default function App() {
   const { t } = useTranslation()
   const loc = useLocation()
 
+  const nav = useNavigate()
   useEffect(() => { window.scrollTo(0, 0) }, [loc.pathname])
+  // a tapped push opens its screen (web: message from push-sw.js; Android app: Capacitor listener)
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      if (e.data?.type === 'vz-open' && typeof e.data.url === 'string') nav(new URL(e.data.url).pathname + new URL(e.data.url).search)
+    }
+    navigator.serviceWorker?.addEventListener('message', onMsg)
+    void listenNativeTaps((url) => nav(url))
+    return () => navigator.serviceWorker?.removeEventListener('message', onMsg)
+  }, [nav])
 
   if (status === 'loading') return <Splash />
   if (status === 'blocked') return <div className="grid h-full place-items-center p-6 text-center text-lg">{t('error.blocked')}</div>
@@ -45,6 +58,7 @@ export default function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/queue" element={<AdminQueue />} />
         <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/admin/import" element={<AdminImport />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
@@ -68,6 +82,7 @@ export default function App() {
       <Route path="/posts" element={<MyPosts />} />
       <Route path="/posts/new" element={<PostNew />} />
       <Route path="/interests" element={<MyInterests />} />
+      <Route path="/notifications" element={<Notifications />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

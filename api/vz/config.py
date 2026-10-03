@@ -22,6 +22,16 @@ class Settings(BaseSettings):
     blob_read_write_token: str = ""
     dev_upload_dir: str = "/tmp/vahanza-uploads"
 
+    # Phone push (optional). Web push for the PWA: scripts/make_vapid_keys.py. Android APK: Firebase service account JSON.
+    vapid_public_key: str = ""
+    vapid_private_key: str = ""
+    vapid_subject: str = "mailto:support@example.in"
+    fcm_service_account: str = ""
+
+    # Bulk import invites (Sprint 7). The link people get in the SMS / WhatsApp invite.
+    public_app_url: str = ""               # e.g. https://vahanza.in (empty: invites need it set)
+    msg91_invite_template_id: str = ""     # DLT-approved template with ##name## and ##link##
+
     cors_origins: str = (
         "http://localhost:5173,http://localhost:4173,"
         "capacitor://localhost,http://localhost,https://localhost"

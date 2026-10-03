@@ -165,6 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async (everywhere = false) => {
     track(everywhere ? 'logout_all' : 'logout')
+    // this phone should stop getting this person's alerts
+    await (await import('./push')).disablePush()
     await supabase.auth.signOut({ scope: everywhere ? 'global' : 'local' })
     applyMe({ exists: false, profile: null })
     setStatus('signedOut')
