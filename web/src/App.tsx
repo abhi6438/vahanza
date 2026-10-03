@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './lib/auth'
+import { closeTopOverlay } from './lib/layout'
+import { isNative } from './lib/platform'
 import { listenNativeTaps } from './lib/push'
 import Notifications from './pages/Notifications'
 import Home from './pages/Home'
@@ -43,6 +45,20 @@ export default function App() {
     void listenNativeTaps((url) => nav(url))
     return () => navigator.serviceWorker?.removeEventListener('message', onMsg)
   }, [nav])
+  // Android back button: close an open sheet first, then go back, and leave the app from a main tab.
+  useEffect(() => {
+    if (!isNative) return
+    let remove: (() => void) | undefined
+    void import('@capacitor/app').then(({ App: Cap }) => {
+      void Cap.addListener('backButton', ({ canGoBack }) => {
+        if (closeTopOverlay()) return
+        const root = ['/home', '/admin', '/language', '/role'].includes(window.location.pathname)
+        if (root || !canGoBack) void Cap.exitApp()
+        else window.history.back()
+      }).then((h) => { remove = () => void h.remove() })
+    })
+    return () => remove?.()
+  }, [])
 
   if (status === 'loading') return <Splash />
   if (status === 'blocked') return <div className="grid h-full place-items-center p-6 text-center text-lg">{t('error.blocked')}</div>

@@ -200,7 +200,7 @@ export default function SetupDriver() {
           <OptionList art options={LICENCES} value={f.licence_type} onChange={(k) => set('licence_type', k)} />
           <Label optional>{t('setup.d.licenceNo')}</Label>
           <TextField upper value={f.licence_number} onChange={(v) => set('licence_number', v.slice(0, 24))} label={t('setup.d.licenceNo')} placeholder="MP17 20190012345" />
-          <p className="mt-1.5 text-sm text-muted">{last4.length === 4 ? t('setup.d.othersSee', { last4 }) : t('setup.d.onlyLast4')}</p>
+          <p className="mt-1.5 text-sm text-text-2">{last4.length === 4 ? t('setup.d.othersSee', { last4 }) : t('setup.d.onlyLast4')}</p>
         </>
       )}
 

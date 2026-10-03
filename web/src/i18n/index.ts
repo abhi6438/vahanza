@@ -11,3 +11,8 @@ void i18n.use(initReactI18next).init({
 })
 
 export default i18n
+
+// keep <html lang> in step so the browser picks Devanagari line-breaking / spacing (and :lang(hi) styles)
+const setHtmlLang = (l: string) => { document.documentElement.lang = l }
+setHtmlLang(i18n.language || 'hi')
+i18n.on('languageChanged', setHtmlLang)

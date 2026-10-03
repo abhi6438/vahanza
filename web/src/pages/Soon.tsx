@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { TabPage } from '../components/home'
-import { Icon } from '../components/ui'
+import { AppShell } from '../components/shell'
+import { Badge, Button, Icon } from '../components/ui'
 import { storage } from '../lib/storage'
 import { track, trackScreen } from '../lib/track'
 
@@ -33,27 +33,35 @@ export default function Soon() {
     void storage.setItem('soon-notify', JSON.stringify(next))
     track(on.includes(k) ? 'soon_notify_off' : 'soon_notify', { feature: k })
   }
+  const [first, ...rest] = ITEMS
+  const btn = (k: string) => (
+    <Button variant={on.includes(k) ? 'primary' : 'outline'} size="sm" block aria-pressed={on.includes(k)} icon={on.includes(k) ? Icon.check : Icon.bell} onClick={() => toggle(k)} className="mt-3">
+      {on.includes(k) ? t('soonPage.on') : t('soonPage.notify')}
+    </Button>
+  )
   return (
-    <TabPage>
-      <div className="bg-header px-4 pb-5 text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}>
-        <div className="mx-auto max-w-md">
-          <h1 className="font-display text-2xl font-bold">{t('soon')}</h1>
-          <p className="text-sm opacity-90">{t('soonPage.sub')}</p>
+    <AppShell title={t('tabs.mechanic')} sub={t('soonPage.sub')} width="default">
+      <p className="mb-4 text-text-2 lg:hidden">{t('soonPage.sub')}</p>
+      <section className="mb-4 flex flex-col gap-4 rounded-lg border border-action/50 bg-warning-soft p-5 md:flex-row md:items-center">
+        <span className="grid size-14 shrink-0 place-items-center rounded-lg bg-surface text-[1.6rem] text-warning">{Icon.wrench}</span>
+        <div className="min-w-0 flex-1">
+          <Badge tone="action">{t('soon')}</Badge>
+          <p className="mt-1 text-xl font-semibold">{en ? first.n[1] : first.n[0]}</p>
+          <p className="text-text-2">{en ? first.d[1] : first.d[0]}</p>
         </div>
-      </div>
-      <main className="mx-auto grid max-w-md grid-cols-2 gap-3 px-4 py-4">
-        {ITEMS.map((s) => (
-          <div key={s.k} className="flex flex-col rounded-2xl border border-line bg-card p-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent-soft text-accent-ink">{Icon.sparkle}</span>
-            <strong className="mt-2 leading-tight">{en ? s.n[1] : s.n[0]}</strong>
-            <p className="mt-1 flex-1 text-sm text-muted">{en ? s.d[1] : s.d[0]}</p>
-            <button type="button" aria-pressed={on.includes(s.k)} onClick={() => toggle(s.k)}
-              className="mt-2 min-h-10 rounded-xl border-2 border-brand text-sm font-bold text-brand aria-pressed:bg-brand aria-pressed:text-white">
-              {on.includes(s.k) ? t('soonPage.on') : t('soonPage.notify')}
-            </button>
+        <div className="md:w-56">{btn(first.k)}</div>
+      </section>
+      <h2 className="mb-3 text-lg font-semibold">{t('soonPage.more')}</h2>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+        {rest.map((s) => (
+          <div key={s.k} className="flex flex-col rounded-lg border border-border bg-surface p-4 shadow-sm">
+            <span className="grid size-10 place-items-center rounded-md bg-primary-soft text-primary">{Icon.sparkle}</span>
+            <strong className="mt-2 font-semibold leading-snug">{en ? s.n[1] : s.n[0]}</strong>
+            <p className="mt-1 flex-1 text-sm text-text-2">{en ? s.d[1] : s.d[0]}</p>
+            {btn(s.k)}
           </div>
         ))}
-      </main>
-    </TabPage>
+      </div>
+    </AppShell>
   )
 }

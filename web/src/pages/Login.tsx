@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
-import { BigButton, H, Screen, Sub, TopBar } from '../components/ui'
+import { AuthLayout } from '../components/auth-layout'
+import { BigButton, H, Sub } from '../components/ui'
 import { useAuth } from '../lib/auth'
 import { brand } from '../lib/brand'
 import { isValidIndianMobile } from '../lib/supabase'
@@ -34,13 +35,11 @@ export default function Login() {
   }
 
   return (
-    <>
-      <TopBar title={t('login.title')} />
-      <Screen footer={<BigButton disabled={!ok || busy} onClick={submit}>{t('login.send')}</BigButton>}>
+    <AuthLayout title={t('login.title')} footer={<BigButton disabled={!ok || busy} onClick={submit}>{t('login.send')}</BigButton>}>
         <H>{t('login.title')}</H>
         <Sub>{t('login.sub')}</Sub>
-        <label className="flex items-center gap-2 rounded-2xl border-2 border-line bg-card px-3 focus-within:border-brand">
-          <span className="text-xl text-muted">+91</span>
+        <label className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 focus-within:border-brand">
+          <span className="text-xl text-text-2">+91</span>
           <input
             id="phone"
             inputMode="numeric"
@@ -53,16 +52,15 @@ export default function Login() {
             aria-label={t('login.title')}
           />
         </label>
-        {phone.length === 10 && !isValidIndianMobile(phone) && <p className="mt-2 text-danger">{t('login.invalid')}</p>}
-        <label className="mt-5 flex items-start gap-2.5 text-sm text-muted">
+        {phone.length === 10 && !isValidIndianMobile(phone) && <p className="mt-2 text-error">{t('login.invalid')}</p>}
+        <label className="mt-5 flex items-start gap-2.5 text-sm text-text-2">
           <input id="consent" type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-5 w-5 accent-[var(--c-brand)]" />
           <span>
             {t('login.consent', { brand: brand.name })}{' '}
             <Link to="/legal" className="font-semibold text-brand underline">{t('login.terms')}</Link>
           </span>
         </label>
-        {error && <p className="mt-4 text-danger">{error}</p>}
-      </Screen>
-    </>
+        {error && <p className="mt-4 text-error">{error}</p>}
+      </AuthLayout>
   )
 }

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { BigButton, H, Screen, Sub, TopBar } from '../components/ui'
+import { AuthLayout } from '../components/auth-layout'
+import { BigButton, H, Sub } from '../components/ui'
 import { ApiError } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { trackScreen } from '../lib/track'
@@ -61,9 +62,7 @@ export default function Otp() {
 
   const shown = `${phone.slice(0, 5)} ${phone.slice(5)}`
   return (
-    <>
-      <TopBar title={t('otp.title')} />
-      <Screen footer={<BigButton disabled={code.length !== 6 || busy} onClick={() => submit()}>{t('otp.verify')}</BigButton>}>
+    <AuthLayout title={t('otp.title')} footer={<BigButton disabled={code.length !== 6 || busy} onClick={() => submit()}>{t('otp.verify')}</BigButton>}>
         <H>{t('otp.title')}</H>
         <Sub>{t('otp.sentTo', { phone: shown })}</Sub>
         {/* One real input (works with SMS auto-fill), drawn as 6 boxes */}
@@ -86,18 +85,17 @@ export default function Otp() {
           />
           <div className="grid grid-cols-6 gap-2" aria-hidden>
             {Array.from({ length: 6 }, (_, i) => (
-              <div key={i} className={`grid h-14 place-items-center rounded-xl border-2 bg-card text-2xl font-bold ${i === code.length ? 'border-brand' : 'border-line'}`}>
+              <div key={i} className={`grid h-14 place-items-center rounded-md border-2 bg-surface text-2xl font-bold ${i === code.length ? 'border-brand' : 'border-border'}`}>
                 {code[i] || ''}
               </div>
             ))}
           </div>
         </label>
         <div className="mt-3 flex items-center justify-between text-sm">
-          {left > 0 ? <span className="text-muted">{t('otp.resendIn', { s: left })}</span> : <button onClick={resend} className="font-bold text-brand">{t('otp.resend')}</button>}
+          {left > 0 ? <span className="text-text-2">{t('otp.resendIn', { s: left })}</span> : <button onClick={resend} className="font-bold text-brand">{t('otp.resend')}</button>}
           <button onClick={() => nav('/login', { replace: true })} className="font-bold text-brand">{t('otp.change')}</button>
         </div>
-        {error && <p className="mt-4 text-danger">{error}</p>}
-      </Screen>
-    </>
+        {error && <p className="mt-4 text-error">{error}</p>}
+      </AuthLayout>
   )
 }

@@ -114,20 +114,20 @@ export default function PostNew() {
             {fleet.map((g) => {
               const on = !!(g.id && need[g.id])
               return (
-                <div key={g.id} className={`rounded-2xl border-2 bg-card p-3 ${on ? 'border-brand' : 'border-line'}`}>
+                <div key={g.id} className={`rounded-lg border-2 bg-surface p-3 ${on ? 'border-brand' : 'border-border'}`}>
                   <button type="button" aria-pressed={on} className="flex w-full items-center gap-3 text-left"
                     onClick={() => g.id && setNeed((n) => { const x = { ...n }; if (x[g.id!]) delete x[g.id!]; else x[g.id!] = 1; return x })}>
-                    <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-md border-2 ${on ? 'border-brand bg-brand text-white' : 'border-line'}`}>
+                    <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-md border-2 ${on ? 'border-brand bg-primary text-on-primary' : 'border-border'}`}>
                       {on && <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3.5"><path d="M5 12l5 5 9-10" /></svg>}
                     </span>
                     <VehicleArt kind={g.vehicle_type} className="h-9 w-14" />
                     <span className="flex-1">
                       <strong className="block">{g.vehicle_count} {label(VEHICLES, g.vehicle_type as never, lang)}{g.wheels ? ` · ${t('wheels', { n: g.wheels })}` : ''}</strong>
-                      <span className="text-sm text-muted">{g.base_cities.length ? t('fleet.from', { cities: g.base_cities.map((c) => placeName(c, lang)).join(', ') }) : t('fleet.noCity')}</span>
+                      <span className="text-sm text-text-2">{g.base_cities.length ? t('fleet.from', { cities: g.base_cities.map((c) => placeName(c, lang)).join(', ') }) : t('fleet.noCity')}</span>
                     </span>
                   </button>
                   {on && g.id && (
-                    <div className="mt-3 border-t border-line pt-3">
+                    <div className="mt-3 border-t border-border pt-3">
                       <p className="mb-2 text-sm font-semibold">{t('post.howMany')}</p>
                       <Stepper label={t('post.howMany')} value={need[g.id]} min={1} max={Math.max(1, Math.min(500, g.vehicle_count * 3))} unit={t('post.drivers')}
                         onChange={(v) => setNeed((n) => ({ ...n, [g.id!]: v }))} />
@@ -153,7 +153,7 @@ export default function PostNew() {
             {payTypes.map((k) => {
               const u = PAY_UNIT[k]
               return (
-                <div key={k} className="rounded-2xl border border-line bg-card p-3">
+                <div key={k} className="rounded-lg border border-border bg-surface p-3">
                   <p className="mb-2 font-semibold">{label(PAY, k as never, lang)}</p>
                   <Stepper label={label(PAY, k as never, lang)} value={payVals[k]} step={u.step} min={u.min} max={u.max} format={(v) => u.fmt(v, lang)}
                     onChange={(v) => setPayVals((x) => ({ ...x, [k]: Math.round(v * 10) / 10 }))} />
@@ -198,7 +198,7 @@ export default function PostNew() {
 
       {cur === 'preview' && (
         <>
-          <div className={`mb-3 rounded-2xl p-3.5 ${salOk ? 'bg-call/10' : 'bg-accent-soft'}`}>
+          <div className={`mb-3 rounded-lg p-3.5 ${salOk ? 'bg-success-soft' : 'bg-accent-soft'}`}>
             <strong className={salOk ? 'text-call' : 'text-accent-ink'}>{salOk ? t('post.goesLive') : t('post.goesCheck')}</strong>
             <ul className="mt-2 space-y-1 text-sm">
               <li>✓ {t('post.chk.otp')}</li>
@@ -207,7 +207,7 @@ export default function PostNew() {
             </ul>
           </div>
           <JobCard self data={{ title: profile?.business_name || profile?.name || '', photo_url: profile?.photo_url, place: profile?.district && profile.state ? placeName(`${profile.district}, ${profile.state}`, lang) : '', verified: !!profile?.verified, post: preview }} />
-          <p className="mt-3 text-sm text-muted">{t('post.numberNote')}</p>
+          <p className="mt-3 text-sm text-text-2">{t('post.numberNote')}</p>
         </>
       )}
     </Wizard>

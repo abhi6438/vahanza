@@ -1,35 +1,41 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { TabPage } from '../components/home'
 import { JobItem } from '../components/jobs'
 import { PushAsk } from '../components/notify'
+import { AppShell, CardGrid } from '../components/shell'
+import { ButtonLink, CardSkeletons, EmptyState, ErrorState, Icon } from '../components/ui'
 import { myInterests, type Job } from '../lib/api'
 import { trackScreen } from '../lib/track'
 
-/** Driver's "My interests" tab: jobs they tapped "interested" on, and whether the owner has seen it. */
+/** Driver's "My interests": jobs they tapped "interested" on, and whether the owner has seen it. */
 export default function MyInterests() {
   const { t } = useTranslation()
   const [items, setItems] = useState<Job[] | null>(null)
   const [error, setError] = useState(false)
-  useEffect(() => {
-    trackScreen('my_interests')
+  const load = useCallback(() => {
+    setError(false)
     myInterests().then((r) => setItems(r.items)).catch(() => setError(true))
   }, [])
+  useEffect(() => { trackScreen('my_interests'); load() }, [load])
+  const seen = items?.filter((j) => j.interest_status === 'seen').length || 0
   return (
-    <TabPage>
-      <div className="bg-header px-4 pb-5 text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}>
-        <div className="mx-auto max-w-md">
-          <h1 className="font-display text-2xl font-bold">{t('tabs.interests')}</h1>
-          <p className="text-sm opacity-90">{t('job.interestsSub')}</p>
+    <AppShell title={t('tabs.interests')} sub={t('job.interestsSub')} width="wide">
+      <p className="mb-4 text-text-2 lg:hidden">{t('job.interestsSub')}</p>
+      {!!items?.length && (
+        <div className="mb-4 flex flex-col gap-3">
+          <p className="text-sm text-text-2">{t('job.seenCount', { seen, n: items.length })}</p>
+          <PushAsk from="interests" why={t('notif.whyDriverSeen')} />
         </div>
-      </div>
-      <main className="mx-auto flex max-w-md flex-col gap-3 px-4 py-4">
-        {items === null && !error && <div className="h-48 animate-pulse rounded-2xl bg-card" />}
-        {error && <p className="rounded-xl bg-card p-4 text-muted">{t('error.server')}</p>}
-        {items?.length === 0 && <p className="rounded-2xl border border-dashed border-line bg-card p-4 text-muted">{t('job.noInterests')}</p>}
-        {!!items?.length && <PushAsk from="interests" why={t('notif.whyDriverSeen')} />}
+      )}
+      {error && <ErrorState onRetry={load} />}
+      {items?.length === 0 && (
+        <EmptyState icon={Icon.heart} title={t('job.noInterestsTitle')} body={t('job.noInterests')}
+          action={<ButtonLink to="/home" variant="primary">{t('job.findJobs')}</ButtonLink>} />
+      )}
+      <CardGrid>
+        {items === null && !error && <CardSkeletons count={2} height="h-64" />}
         {items?.map((j) => <JobItem key={j.id} job={j} showStatus />)}
-      </main>
-    </TabPage>
+      </CardGrid>
+    </AppShell>
   )
 }

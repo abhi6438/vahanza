@@ -9,7 +9,7 @@ export default function Legal() {
       <TopBar title={t('legal.title')} />
       <Screen>
         <p className="whitespace-pre-line leading-relaxed">{t('legal.body')}</p>
-        <p className="mt-4 text-sm text-muted">{brand.grievanceOfficer.name} · {brand.grievanceOfficer.email}</p>
+        <p className="mt-4 text-sm text-text-2">{brand.grievanceOfficer.name} · {brand.grievanceOfficer.email}</p>
       </Screen>
     </>
   )

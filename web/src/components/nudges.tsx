@@ -6,6 +6,7 @@ import type { Completion } from '../lib/completion'
 import { track } from '../lib/track'
 import { PhotoNudge } from './photo'
 import { useAuth } from '../lib/auth'
+import { ButtonLink, Note } from './ui'
 
 const SNOOZE_DAYS = 3
 
@@ -27,40 +28,38 @@ export function ProfileNudges({ role, done }: { role: 'driver' | 'owner'; done: 
     void storage.setItem('photo-nudge-until', String(Date.now() + SNOOZE_DAYS * 86400000))
     track('photo_nudge_later')
   }
-  if (done.missing.length > 0 && !onlyPhotoLeft) return <div className="mt-4"><CompleteCard role={role} percent={done.percent} missing={done.missing} listable={done.listable} /></div>
-  if (showPhoto) return <div className="mt-4"><PhotoNudge role={role} onLater={later} /></div>
+  if (done.missing.length > 0 && !onlyPhotoLeft) return <div><CompleteCard role={role} percent={done.percent} missing={done.missing} listable={done.listable} /></div>
+  if (showPhoto) return <div><PhotoNudge role={role} onLater={later} /></div>
   return null
 }
 
 /** "Your profile is 40% complete" — the rest of the setup, one step at a time, whenever the user wants. */
-export function CompleteCard({ role, percent, missing, listable }: { role: 'driver' | 'owner'; percent: number; missing: { key: string; step: string }[]; listable: boolean }) {
+export function CompleteCard({ role, percent, missing, listable, compact }: { role: 'driver' | 'owner'; percent: number; missing: { key: string; step: string }[]; listable: boolean; compact?: boolean }) {
   const { t } = useTranslation()
   const first = missing[0]
   const href = (step: string) => (step === 'about' ? '/setup?edit' : `/setup?step=${step}`)
+  const shown = compact ? missing.slice(0, 3) : missing
   return (
-    <section className="rounded-2xl border-2 border-brand bg-card p-4">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-lg font-bold">{t('complete.title', { n: percent })}</h2>
-        <span className="font-display text-xl font-bold text-brand">{percent}%</span>
+    <section className="rounded-lg border border-border bg-surface p-4 shadow-sm md:p-5">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="font-semibold">{t('complete.title', { n: percent })}</h2>
+        <span className="font-display text-xl font-bold text-primary">{percent}%</span>
       </div>
-      <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-line" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
-        <div className="h-full rounded-full bg-brand" style={{ width: `${percent}%` }} />
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label={t('complete.title', { n: percent })}>
+        <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${percent}%` }} />
       </div>
-      <p className="mt-3 text-[15px]">{t(role === 'driver' ? 'complete.whyDriver' : 'complete.whyOwner')}</p>
-      {!listable && role === 'driver' && (
-        <p className="mt-2 rounded-xl bg-accent-soft px-3 py-2 text-sm font-semibold text-accent-ink">{t('complete.hiddenDriver')}</p>
-      )}
-      <div className="mt-3 flex flex-wrap gap-2">
-        {missing.map((m) => (
-          <Link key={m.key} to={href(m.step)} className="rounded-full border-2 border-line px-3 py-1.5 text-sm font-semibold">
-            + {t(`complete.item.${m.key}`)}
-          </Link>
+      {!compact && <p className="mt-3 text-[0.95rem] text-text-2">{t(role === 'driver' ? 'complete.whyDriver' : 'complete.whyOwner')}</p>}
+      {!listable && role === 'driver' && <div className="mt-3"><Note tone="warn">{t('complete.hiddenDriver')}</Note></div>}
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {shown.map((m) => (
+          <li key={m.key}>
+            <Link to={href(m.step)} className="inline-flex min-h-9 items-center rounded-full border border-border px-3 text-sm font-medium hover:bg-surface-2">+ {t(`complete.item.${m.key}`)}</Link>
+          </li>
         ))}
-      </div>
-      <Link to={href(first.step)} onClick={() => track('complete_profile_tap', { role, percent })}
-        className="mt-4 flex min-h-12 items-center justify-center rounded-xl bg-brand font-bold text-white">
+      </ul>
+      <ButtonLink to={href(first.step)} onClick={() => track('complete_profile_tap', { role, percent })} variant="primary" block className="mt-4">
         {t('complete.cta')}
-      </Link>
+      </ButtonLink>
     </section>
   )
 }

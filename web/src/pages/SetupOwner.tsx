@@ -142,7 +142,7 @@ export default function SetupOwner() {
             <FleetRow key={x.id || i} g={x} onEdit={() => openAdder(i)} onRemove={() => set('fleet', f.fleet.filter((_, j) => j !== i))} />
           ))}
         </div>
-        <p className="mb-4 mt-3 text-muted">{t('setup.o.total', { n: total })}</p>
+        <p className="mb-4 mt-3 text-text-2">{t('setup.o.total', { n: total })}</p>
         <BigButton variant="secondary" onClick={() => openAdder()}>+ {t('setup.o.addMore')}</BigButton>
       </Wizard>
     )
@@ -161,12 +161,12 @@ export default function SetupOwner() {
     a.sub === 2 ? <BigButton onClick={() => setA((x) => ({ ...x, sub: 3 }))}>{t('next')}</BigButton>
     : a.sub === 3 ? <BigButton disabled={!g.base_cities.length} onClick={() => commitGroup()}>+ {a.editIndex == null ? t('setup.o.addToList') : t('save')}</BigButton>
     : f.fleet.length ? <BigButton variant="secondary" onClick={() => setA((x) => ({ ...x, open: false }))}>{t('cancel')}</BigButton>
-    : <p className="py-2 text-center text-muted">{t('setup.o.pickAbove')}</p>
+    : <p className="py-2 text-center text-text-2">{t('setup.o.pickAbove')}</p>
 
   return (
     <Wizard step={shown} total={steps.length} title={adderTitles[a.sub]} sub={adderSubs[a.sub]} onBack={adderBack} footer={footer}>
       {summary.length > 0 && (
-        <div className="mb-4 flex items-center gap-3 rounded-2xl bg-brand-soft p-3">
+        <div className="mb-4 flex items-center gap-3 rounded-lg bg-brand-soft p-3">
           <VehicleArt kind={g.vehicle_type} className="h-9 w-14" />
           <span className="font-bold">{summary.join(' · ')}</span>
         </div>
@@ -181,9 +181,9 @@ export default function SetupOwner() {
         <div className="grid grid-cols-3 gap-2.5">
           {WHEELS.map((w) => (
             <button key={w} type="button" aria-pressed={g.wheels === w} onClick={() => setA((x) => ({ ...x, g: { ...x.g, wheels: w }, sub: 2 }))}
-              className="flex min-h-20 flex-col items-center justify-center rounded-2xl border-2 border-line bg-card font-display text-[28px] font-bold leading-none aria-pressed:border-brand aria-pressed:bg-brand-soft">
+              className="flex min-h-20 flex-col items-center justify-center rounded-lg border border-border bg-surface font-display text-[28px] font-bold leading-none aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary">
               {w}
-              <small className="mt-1 font-sans text-sm font-semibold text-muted">{t('wheeler')}</small>
+              <small className="mt-1 font-sans text-sm font-semibold text-text-2">{t('wheeler')}</small>
             </button>
           ))}
         </div>
@@ -194,7 +194,7 @@ export default function SetupOwner() {
           <div className="mt-4 flex justify-center gap-2">
             {[1, 2, 3, 5, 10].map((n) => (
               <button key={n} type="button" aria-pressed={g.vehicle_count === n} onClick={() => setG({ vehicle_count: n })}
-                className="h-12 w-12 rounded-xl border-2 border-line bg-card text-lg font-bold aria-pressed:border-brand aria-pressed:bg-brand-soft">{n}</button>
+                className="h-12 w-12 rounded-md border border-border bg-surface text-lg font-bold aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary">{n}</button>
             ))}
           </div>
         </>

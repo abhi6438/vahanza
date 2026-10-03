@@ -38,7 +38,7 @@ function useCitySearch(q: string, preferState?: string | null) {
   return hits
 }
 
-const cityBtn = 'min-h-12 rounded-xl border-2 border-line bg-card px-2 py-2 text-[16px] font-semibold leading-tight aria-pressed:border-brand aria-pressed:bg-brand-soft'
+const cityBtn = 'min-h-12 rounded-md border border-border bg-surface px-2 py-2 text-[16px] font-semibold leading-tight aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary'
 
 /** Pick one or more cities (e.g. where the vehicles run from). */
 export function CityPicker({ value, onToggle, preferState, multi = true }: {
@@ -69,11 +69,11 @@ export function CityPicker({ value, onToggle, preferState, multi = true }: {
         {shown.map((h) => (
           <button key={h.value} type="button" className={cityBtn} aria-pressed={value.includes(h.value)} onClick={() => onToggle(h.value, h)}>
             {lang === 'en' ? h.en : h.hi || h.en}
-            <span className="block text-xs font-normal text-muted">{stateName(h.state, lang)}</span>
+            <span className="block text-xs font-normal text-text-2">{stateName(h.state, lang)}</span>
           </button>
         ))}
       </div>
-      {q && shown.length === 0 && <p className="mt-3 text-muted">{t('place.none')}</p>}
+      {q && shown.length === 0 && <p className="mt-3 text-text-2">{t('place.none')}</p>}
     </div>
   )
 }
@@ -139,7 +139,7 @@ export function PlaceField({ value, onChange }: { value: PlaceValue | null; onCh
 
   if (value) {
     return (
-      <div className="flex min-h-14 items-center gap-2.5 rounded-2xl border-2 border-brand bg-brand-soft px-3.5 py-2.5">
+      <div className="flex min-h-14 items-center gap-2.5 rounded-lg border-2 border-brand bg-brand-soft px-3.5 py-2.5">
         <span className="text-brand">{pinIcon}</span>
         <span className="flex-1 font-semibold">{placeText(value, i18n.language)}</span>
         <button type="button" className="font-bold text-brand" onClick={() => { onChange(null); setPin(''); lastPin.current = ''; setChooseCity(false) }}>
@@ -152,11 +152,11 @@ export function PlaceField({ value, onChange }: { value: PlaceValue | null; onCh
   return (
     <div className="flex flex-col gap-3">
       <button type="button" onClick={useGps} disabled={busy !== ''}
-        className="flex min-h-14 items-center justify-center gap-2 rounded-2xl border-2 border-brand bg-card px-4 text-[17px] font-bold text-brand disabled:opacity-60">
+        className="flex min-h-14 items-center justify-center gap-2 rounded-lg border-2 border-brand bg-surface px-4 text-[17px] font-bold text-brand disabled:opacity-60">
         {pinIcon}
         {busy === 'gps' ? t('place.finding') : t('place.gps')}
       </button>
-      <div className="flex items-center gap-3 text-sm text-muted"><span className="h-px flex-1 bg-line" />{t('or')}<span className="h-px flex-1 bg-line" /></div>
+      <div className="flex items-center gap-3 text-sm text-text-2"><span className="h-px flex-1 bg-line" />{t('or')}<span className="h-px flex-1 bg-line" /></div>
       <TextField
         value={pin}
         inputMode="numeric"
@@ -169,7 +169,7 @@ export function PlaceField({ value, onChange }: { value: PlaceValue | null; onCh
           if (d.length === 6 && /^[1-9]/.test(d)) void lookupPin(d)
         }}
       />
-      {busy === 'pin' && <p className="text-muted">{t('place.finding')}</p>}
+      {busy === 'pin' && <p className="text-text-2">{t('place.finding')}</p>}
       {msg && <Note tone="warn">{msg}</Note>}
       {chooseCity ? (
         <CityPicker

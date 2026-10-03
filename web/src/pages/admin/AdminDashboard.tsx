@@ -22,22 +22,22 @@ export default function AdminDashboard() {
   return (
     <AdminLayout queue={s?.queue}>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <h1 className="flex-1 font-display text-2xl font-bold">{t('admin.tab.dashboard')}</h1>
-        <div className="flex rounded-xl border border-line bg-card p-1" role="group" aria-label={t('admin.range')}>
+        <span className="flex-1" />
+        <div className="flex rounded-md border border-border bg-surface p-1" role="group" aria-label={t('admin.range')}>
           {RANGES.map((d) => (
             <button key={d} type="button" aria-pressed={days === d} onClick={() => setDays(d)}
-              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-muted aria-pressed:bg-brand aria-pressed:text-white">
+              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-text-2 aria-pressed:bg-primary aria-pressed:text-on-primary">
               {t('admin.days', { n: d })}
             </button>
           ))}
         </div>
       </div>
-      {error && <p className="rounded-xl bg-card p-4 text-danger">{t('error.server')}</p>}
-      {!s && !error && <div className="h-64 animate-pulse rounded-2xl bg-card" />}
+      {error && <p className="rounded-md bg-surface p-4 text-error">{t('error.server')}</p>}
+      {!s && !error && <div className="h-64 animate-pulse rounded-lg bg-surface" />}
       {s && (
         <div className="flex flex-col gap-4">
           {s.queue > 0 && (
-            <Link to="/admin/queue" className="flex items-center justify-between rounded-2xl bg-accent-soft px-4 py-3 font-semibold text-accent-ink">
+            <Link to="/admin/queue" className="flex items-center justify-between rounded-lg bg-accent-soft px-4 py-3 font-semibold text-accent-ink">
               {t('admin.queueBanner', { n: s.queue })}<span>→</span>
             </Link>
           )}
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
           <Card title={t('admin.c.cities')}>
             <CityTable rows={s.cities} />
           </Card>
-          <p className="text-sm text-muted">{t('admin.testNote')}</p>
+          <p className="text-sm text-text-2">{t('admin.testNote')}</p>
         </div>
       )}
     </AdminLayout>
@@ -83,22 +83,22 @@ export default function AdminDashboard() {
 
 function Tile({ label, value, sub, unit }: { label: string; value: number; sub?: string; unit?: string }) {
   return (
-    <div className="rounded-2xl border border-line bg-card p-4">
-      <p className="text-sm font-semibold text-muted">{label}</p>
+    <div className="rounded-lg border border-border bg-surface p-4">
+      <p className="text-sm font-semibold text-text-2">{label}</p>
       <p className="mt-1 font-display text-3xl font-bold leading-none">
         {nf(value)}
-        {unit && <small className="ml-1 text-base font-semibold text-muted">{unit}</small>}
+        {unit && <small className="ml-1 text-base font-semibold text-text-2">{unit}</small>}
       </p>
-      {sub && <p className="mt-1.5 text-sm text-muted">{sub}</p>}
+      {sub && <p className="mt-1.5 text-sm text-text-2">{sub}</p>}
     </div>
   )
 }
 
 function Card({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-line bg-card p-4">
+    <section className="rounded-lg border border-border bg-surface p-4">
       <h2 className="text-lg font-bold">{title}</h2>
-      {sub && <p className="text-sm text-muted">{sub}</p>}
+      {sub && <p className="text-sm text-text-2">{sub}</p>}
       <div className="mt-3">{children}</div>
     </section>
   )
@@ -160,7 +160,7 @@ function SignupChart({ data }: { data: AdminStats['signups'] }) {
         ))}
       </svg>
       {h && hover != null && (
-        <div className="pointer-events-none absolute top-6 rounded-xl border border-line bg-card px-3 py-2 text-sm shadow-lg"
+        <div className="pointer-events-none absolute top-6 rounded-md border border-border bg-surface px-3 py-2 text-sm shadow-lg"
           style={{ left: `min(calc(${((PAD_L + hover * band + band / 2) / W) * 100}% + 8px), calc(100% - 150px))` }}>
           <p className="font-bold">{fmt(h.day)}</p>
           <p>{t('role.driver')}: <strong>{h.drivers}</strong></p>
@@ -181,14 +181,14 @@ function Bar({ x, y, w, h, fill, round }: { x: number; y: number; w: number; h: 
 function BarList({ items, percentOfFirst }: { items: [string, number][]; percentOfFirst?: boolean }) {
   const max = Math.max(1, ...items.map(([, v]) => v))
   const first = items[0]?.[1] || 0
-  if (!items.length) return <p className="text-sm text-muted">—</p>
+  if (!items.length) return <p className="text-sm text-text-2">—</p>
   return (
     <div className="flex flex-col gap-2.5">
       {items.map(([label, v]) => (
         <div key={label}>
           <div className="mb-1 flex justify-between text-sm">
             <span>{label}</span>
-            <span className="font-semibold">{nf(v)}{percentOfFirst && first > 0 && <span className="ml-1.5 font-normal text-muted">{Math.round((v / first) * 100)}%</span>}</span>
+            <span className="font-semibold">{nf(v)}{percentOfFirst && first > 0 && <span className="ml-1.5 font-normal text-text-2">{Math.round((v / first) * 100)}%</span>}</span>
           </div>
           <div className="h-3 rounded-full" style={{ background: 'var(--chart-grid)' }}>
             <div className="h-3 rounded-full" style={{ width: `${(v / max) * 100}%`, background: 'var(--chart-1)', minWidth: v ? 6 : 0 }} />
@@ -201,17 +201,17 @@ function BarList({ items, percentOfFirst }: { items: [string, number][]; percent
 
 function CityTable({ rows }: { rows: AdminStats['cities'] }) {
   const { t, i18n } = useTranslation()
-  if (!rows.length) return <p className="text-sm text-muted">—</p>
+  if (!rows.length) return <p className="text-sm text-text-2">—</p>
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead className="text-muted">
+        <thead className="text-text-2">
           <tr><th className="py-2 font-semibold">{t('admin.city')}</th><th className="py-2 text-right font-semibold">{t('role.driver')}</th><th className="py-2 text-right font-semibold">{t('role.owner')}</th></tr>
         </thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.district + r.state} className="border-t border-line">
-              <td className="py-2">{placeName(`${r.district}, ${r.state}`, i18n.language)} <span className="text-muted">· {stateName(r.state, i18n.language)}</span></td>
+            <tr key={r.district + r.state} className="border-t border-border">
+              <td className="py-2">{placeName(`${r.district}, ${r.state}`, i18n.language)} <span className="text-text-2">· {stateName(r.state, i18n.language)}</span></td>
               <td className="py-2 text-right font-semibold">{nf(r.drivers)}</td>
               <td className="py-2 text-right font-semibold">{nf(r.owners)}</td>
             </tr>

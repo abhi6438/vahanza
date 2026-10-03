@@ -1,81 +1,200 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link, useSearchParams } from 'react-router-dom'
 import { PushAsk } from '../components/notify'
-import { BigButton, Screen, TopBar } from '../components/ui'
+import { AppShell } from '../components/shell'
+import { useToast } from '../components/toast'
+import { Button, ConfirmDialog, Icon, Segmented, Switch } from '../components/ui'
 import { notifications, type NotifyPrefs } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { brand } from '../lib/brand'
+import { useIsDesktop } from '../lib/layout'
 import { loadTheme, saveTheme, type ThemePref } from '../lib/theme'
 import { track, trackScreen } from '../lib/track'
 
+type Key = 'language' | 'appearance' | 'notifications' | 'account' | 'privacy' | 'help'
+const ICONS: Record<Key, ReactNode> = {
+  language: Icon.globe, appearance: Icon.palette, notifications: Icon.bell, account: Icon.user, privacy: Icon.shield, help: Icon.help,
+}
+
+/**
+ * Settings.
+ *   desktop: categories on the left, the chosen one on the right (?s=<category>)
+ *   phone:   every category as a grouped card, one scroll
+ */
 export default function Settings() {
   const { t } = useTranslation()
-  const { lang, setLang, logout, profile } = useAuth()
-  const [theme, setTheme] = useState<ThemePref>('system')
-  useEffect(() => {
-    trackScreen('settings')
-    void loadTheme().then(setTheme)
-  }, [])
+  const { profile } = useAuth()
+  const desktop = useIsDesktop()
+  const [params, setParams] = useSearchParams()
+  useEffect(() => { trackScreen('settings') }, [])
+  const isUser = profile?.role === 'driver' || profile?.role === 'owner'
+  const keys: Key[] = ['language', 'appearance', ...(isUser ? (['notifications'] as Key[]) : []), 'account', 'privacy', 'help']
+  const current = (keys.includes(params.get('s') as Key) ? params.get('s') : 'language') as Key
 
-  const chip = 'flex-1 rounded-xl border-2 border-line bg-card py-2.5 font-semibold aria-pressed:border-brand aria-pressed:bg-brand-soft'
+  const body = (k: Key) => {
+    switch (k) {
+      case 'language': return <LanguageSection />
+      case 'appearance': return <AppearanceSection />
+      case 'notifications': return isUser ? <NotifySection role={profile!.role as 'driver' | 'owner'} /> : null
+      case 'account': return <AccountSection />
+      case 'privacy': return <PrivacySection isUser={isUser} />
+      case 'help': return <HelpSection />
+    }
+  }
+
   return (
-    <>
-      <TopBar title={t('settings.title')} />
-      <Screen>
-        <p className="mb-2 font-bold">{t('settings.language')}</p>
-        <div className="mb-5 flex gap-2">
-          <button className={chip} aria-pressed={lang === 'hi'} onClick={() => setLang('hi')}>हिंदी</button>
-          <button className={chip} aria-pressed={lang === 'en'} onClick={() => setLang('en')}>English</button>
+    <AppShell title={t('settings.title')} back={!desktop} width="default">
+      {desktop ? (
+        <div className="grid grid-cols-[260px_minmax(0,1fr)] items-start gap-8">
+          <nav aria-label={t('settings.title')} className="sticky top-[5.5rem] flex flex-col gap-1 rounded-lg border border-border bg-surface p-2 shadow-sm">
+            {keys.map((k) => (
+              <button key={k} type="button" aria-current={current === k ? 'page' : undefined}
+                onClick={() => setParams({ s: k }, { replace: true })}
+                className={`flex min-h-11 items-center gap-3 rounded-md px-3 text-left font-medium transition-colors ${current === k ? 'bg-primary-soft text-primary' : 'text-text-2 hover:bg-surface-2 hover:text-text'}`}>
+                <span className="text-[1.1rem]">{ICONS[k]}</span>{t(`settings.cat.${k}`)}
+              </button>
+            ))}
+          </nav>
+          <section aria-labelledby="settings-h" className="min-w-0 rounded-lg border border-border bg-surface p-6 shadow-sm xl:p-8">
+            <h2 id="settings-h" className="text-xl font-semibold">{t(`settings.cat.${current}`)}</h2>
+            <p className="mb-6 mt-1 text-sm text-text-2">{t(`settings.catSub.${current}`)}</p>
+            <div className="max-w-2xl">{body(current)}</div>
+          </section>
         </div>
-        <p className="mb-2 font-bold">{t('settings.theme')}</p>
-        <div className="mb-6 flex gap-2">
-          {(['system', 'light', 'dark'] as ThemePref[]).map((p) => (
-            <button key={p} className={chip} aria-pressed={theme === p} onClick={() => { setTheme(p); void saveTheme(p); track('theme_set', { theme: p }) }}>
-              {t(`settings.${p}`)}
-            </button>
+      ) : (
+        <div className="flex flex-col gap-5">
+          {keys.map((k) => (
+            <section key={k} aria-labelledby={`s-${k}`}>
+              <h2 id={`s-${k}`} className="mb-2 flex items-center gap-2 px-1 text-sm font-semibold uppercase tracking-wide text-text-2">
+                <span>{ICONS[k]}</span>{t(`settings.cat.${k}`)}
+              </h2>
+              <div className="rounded-lg border border-border bg-surface p-4 shadow-sm">{body(k)}</div>
+            </section>
           ))}
         </div>
-        {(profile?.role === 'driver' || profile?.role === 'owner') && <NotifySettings role={profile.role} />}
-        <div className="flex flex-col gap-3">
-          <BigButton variant="secondary" onClick={() => logout(false)}>{t('settings.logout')}</BigButton>
-          <BigButton variant="secondary" onClick={() => logout(true)}>{t('settings.logoutAll')}</BigButton>
-        </div>
-        <div className="mt-6 space-y-1 text-sm text-muted">
-          <p>{t('settings.help')}: <span className="select-all font-semibold text-ink">{brand.supportPhone}</span></p>
-          <p>{t('settings.grievance')}: {brand.grievanceOfficer.name}, <span className="select-all">{brand.grievanceOfficer.email}</span></p>
-          <p>{t('settings.version')}: {__APP_VERSION__}</p>
-        </div>
-      </Screen>
-    </>
+      )}
+    </AppShell>
   )
 }
 
-/** Which alerts to get. Post approved / not approved always comes. */
-function NotifySettings({ role }: { role: 'driver' | 'owner' }) {
+/** Label + control row; stacks on phones, side by side on wide screens. */
+function SettingRow({ label, sub, children }: { label: ReactNode; sub?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-3 border-b border-border py-4 first:pt-0 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <p className="font-medium">{label}</p>
+        {sub && <p className="text-sm text-text-2">{sub}</p>}
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  )
+}
+
+function LanguageSection() {
   const { t } = useTranslation()
+  const { lang, setLang } = useAuth()
+  return (
+    <SettingRow label={t('settings.language')} sub={t('settings.languageSub')}>
+      <Segmented label={t('settings.language')} value={lang} onChange={(l) => void setLang(l)}
+        options={[{ key: 'hi', label: 'हिंदी' }, { key: 'en', label: 'English' }]} />
+    </SettingRow>
+  )
+}
+
+function AppearanceSection() {
+  const { t } = useTranslation()
+  const [theme, setTheme] = useState<ThemePref>('system')
+  useEffect(() => { void loadTheme().then(setTheme) }, [])
+  return (
+    <SettingRow label={t('settings.theme')} sub={t('settings.themeSub')}>
+      <Segmented label={t('settings.theme')} value={theme}
+        onChange={(p) => { setTheme(p); void saveTheme(p); track('theme_set', { theme: p }) }}
+        options={(['system', 'light', 'dark'] as ThemePref[]).map((p) => ({ key: p, label: t(`settings.${p}`) }))} />
+    </SettingRow>
+  )
+}
+
+/** Which alerts to get. "Post approved / not approved" always comes. */
+function NotifySection({ role }: { role: 'driver' | 'owner' }) {
+  const { t } = useTranslation()
+  const toast = useToast()
   const [prefs, setPrefs] = useState<NotifyPrefs | null>(null)
   useEffect(() => { notifications.prefs().then(setPrefs).catch(() => {}) }, [])
   const keys: (keyof NotifyPrefs)[] = role === 'driver' ? ['new_post', 'interest_seen'] : ['new_interest']
   async function flip(k: keyof NotifyPrefs) {
     if (!prefs) return
+    const before = prefs
     const next = !prefs[k]
     setPrefs({ ...prefs, [k]: next })
     track('notify_pref', { kind: k, on: next })
-    try { setPrefs(await notifications.setPrefs({ [k]: next })) } catch { setPrefs({ ...prefs }) }
+    try { setPrefs(await notifications.setPrefs({ [k]: next })) } catch { setPrefs(before); toast(t('error.generic'), { tone: 'error' }) }
   }
   return (
-    <section className="mb-6">
-      <p className="mb-2 font-bold">{t('notif.settings')}</p>
-      <div className="mb-3"><PushAsk from="settings" force why={role === 'owner' ? t('notif.whyOwner') : t('notif.whyDriver')} /></div>
-      <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
+      <PushAsk from="settings" force why={role === 'owner' ? t('notif.whyOwner') : t('notif.whyDriver')} />
+      <div className="divide-y divide-border">
         {keys.map((k) => (
-          <label key={k} className="flex min-h-14 items-center gap-3 rounded-2xl border border-line bg-card px-4">
-            <span className="flex-1 font-semibold">{t(`notif.pref.${k}`)}</span>
-            <input type="checkbox" role="switch" className="peer sr-only" checked={prefs ? prefs[k] : true} disabled={!prefs} onChange={() => void flip(k)} />
-            <span aria-hidden className="relative h-7 w-12 shrink-0 rounded-full bg-line transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-call peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-brand" />
-          </label>
+          <Switch key={k} checked={prefs ? prefs[k] : true} disabled={!prefs} onChange={() => void flip(k)} label={t(`notif.pref.${k}`)} />
         ))}
       </div>
-    </section>
+      <p className="text-sm text-text-2">{t('settings.alwaysNotified')}</p>
+    </div>
+  )
+}
+
+function AccountSection() {
+  const { t } = useTranslation()
+  const { profile, logout } = useAuth()
+  const [ask, setAsk] = useState<'' | 'one' | 'all'>('')
+  const isUser = profile?.role === 'driver' || profile?.role === 'owner'
+  const phone = (profile?.phone || '').replace(/^91/, '')
+  return (
+    <div>
+      <SettingRow label={t('settings.number')} sub={`+91 ${phone.slice(0, 5)} ${phone.slice(5)}`}>
+        {isUser && <Link to="/setup?edit" className="font-semibold text-primary hover:underline">{t('profile.edit')}</Link>}
+      </SettingRow>
+      <SettingRow label={t('settings.logout')} sub={t('settings.logoutSub')}>
+        <Button variant="outline" icon={Icon.logout} onClick={() => setAsk('one')}>{t('settings.logout')}</Button>
+      </SettingRow>
+      <SettingRow label={t('settings.logoutAll')} sub={t('settings.logoutAllSub')}>
+        <Button variant="danger" onClick={() => setAsk('all')}>{t('settings.logoutAll')}</Button>
+      </SettingRow>
+      <ConfirmDialog open={!!ask} danger={ask === 'all'} title={ask === 'all' ? t('settings.logoutAllQ') : t('settings.logoutQ')}
+        confirmLabel={ask === 'all' ? t('settings.logoutAll') : t('settings.logout')}
+        onCancel={() => setAsk('')} onConfirm={() => { const all = ask === 'all'; setAsk(''); void logout(all) }} />
+    </div>
+  )
+}
+
+function PrivacySection({ isUser }: { isUser: boolean }) {
+  const { t } = useTranslation()
+  const link = 'flex min-h-12 items-center gap-3 border-b border-border py-2 font-medium last:border-0 hover:text-primary'
+  return (
+    <div>
+      <ul className="mb-4 space-y-2 text-sm text-text-2">
+        <li className="flex gap-2"><span className="text-success">{Icon.check}</span>{t('settings.privacy1')}</li>
+        <li className="flex gap-2"><span className="text-success">{Icon.check}</span>{t('settings.privacy2')}</li>
+      </ul>
+      <div>
+        {isUser && <Link to="/blocked" className={link}><span className="text-primary">{Icon.ban}</span><span className="flex-1">{t('trust.blockedList')}</span>{Icon.chevron}</Link>}
+        <Link to="/legal" className={link}><span className="text-primary">{Icon.doc}</span><span className="flex-1">{t('login.terms')}</span>{Icon.chevron}</Link>
+      </div>
+    </div>
+  )
+}
+
+function HelpSection() {
+  const { t } = useTranslation()
+  return (
+    <div>
+      <SettingRow label={t('settings.help')} sub={brand.supportPhone}>
+        <a href={`tel:${brand.supportPhone}`} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-success px-4 font-semibold text-on-success">{Icon.phone}{t('card.call')}</a>
+      </SettingRow>
+      <SettingRow label={t('settings.grievance')} sub={<>{brand.grievanceOfficer.name} · <span className="select-all">{brand.grievanceOfficer.email}</span></>}>
+        <span />
+      </SettingRow>
+      <SettingRow label={t('settings.version')} sub={__APP_VERSION__}><span /></SettingRow>
+    </div>
   )
 }
