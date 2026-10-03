@@ -23,7 +23,7 @@ FIELDS = ("phone", "name", "business_name", "district", "state", "pincode", "veh
 # Checked in this order; a header is matched by the first field whose alias it equals or starts with.
 _ALIASES: list[tuple[str, tuple[str, ...]]] = [
     ("vehicle_count", ("vehiclecount", "noofvehicles", "numberofvehicles", "vehiclesno", "totalvehicles", "fleetsize", "fleet",
-                       "count", "qty", "quantity", "गाड़ियोंकीसंख्या", "गाडियोंकीसंख्या", "संख्या", "कितनीगाड़ियाँ")),
+                       "count", "qty", "quantity", "गाड़ियोंकीसंख्या", "गाडियोंकीसंख्या", "संख्या", "कितनीगाड़ियाँ", "कुलगाड़ियाँ", "कुलगाड़ी", "कुलगाडियां", "गिनती")),
     ("phone", ("phone", "mobile", "mob", "contact", "number", "cell", "whatsapp", "मोबाइल", "फ़ोन", "फोन", "नंबर", "संपर्क")),
     ("business_name", ("business", "company", "firm", "transport", "agency", "फर्म", "फ़र्म", "कंपनी", "ट्रांसपोर्ट", "व्यवसाय")),
     ("name", ("name", "naam", "drivername", "ownername", "fullname", "नाम")),
@@ -61,12 +61,35 @@ _EXACT = {"contactperson": "name", "contactname": "name", "personname": "name", 
 _SKIP = re.compile(r"^(vehicle|gaadi|gadi|गाड़ी|गाडी|वाहन)(no|number|regno|registration|नंबर|संख्याप्लेट)")
 
 
+# one-column-per-vehicle files (our Excel template): header is the vehicle name, cell says yes
+_FLAG_HEADERS = {
+    "ट्रक": "truck", "truck": "truck", "ट्रेलर": "trailer", "trailer": "trailer", "बस": "bus", "bus": "bus",
+    "पिकअप": "pickup", "pickup": "pickup", "जेसीबी": "jcb", "jcb": "jcb", "ट्रैक्टर": "tractor", "tractor": "tractor",
+    "कार": "car", "car": "car", "ऑटो": "auto", "auto": "auto",
+}
+_YES = {"हाँ", "हां", "हा", "haan", "han", "ha", "yes", "y", "1", "✓", "✔", "true", "x", "हाँजी", "ji"}
+
+
+def flag_columns(headers: list) -> dict[int, str]:
+    return {i: _FLAG_HEADERS[_norm_header(h)] for i, h in enumerate(headers) if _norm_header(h) in _FLAG_HEADERS}
+
+
+def is_yes(v) -> bool:
+    if v is None:
+        return False
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, (int, float)):
+        return v == 1
+    return _norm_header(v) in _YES
+
+
 def map_columns(headers: list) -> dict[int, str]:
     out: dict[int, str] = {}
     taken: set[str] = set()
     for i, h in enumerate(headers):
         n = _norm_header(h)
-        if not n or _SKIP.match(n):   # vehicle registration numbers are not needed
+        if not n or _SKIP.match(n) or n in _FLAG_HEADERS:   # registration numbers are not needed; vehicle columns handled separately
             continue
         if _EXACT.get(n) and _EXACT[n] not in taken:
             out[i] = _EXACT[n]
@@ -209,6 +232,8 @@ class PlaceFinder:
         if not raw:
             return None, None
         name = raw.split(",")[0].strip()
+        if not st and "," in raw:   # "रीवा (Rewa), Madhya Pradesh" from the template's city list
+            st = _state(raw.split(",", 1)[1])
         low = name.lower()
         cities = _places()["cities"]
         hits = [c for c in cities if c["en"].lower() == low or c["hi"] == name]
@@ -230,6 +255,7 @@ def parse(db, rows: list[list], role: str) -> tuple[dict, list[dict]]:
     """Cleans every row. Returns (column map info, row results). Statuses are set later by analyse()."""
     headers = rows[0]
     cols = map_columns(headers)
+    flags = flag_columns(headers)
     if "phone" not in cols.values():
         raise ImportError_("no_phone_column", headers=[str(h) for h in headers if h is not None][:30])
     places = PlaceFinder(db)
@@ -255,6 +281,9 @@ def parse(db, rows: list[list], role: str) -> tuple[dict, list[dict]]:
         elif not district:
             warn.append("no_place")
         vehicles, unknown_v = clean_vehicles(cell.get("vehicles"))
+        for i, v in flags.items():
+            if i < len(r) and is_yes(r[i]) and v not in vehicles:
+                vehicles.append(v)
         if unknown_v:
             warn.append("vehicle_unknown")
         note = clean_name(str(cell.get("note") or ""))[:200]
@@ -266,7 +295,9 @@ def parse(db, rows: list[list], role: str) -> tuple[dict, list[dict]]:
             "note": note or None, "warnings": warn,
         })
     info = {"columns": {str(headers[i]): f for i, f in cols.items()},
-            "ignored": [str(h) for i, h in enumerate(headers) if i not in cols and h not in (None, "")]}
+            "ignored": [str(h) for i, h in enumerate(headers) if i not in cols and i not in flags and h not in (None, "")]}
+    if flags:
+        info["columns"].update({str(headers[i]): "vehicles" for i in flags})
     return info, out
 
 

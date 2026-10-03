@@ -417,8 +417,8 @@
   "admin.imp.source": "कहाँ से मिली (वैकल्पिक)",
   "admin.imp.sourcePh": "जैसे: रीवा ट्रक यूनियन",
   "admin.imp.pick": "Excel या CSV फ़ाइल चुनें",
-  "admin.imp.pickSub": "कम से कम मोबाइल नंबर का कॉलम ज़रूरी है। 5,000 लाइन तक, 2 MB तक।",
-  "admin.imp.sample": "नमूना फ़ाइल डाउनलोड करें",
+  "admin.imp.pickSub": "हमारी Excel फ़ाइल या कोई भी सूची जिसमें मोबाइल नंबर हो। 5,000 लाइन तक, 2 MB तक।",
+  "admin.imp.sample": "Excel फ़ाइल डाउनलोड करें",
   "admin.imp.columns": "पहचाने गए कॉलम:",
   "admin.imp.ignored": "छोड़े गए",
   "admin.imp.save": "{{n}} लोगों को जोड़ें",
@@ -565,5 +565,8 @@
   "trust.unblockedToast": "{{name}} को अनब्लॉक कर दिया",
   "auth.point.free": "ड्राइवर और मालिक, दोनों के लिए मुफ़्त",
   "auth.point.direct": "बिना बिचौलिये के सीधे कॉल या WhatsApp",
-  "auth.point.checked": "जाँचे हुए लोग, रेटिंग और शिकायत की सुविधा"
+  "auth.point.checked": "जाँचे हुए लोग, रेटिंग और शिकायत की सुविधा",
+  "admin.imp.step1": "1. भरने वाली Excel फ़ाइल लें",
+  "admin.imp.step1Sub": "शहर और गाड़ी सूची से चुनने हैं, टाइप नहीं करना। गलत मोबाइल नंबर Excel खुद रोक देगा। यह फ़ाइल यूनियन / ट्रांसपोर्टर को भेज दें।",
+  "admin.imp.step2": "2. भरी हुई फ़ाइल यहाँ डालें"
 }

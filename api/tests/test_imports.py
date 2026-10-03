@@ -94,3 +94,28 @@ def test_invite_text():
     t = prospects.invite_text("driver", "Ramesh Kumar", "Vahanza", "https://x.in/?inv=driver")
     assert t.startswith("नमस्ते Ramesh जी") and t.endswith("https://x.in/?inv=driver")
     assert prospects.whatsapp_url("919876543210", "a b").endswith("919876543210?text=a%20b")
+
+
+def test_excel_template_round_trip():
+    """The downloadable template: dropdown columns come back as clean data."""
+    import io
+    from openpyxl import load_workbook
+    from vz.importer import flag_columns, map_columns, read_table
+    from vz.template import build
+    wb = load_workbook(io.BytesIO(build("owner")))
+    assert wb.sheetnames[0].startswith("भरें") and wb["सूची"].sheet_state == "hidden"
+    ws = wb.worksheets[0]
+    ws["A2"], ws["B2"], ws["E2"], ws["F2"], ws["H2"] = "9826199991", "सुरेश", 12, "हाँ", "हाँ"
+    buf = io.BytesIO()
+    wb.save(buf)
+    rows = read_table(buf.getvalue())
+    cols, flags = map_columns(rows[0]), flag_columns(rows[0])
+    assert set(cols.values()) == {"phone", "name", "business_name", "district", "vehicle_count"}
+    assert [flags[i] for i in sorted(flags)] == ["truck", "trailer", "bus", "pickup", "jcb", "tractor", "car", "auto"]
+    assert len(rows) == 2
+
+
+def test_yes_values():
+    from vz.importer import is_yes
+    assert all(is_yes(v) for v in ["हाँ", "हां", "Yes", "y", 1, "✓", True])
+    assert not any(is_yes(v) for v in [None, "", "नहीं", "no", 0])

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Note, TextField } from '../../components/form'
+import { Button, Icon } from '../../components/ui'
 import { admin, ApiError, type ImportPreviewRow, type ImportResult, type ImportRow, type Prospect, type ProspectStatus } from '../../lib/api'
 import { pick, placeName, VEHICLES } from '../../lib/catalog'
 import { track, trackScreen } from '../../lib/track'
@@ -79,15 +80,22 @@ function Upload({ onDone }: { onDone: () => void }) {
       setBusy(false)
     }
   }
+  const [dl, setDl] = useState(false)
   async function sample() {
-    const s = await admin.template(role)
-    const esc = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)
-    const csv = '﻿' + [s.headers, ...s.sample].map((r) => r.map(esc).join(',')).join('\r\n') + '\r\n'
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-    a.download = role === 'driver' ? 'drivers-sample.csv' : 'owners-sample.csv'
-    a.click()
-    URL.revokeObjectURL(a.href)
+    setDl(true)
+    try {
+      const blob = await admin.template(role)
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = role === 'driver' ? 'vahanza-drivers.xlsx' : 'vahanza-owners.xlsx'
+      a.click()
+      window.setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+      track('import_template', { role })
+    } catch {
+      setError(t('error.server'))
+    } finally {
+      setDl(false)
+    }
   }
   const ready = preview ? preview.counts.new + preview.counts.update : 0
 
@@ -103,13 +111,18 @@ function Upload({ onDone }: { onDone: () => void }) {
       </div>
       <div className="mb-3"><TextField value={source} onChange={setSource} label={t('admin.imp.source')} placeholder={t('admin.imp.sourcePh')} /></div>
 
+      <div className="mb-3 rounded-md border border-border bg-surface-2 p-3">
+        <p className="font-semibold">{t('admin.imp.step1')}</p>
+        <p className="mt-0.5 text-sm text-text-2">{t('admin.imp.step1Sub')}</p>
+        <Button variant="outline" size="sm" className="mt-2" icon={Icon.doc} loading={dl} onClick={() => void sample()}>{t('admin.imp.sample')}</Button>
+      </div>
+      <p className="mb-2 font-semibold">{t('admin.imp.step2')}</p>
       <label className={`flex min-h-28 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed p-4 text-center ${busy ? 'border-border opacity-60' : 'border-brand bg-brand-soft/50'}`}>
         <input ref={input} type="file" className="sr-only" accept=".csv,.xlsx,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           disabled={busy} onChange={(e) => { const f = e.target.files?.[0]; if (f) void check(f, role) }} />
         <span className="font-bold text-brand">{file ? file.name : t('admin.imp.pick')}</span>
         <span className="text-sm text-text-2">{t('admin.imp.pickSub')}</span>
       </label>
-      <button type="button" onClick={() => void sample()} className="mt-2 text-sm font-bold text-brand underline">{t('admin.imp.sample')}</button>
 
       {busy && <div className="mt-4 h-24 animate-pulse rounded-lg bg-bg" />}
       {error && <p className="mt-3 rounded-md bg-error-soft px-3 py-2 text-sm font-semibold text-error">{error}</p>}

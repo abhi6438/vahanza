@@ -46,6 +46,16 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown;
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T)
 }
 
+/** Same as api() but returns the raw file (e.g. an Excel template). */
+export async function apiBlob(path: string): Promise<Blob> {
+  const headers = new Headers({ 'X-Brand': brand.id, 'X-App-Version': __APP_VERSION__ })
+  const { data } = await supabase.auth.getSession()
+  if (data.session) headers.set('Authorization', `Bearer ${data.session.access_token}`)
+  const res = await fetch(BASE + path, { headers })
+  if (!res.ok) throw new ApiError(res.status, res.statusText)
+  return res.blob()
+}
+
 export interface Profile {
   id: string
   tenant_id: string
@@ -251,7 +261,7 @@ export const admin = {
     return api<ImportResult>(`/admin/imports?${p}`, { method: 'POST', body: file, headers: { 'Content-Type': 'application/octet-stream' } })
   },
   imports: () => api<{ items: ImportRow[] }>('/admin/imports'),
-  template: (role: 'driver' | 'owner') => api<{ headers: string[]; sample: string[][] }>(`/admin/imports/template?role=${role}`),
+  template: (role: 'driver' | 'owner') => apiBlob(`/admin/imports/template?role=${role}`),
   prospects: (q: { status?: ProspectStatus; role?: string | null; q?: string; import_id?: number | null; offset?: number }) => {
     const p = new URLSearchParams()
     if (q.status) p.set('status', q.status)

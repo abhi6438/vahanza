@@ -6,7 +6,7 @@ When an imported number logs in, its details are pre-filled (see prospects.claim
 """
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 
 from .. import prospects as pr
@@ -272,9 +272,8 @@ def patch_prospect(prospect_id: int, body: ProspectPatch, ctx: dict = Depends(ad
 
 @router.get("/imports/template")
 def template(role: Literal["driver", "owner"], ctx: dict = Depends(admin_ctx)):
-    """Sample columns (the app builds the CSV file from this)."""
-    if role == "driver":
-        return {"headers": ["नाम", "मोबाइल", "शहर", "राज्य", "गाड़ी"],
-                "sample": [["रमेश कुमार", "9876543210", "Rewa", "Madhya Pradesh", "ट्रक, बस"]]}
-    return {"headers": ["नाम", "फर्म / ट्रांसपोर्ट", "मोबाइल", "शहर", "राज्य", "गाड़ी", "गाड़ियों की संख्या"],
-            "sample": [["सुरेश सिंह", "सिंह ट्रांसपोर्ट", "9876543210", "Satna", "Madhya Pradesh", "ट्रक", "12"]]}
+    """Ready-to-fill Excel file: dropdowns for city and vehicles, 10-digit check on the mobile number."""
+    from ..template import build
+    name = "vahanza-drivers.xlsx" if role == "driver" else "vahanza-owners.xlsx"
+    return Response(build(role), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f'attachment; filename="{name}"'})

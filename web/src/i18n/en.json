@@ -417,8 +417,8 @@
   "admin.imp.source": "Where it came from (optional)",
   "admin.imp.sourcePh": "e.g. Rewa truck union",
   "admin.imp.pick": "Choose an Excel or CSV file",
-  "admin.imp.pickSub": "Only a mobile number column is required. Up to 5,000 rows, 2 MB.",
-  "admin.imp.sample": "Download a sample file",
+  "admin.imp.pickSub": "Our Excel file or any list with mobile numbers. Up to 5,000 rows, 2 MB.",
+  "admin.imp.sample": "Download the Excel file",
   "admin.imp.columns": "Columns found:",
   "admin.imp.ignored": "ignored",
   "admin.imp.save": "Add {{n}} people",
@@ -565,5 +565,8 @@
   "trust.unblockedToast": "{{name}} unblocked",
   "auth.point.free": "Free for drivers and owners",
   "auth.point.direct": "Call or WhatsApp directly, no middlemen",
-  "auth.point.checked": "Checked people, ratings and reporting"
+  "auth.point.checked": "Checked people, ratings and reporting",
+  "admin.imp.step1": "1. Get the ready-to-fill Excel file",
+  "admin.imp.step1Sub": "City and vehicles are picked from lists, nothing to type. Excel itself stops a wrong mobile number. Send this file to the union / transporter.",
+  "admin.imp.step2": "2. Upload the filled file here"
 }
