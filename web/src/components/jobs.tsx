@@ -5,9 +5,10 @@ import { placeName } from '../lib/catalog'
 import { track } from '../lib/track'
 import { JobCard } from './cards'
 import { ContactButtons } from './home'
+import { CardMenu } from './trust'
 
 /** A job in the driver's list: call / WhatsApp the owner, or send "I'm interested" (owner then sees the profile). */
-export function JobItem({ job, showStatus }: { job: Job; showStatus?: boolean }) {
+export function JobItem({ job, showStatus, onBlocked }: { job: Job; showStatus?: boolean; onBlocked?: () => void }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
   const [interested, setInterested] = useState(job.interested)
@@ -30,7 +31,8 @@ export function JobItem({ job, showStatus }: { job: Job; showStatus?: boolean })
   }
   return (
     <JobCard
-      data={{ title: owner, photo_url: job.owner_photo, verified: job.owner_verified, distance_km: job.distance_km, place: job.owner_district && job.owner_state ? placeName(`${job.owner_district}, ${job.owner_state}`, lang) : '', post: job }}
+      data={{ title: owner, photo_url: job.owner_photo, verified: job.owner_verified, distance_km: job.distance_km, rating_avg: job.owner_rating_avg, rating_count: job.owner_rating_count, place: job.owner_district && job.owner_state ? placeName(`${job.owner_district}, ${job.owner_state}`, lang) : '', post: job }}
+      menu={job.owner_id ? <CardMenu target={{ type: 'post', id: job.id }} personId={job.owner_id} name={owner} onBlocked={onBlocked} /> : undefined}
       actions={job.status !== 'live' ? (
         <p className="mt-3 rounded-xl bg-line/60 px-3 py-2 text-center text-sm font-semibold text-muted">{t('job.closed')}</p>
       ) : (

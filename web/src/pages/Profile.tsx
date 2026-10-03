@@ -64,6 +64,7 @@ export default function Profile() {
         <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-card">
           <Row to="/setup?edit" icon={Icon.user} label={t('profile.edit')} />
           {!isDriver && <Row to="/setup?step=fleet" icon={Icon.list} label={t('profile.vehicles', { n: fleet.reduce((s, g) => s + g.vehicle_count, 0) })} />}
+          <Row to="/blocked" icon={Icon.user} label={t('trust.blockedList')} />
           <Row to="/settings" icon={Icon.settings} label={t('settings.title')} />
           <Row href={`tel:${brand.supportPhone}`} icon={Icon.phone} label={t('profile.help')} />
           <Row to="/legal" icon={Icon.list} label={t('login.terms')} last />

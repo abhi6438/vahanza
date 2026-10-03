@@ -17,17 +17,26 @@ export function VerifiedBadge({ verified }: { verified: boolean }) {
   )
 }
 
+/** "★ 4.3 (12)", or "★ New" when nobody has rated yet. */
+export function RatingBadge({ avg, count }: { avg?: number | null; count?: number | null }) {
+  const { t } = useTranslation()
+  if (!count || avg == null) return <span className="text-xs font-semibold text-muted">★ {t('card.newRating')}</span>
+  return <span className="text-xs font-bold text-ink"><span className="text-accent">★</span> {avg.toFixed(1)} <span className="font-semibold text-muted">({count})</span></span>
+}
+
 export interface DriverCardData {
   name: string
   photo_url?: string | null
   place: string
   verified: boolean
   distance_km?: number | null
+  rating_avg?: number | null
+  rating_count?: number | null
   d: DriverDetails
 }
 
 /** How owners see a driver. Used for the setup preview now and the driver list later. */
-export function DriverCard({ data, self, actions }: { data: DriverCardData; self?: boolean; actions?: React.ReactNode }) {
+export function DriverCard({ data, self, actions, menu }: { data: DriverCardData; self?: boolean; actions?: React.ReactNode; menu?: React.ReactNode }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
   const d = data.d
@@ -54,10 +63,11 @@ export function DriverCard({ data, self, actions }: { data: DriverCardData; self
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <VerifiedBadge verified={data.verified} />
-            <span className="text-xs font-semibold text-muted">★ {t('card.newRating')}</span>
+            <RatingBadge avg={data.rating_avg} count={data.rating_count} />
           </div>
         </div>
         <div className="flex flex-col gap-1">{d.vehicles.slice(0, 2).map((v) => <VehicleArt key={v} kind={v} className="h-7 w-12" />)}</div>
+        {menu}
       </div>
       {d.savings_wanted != null && (
         <p className="mt-3 font-display text-[22px] font-bold">
@@ -105,6 +115,8 @@ export interface JobCardData {
   place: string
   verified: boolean
   distance_km?: number | null
+  rating_avg?: number | null
+  rating_count?: number | null
   post: import('../lib/api').Post
 }
 
@@ -117,7 +129,7 @@ const STATUS_STYLE: Record<string, string> = {
 }
 
 /** How drivers see a post. Also used for the owner's own posts (with a status chip) and the preview. */
-export function JobCard({ data, status, actions, self }: { data: JobCardData; status?: boolean; actions?: React.ReactNode; self?: boolean }) {
+export function JobCard({ data, status, actions, self, menu }: { data: JobCardData; status?: boolean; actions?: React.ReactNode; self?: boolean; menu?: React.ReactNode }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
   const p = data.post
@@ -138,9 +150,11 @@ export function JobCard({ data, status, actions, self }: { data: JobCardData; st
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <VerifiedBadge verified={data.verified} />
+            {!self && <RatingBadge avg={data.rating_avg} count={data.rating_count} />}
             {status && <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${STATUS_STYLE[p.status]}`}>{t(`post.status.${p.status}`)}</span>}
           </div>
         </div>
+        {menu}
       </div>
       <div className="mt-3 flex flex-col gap-1.5">
         {p.groups.map((g) => (

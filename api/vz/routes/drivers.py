@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from ..auth import AuthUser, current_user
 from ..deps import get_db, tenant_id
+from .trust import is_blocked
 
 router = APIRouter(tags=["drivers"])
 VEHICLES = {"truck", "trailer", "bus", "car", "jcb", "tractor", "auto", "pickup"}
@@ -45,7 +46,7 @@ def list_drivers(
         raise HTTPException(422, "Unknown vehicle")
     rows = db.execute(
         """
-        select p.id, p.name, p.photo_url, p.district, p.state, p.verified, p.last_seen_at,
+        select p.id, p.name, p.photo_url, p.district, p.state, p.verified, p.last_seen_at, p.rating_avg, p.rating_count,
                case when p.location is not null and %(loc)s::extensions.geography is not null
                     then round((extensions.st_distance(p.location, %(loc)s::extensions.geography) / 1000)::numeric)::int end
                  as distance_km,
@@ -58,6 +59,8 @@ def list_drivers(
           and d.is_available and cardinality(d.vehicles) > 0 and d.available_from is not null
           and (%(vehicle)s::text is null or %(vehicle)s = any(d.vehicles))
           and (not %(verified)s or p.verified)
+          and not exists (select 1 from public.blocks bl
+                  where (bl.blocker_id = %(me)s::uuid and bl.blocked_id = p.id) or (bl.blocker_id = p.id and bl.blocked_id = %(me)s::uuid))
         order by
           case when %(loc)s::extensions.geography is null then
             case when lower(p.district) = lower(%(district)s) then 0 else 1 end end,
@@ -73,6 +76,7 @@ def list_drivers(
         r = dict(r)
         r["id"] = str(r["id"])
         r["last_seen_at"] = r["last_seen_at"].isoformat() if r.get("last_seen_at") else None
+        r["rating_avg"] = float(r["rating_avg"]) if r.get("rating_avg") is not None else None
         items.append(r)
     return {"items": items, "has_more": len(items) == limit}
 
@@ -93,6 +97,8 @@ def contact_driver(driver_id: str, body: ContactBody, user: AuthUser = Depends(c
     ).fetchone()
     if used and used["n"] >= MAX_REVEALS_PER_DAY:
         raise HTTPException(429, {"code": "too_many_contacts"})
+    if is_blocked(db, user.id, driver_id):
+        raise HTTPException(404, "Driver not available")
     row = db.execute(
         """
         select p.phone from public.profiles p join public.driver_details d on d.profile_id = p.id

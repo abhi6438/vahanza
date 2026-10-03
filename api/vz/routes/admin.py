@@ -190,8 +190,15 @@ def queue(ctx: dict = Depends(admin_ctx), db=Depends(get_db)):
         order by created_at
         """, (t,))
     reports = _rows(db, """
-        select r.id, r.target_type, r.target_id, r.reason, r.note, r.created_at, rp.name as reporter_name
-        from public.reports r left join public.profiles rp on rp.id = r.reporter_id
+        select r.id, r.target_type, r.target_id, r.reason, r.note, r.created_at, rp.name as reporter_name,
+               coalesce(tp.name, po.name) as target_name, coalesce(tp.business_name, po.business_name) as target_business,
+               coalesce(tp.phone, po.phone) as target_phone, coalesce(tp.id, po.id) as target_profile_id,
+               (select count(*) from public.reports r2 where r2.target_id = r.target_id and r2.status = 'open') as open_reports
+        from public.reports r
+        left join public.profiles rp on rp.id = r.reporter_id
+        left join public.profiles tp on r.target_type = 'profile' and tp.id = r.target_id
+        left join public.posts pp on r.target_type = 'post' and pp.id = r.target_id
+        left join public.profiles po on po.id = pp.owner_id
         where r.tenant_id = %s and r.status = 'open' order by r.created_at
         """, (t,))
     for lst in (posts, profiles, reports):
@@ -308,3 +315,36 @@ def actions(ctx: dict = Depends(admin_ctx), db=Depends(get_db)):
         r["target_id"] = str(r["target_id"])
         r["created_at"] = r["created_at"].isoformat()
     return {"items": rows}
+
+
+class ReportReview(BaseModel):
+    action: Literal["dismiss", "block_target", "close_post"]
+    note: Optional[str] = Field(default=None, max_length=300)
+
+
+@router.post("/reports/{report_id}/review")
+def review_report(report_id: str, body: ReportReview, ctx: dict = Depends(admin_ctx), db=Depends(get_db)):
+    """Dismiss a report, block the person reported, or close the reported post.
+    All open reports on the same target are closed together."""
+    r = db.execute("select target_type, target_id from public.reports where id = %s and tenant_id = %s", (report_id, ctx["tenant"])).fetchone()
+    if not r:
+        raise HTTPException(404, "Report not found")
+    target = str(r["target_id"])
+    if body.action == "block_target":
+        if r["target_type"] == "profile":
+            owner = target
+        else:
+            row = db.execute("select owner_id from public.posts where id = %s", (target,)).fetchone()
+            owner = str(row["owner_id"]) if row else None
+        if owner:
+            db.execute("update public.profiles set blocked = true where id = %s and tenant_id = %s and role in ('driver','owner')", (owner, ctx["tenant"]))
+            _audit(db, ctx, "block", "profile", owner, body.note)
+    elif body.action == "close_post":
+        if r["target_type"] != "post":
+            raise HTTPException(422, "Not a post")
+        db.execute("update public.posts set status = 'closed' where id = %s", (target,))
+        _audit(db, ctx, "close_post", "post", target, body.note)
+    status = "dismissed" if body.action == "dismiss" else "actioned"
+    db.execute("update public.reports set status = %s where target_id = %s and status = 'open' and tenant_id = %s", (status, target, ctx["tenant"]))
+    _audit(db, ctx, f"report_{body.action}", "report", report_id, body.note)
+    return {"id": report_id, "status": status}

@@ -5,6 +5,7 @@ import { useAuth } from './lib/auth'
 import Home from './pages/Home'
 import Language from './pages/Language'
 import Legal from './pages/Legal'
+import Blocked from './pages/Blocked'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminQueue from './pages/admin/AdminQueue'
 import AdminUsers from './pages/admin/AdminUsers'
@@ -62,6 +63,7 @@ export default function App() {
       <Route path="/settings" element={<Settings />} />
       <Route path="/setup" element={<Setup />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/blocked" element={<Blocked />} />
       <Route path="/soon" element={<Soon />} />
       <Route path="/posts" element={<MyPosts />} />
       <Route path="/posts/new" element={<PostNew />} />

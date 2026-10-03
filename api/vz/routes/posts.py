@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ..auth import AuthUser, current_user
 from ..deps import get_db, tenant_id
+from .trust import is_blocked
 
 router = APIRouter(tags=["posts"])
 
@@ -122,6 +123,8 @@ def _clean(row: dict) -> dict:
     for k in ("created_at", "expires_at"):
         if r.get(k) is not None:
             r[k] = r[k].isoformat()
+    if r.get("owner_rating_avg") is not None:
+        r["owner_rating_avg"] = float(r["owner_rating_avg"])
     return r
 
 
@@ -221,16 +224,18 @@ def post_interests(post_id: str, user: AuthUser = Depends(current_user), db=Depe
     rows = db.execute(
         """
         select i.id as interest_id, i.status as interest_status, i.created_at as interested_at,
-               p.id, p.name, p.photo_url, p.district, p.state, p.verified,
+               p.id, p.name, p.photo_url, p.district, p.state, p.verified, p.rating_avg, p.rating_count,
                d.vehicles, d.max_wheels, d.licence_type, d.experience_years, d.savings_wanted,
                d.savings_negotiable, d.pay_prefs, d.work_type, d.area, d.languages, d.available_from
         from public.interests i
         join public.profiles p on p.id = i.driver_id
         left join public.driver_details d on d.profile_id = p.id
         where i.post_id = %s and not p.blocked
+          and not exists (select 1 from public.blocks bl
+                  where (bl.blocker_id = %s::uuid and bl.blocked_id = p.id) or (bl.blocker_id = p.id and bl.blocked_id = %s::uuid))
         order by i.created_at desc
         """,
-        (post_id,),
+        (post_id, user.id, user.id),
     ).fetchall() or []
     db.execute("update public.interests set status = 'seen' where post_id = %s and status = 'sent'", (post_id,))
     out = []
@@ -238,6 +243,7 @@ def post_interests(post_id: str, user: AuthUser = Depends(current_user), db=Depe
         r = dict(r)
         r["id"], r["interest_id"] = str(r["id"]), str(r["interest_id"])
         r["interested_at"] = r["interested_at"].isoformat()
+        r["rating_avg"] = float(r["rating_avg"]) if r["rating_avg"] is not None else None
         r["vehicles"] = r["vehicles"] or []
         r["pay_prefs"] = r["pay_prefs"] or []
         r["languages"] = r["languages"] or []
@@ -266,6 +272,7 @@ def list_jobs(
         select {POST_SELECT},
           o.id as owner_id, o.name as owner_name, o.business_name, o.photo_url as owner_photo,
           o.district as owner_district, o.state as owner_state, o.verified as owner_verified,
+          o.rating_avg as owner_rating_avg, o.rating_count as owner_rating_count,
           case when o.location is not null and %(loc)s::extensions.geography is not null
                then round((extensions.st_distance(o.location, %(loc)s::extensions.geography) / 1000)::numeric)::int end
             as distance_km,
@@ -278,6 +285,8 @@ def list_jobs(
                 select 1 from public.post_groups pg join public.fleet_groups fg on fg.id = pg.fleet_group_id
                 where pg.post_id = p.id and fg.vehicle_type = %(vehicle)s))
           and (not %(verified)s or o.verified)
+          and not exists (select 1 from public.blocks bl
+                  where (bl.blocker_id = %(me)s::uuid and bl.blocked_id = o.id) or (bl.blocker_id = o.id and bl.blocked_id = %(me)s::uuid))
         order by
           (exists (select 1 from unnest(p.base_cities) c where lower(split_part(c, ',', 1)) = lower(%(district)s))) desc,
           o.location operator(extensions.<->) %(loc)s::extensions.geography nulls last,
@@ -310,7 +319,9 @@ def show_interest(post_id: str, user: AuthUser = Depends(current_user), db=Depen
     """Driver taps "I'm interested": the owner sees the driver's profile under the post."""
     me = _me(db, user, tenant)
     _require(me, "driver")
-    _live_post(db, post_id, tenant, me["is_test"])
+    post = _live_post(db, post_id, tenant, me["is_test"])
+    if is_blocked(db, user.id, str(post["owner_id"])):
+        raise HTTPException(404, "Job not available")
     db.execute(
         "insert into public.interests (tenant_id, post_id, driver_id) values (%s, %s, %s) on conflict (post_id, driver_id) do nothing",
         (tenant, post_id, user.id),
@@ -339,6 +350,8 @@ def contact_owner(post_id: str, body: ContactBody, user: AuthUser = Depends(curr
     if used and used["n"] >= MAX_REVEALS_PER_DAY:
         raise HTTPException(429, {"code": "too_many_contacts"})
     row = _live_post(db, post_id, tenant, me["is_test"])
+    if is_blocked(db, user.id, str(row["owner_id"])):
+        raise HTTPException(404, "Job not available")
     if not row["phone"]:
         raise HTTPException(404, "Owner not reachable")
     db.execute(
@@ -358,7 +371,7 @@ def my_interests(user: AuthUser = Depends(current_user), db=Depends(get_db), ten
         f"""
         select {POST_SELECT},
           i.status as interest_status, i.created_at as interested_at,
-          o.name as owner_name, o.business_name, o.district as owner_district, o.state as owner_state,
+          o.id as owner_id, o.name as owner_name, o.photo_url as owner_photo, o.rating_avg as owner_rating_avg, o.rating_count as owner_rating_count, o.business_name, o.district as owner_district, o.state as owner_state,
           o.verified as owner_verified, null::int as distance_km, true as interested
         from public.interests i
         join public.posts p on p.id = i.post_id

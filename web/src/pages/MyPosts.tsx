@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { DriverCard, JobCard } from '../components/cards'
 import { Note } from '../components/form'
 import { DriverContact, TabPage } from '../components/home'
+import { CardMenu } from '../components/trust'
 import { Icon } from '../components/ui'
 import { myPosts, postInterests, setPostStatus, type InterestedDriver, type MyPost } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -98,7 +99,8 @@ function PostItem({ post, onChange }: { post: MyPost; onChange: () => void }) {
           {drivers?.length === 0 && <p className="text-sm text-muted">{t('post.noInterest')}</p>}
           {drivers?.map((d) => (
             <DriverCard key={d.id}
-              data={{ name: d.name || '', photo_url: d.photo_url, verified: d.verified, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
+              data={{ name: d.name || '', photo_url: d.photo_url, verified: d.verified, rating_avg: d.rating_avg, rating_count: d.rating_count, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
+              menu={<CardMenu target={{ type: 'profile', id: d.id }} personId={d.id} name={d.name || ''} onBlocked={() => setDrivers((cur) => cur?.filter((x) => x.id !== d.id) || null)} />}
               actions={<DriverContact driverId={d.id} name={(d.name || '').split(' ')[0]} />} />
           ))}
         </div>

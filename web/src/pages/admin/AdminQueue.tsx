@@ -38,13 +38,7 @@ export default function AdminQueue() {
           )}
           {data.reports.length > 0 && (
             <Section title={t('admin.q.reports', { n: data.reports.length })}>
-              {data.reports.map((r) => (
-                <div key={r.id} className="rounded-2xl border border-line bg-card p-4">
-                  <p className="font-semibold">{t(`admin.reason.${r.reason}`, { defaultValue: r.reason })} · {r.target_type}</p>
-                  {r.note && <p className="text-sm">{r.note}</p>}
-                  <p className="text-sm text-muted">{r.reporter_name || '—'}</p>
-                </div>
-              ))}
+              {data.reports.map((r) => <ReportRow key={r.id} r={r} onDone={load} />)}
             </Section>
           )}
         </div>
@@ -120,6 +114,37 @@ function ProfileRow({ p, onDone }: { p: QueueProfile; onDone: () => void }) {
       <div className="mt-3 flex gap-2">
         <button type="button" disabled={busy} onClick={() => void act('clear')} className="min-h-11 flex-1 rounded-xl bg-call font-bold text-white disabled:opacity-50">{t('admin.looksOk')}</button>
         <button type="button" disabled={busy} onClick={() => void act('block')} className="min-h-11 flex-1 rounded-xl border-2 border-line font-bold text-danger disabled:opacity-50">{t('admin.block')}</button>
+      </div>
+    </div>
+  )
+}
+
+function ReportRow({ r, onDone }: { r: QueueReport; onDone: () => void }) {
+  const { t, i18n } = useTranslation()
+  const [busy, setBusy] = useState(false)
+  async function act(action: 'dismiss' | 'block_target' | 'close_post') {
+    if (action === 'block_target' && !window.confirm(t('admin.confirmBlock'))) return
+    setBusy(true)
+    try { await admin.reviewReport(r.id, action); track('admin_review_report', { action }); onDone() } finally { setBusy(false) }
+  }
+  const btn = 'min-h-11 flex-1 rounded-xl border-2 border-line px-2 text-sm font-bold disabled:opacity-50'
+  return (
+    <div className="rounded-2xl border border-line bg-card p-4">
+      <div className="flex justify-between gap-2">
+        <div>
+          <p className="font-bold">{r.target_business || r.target_name || '—'} <span className="font-normal text-muted">· {t(r.target_type === 'post' ? 'admin.q.aPost' : 'admin.q.aProfile')}</span></p>
+          <p className="text-sm text-muted">{phoneText(r.target_phone)}</p>
+        </div>
+        <span className="text-sm text-muted">{ago(r.created_at, i18n.language)}</span>
+      </div>
+      <p className="mt-2"><span className="rounded-lg bg-danger/10 px-2 py-1 text-sm font-bold text-danger">⚑ {t(`admin.reason.${r.reason}`, { defaultValue: r.reason })}</span>
+        {r.open_reports > 1 && <span className="ml-2 text-sm font-semibold">{t('admin.q.nReports', { n: r.open_reports })}</span>}</p>
+      {r.note && <p className="mt-2 rounded-lg bg-bg px-3 py-2 text-sm">“{r.note}”</p>}
+      <p className="mt-1 text-sm text-muted">{t('admin.q.by', { name: r.reporter_name || '—' })}</p>
+      <div className="mt-3 flex gap-2">
+        <button type="button" disabled={busy} className={btn} onClick={() => void act('dismiss')}>{t('admin.q.dismiss')}</button>
+        {r.target_type === 'post' && <button type="button" disabled={busy} className={btn} onClick={() => void act('close_post')}>{t('admin.q.closePost')}</button>}
+        <button type="button" disabled={busy} className={`${btn} text-danger`} onClick={() => void act('block_target')}>{t('admin.block')}</button>
       </div>
     </div>
   )

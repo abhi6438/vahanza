@@ -37,7 +37,7 @@ A white-label app for vehicle owners and drivers. One codebase serves the web/PW
 ## 1. Supabase setup (one time)
 
 1. Create a project in region **Mumbai (ap-south-1)**.
-2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql`).
+2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql`).
 3. Auth → Providers → **Phone**: enable it. You can pick any SMS provider here because the hook below replaces it.
 4. Auth → Hooks → **Send SMS hook** → HTTPS:
    `https://<your-domain>/api/v1/hooks/send-sms`. Generate the secret and copy it into `SEND_SMS_HOOK_SECRET` (format `v1,whsec_...`).
@@ -65,6 +65,13 @@ Vercel → Storage → Create **Blob** store → connect it to the project. This
 - Any other number (e.g. your own phone) can be marked as test with `supabase/dev/mark_test_number.sql`. Test accounts show a "टेस्ट" badge, their events are marked `is_test` (left out of analytics) and, from Sprint 3, they are shown only to other test accounts.
 - After testing: `supabase/dev/delete_test_users.sql` deletes every test account and its data. `reset_all_data.sql` wipes everything (test project only).
 - Before launch, use a separate Supabase project for live.
+
+## Reports, blocks, ratings
+
+- **⋮ on every driver / job card** → *Report* (asked for money, wrong / off number, fake, bad behaviour, other + optional note) or *Block*.
+- When **2 different people** report the same profile or post, it goes to the admin **check queue** automatically (a live post is paused as "under check"). Admin can dismiss, close the post, or block the person; all open reports on that target close together.
+- **Block** works both ways: neither sees the other in lists, and numbers can't be revealed. Undo from Profile → Blocked people.
+- **Ratings** (1–5 stars + quick tags) are only possible between people who were really in touch (a number was revealed by Call / WhatsApp, or the owner opened a driver's interest). Home asks "How was …?" a few hours after the contact. Cards show ★ average (count).
 
 ## 2. MSG91
 

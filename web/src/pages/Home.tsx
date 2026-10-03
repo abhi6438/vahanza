@@ -6,6 +6,7 @@ import { DriverContact, HomeHeader, MainAction, SectionHead, TabPage, usePlaceNa
 import { Icon } from '../components/ui'
 import { listDrivers, listJobs, setAvailability, type DriverListItem, type Job } from '../lib/api'
 import { JobItem } from '../components/jobs'
+import { CardMenu, RatePrompt } from '../components/trust'
 import { useAuth } from '../lib/auth'
 import { placeName } from '../lib/catalog'
 import { driverCompletion } from '../lib/completion'
@@ -55,6 +56,7 @@ function OwnerHome() {
         <MainAction icon={Icon.plus} label={t('home.post')} to={fleet.length ? '/posts/new' : '/setup?step=fleet&next=/posts/new'} onClick={() => track('post_tap', { has_fleet: fleet.length > 0 })} />
       </HomeHeader>
       <main className="mx-auto max-w-md px-4">
+        <RatePrompt />
         <SectionHead title={city ? t('home.driversNearCity', { city }) : t('home.driversNear')} count={items ? t('home.countDrivers', { n: items.length + (more ? '+' : '') }) : undefined} />
         <VehicleFilter value={vehicle} onChange={setVehicle} verified={verified} onVerified={setVerified} />
         <div className="mt-3 flex flex-col gap-3">
@@ -63,7 +65,8 @@ function OwnerHome() {
           {items?.length === 0 && <EmptyNote text={vehicle || verified ? t('home.noDriversFilter') : t('home.noDrivers')} />}
           {items?.map((d) => (
             <DriverCard key={d.id}
-              data={{ name: d.name || '', photo_url: d.photo_url, verified: d.verified, distance_km: d.distance_km, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
+              data={{ name: d.name || '', photo_url: d.photo_url, verified: d.verified, distance_km: d.distance_km, rating_avg: d.rating_avg, rating_count: d.rating_count, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
+              menu={<CardMenu target={{ type: 'profile', id: d.id }} personId={d.id} name={d.name || ''} onBlocked={() => setItems((cur) => cur?.filter((x) => x.id !== d.id) || null)} />}
               actions={<DriverContact driverId={d.id} name={(d.name || '').split(' ')[0]} />} />
           ))}
           {more && <button type="button" onClick={() => void loadMore()} className="min-h-12 rounded-xl border-2 border-brand font-bold text-brand">{t('home.more')}</button>}
@@ -134,13 +137,14 @@ function DriverHome() {
             <span className="rotate-180">{Icon.back}</span>
           </Link>
         )}
+        <RatePrompt />
         <SectionHead title={city ? t('home.jobsNearCity', { city }) : t('home.jobsNear')} count={jobs ? t('home.countJobs', { n: jobs.length + (more ? '+' : '') }) : undefined} />
         <VehicleFilter value={vehicle} onChange={setVehicle} verified={verified} onVerified={setVerified} />
         <div className="mt-3 flex flex-col gap-3">
           {jobs === null && !error && [0, 1].map((i) => <div key={i} className="h-52 animate-pulse rounded-2xl bg-card" />)}
           {error && <p className="rounded-xl bg-card p-4 text-muted">{t('error.server')}</p>}
           {jobs?.length === 0 && <EmptyNote text={vehicle || verified ? t('home.noJobsFilter') : t('home.noJobs')} />}
-          {jobs?.map((j) => <JobItem key={j.id} job={j} />)}
+          {jobs?.map((j) => <JobItem key={j.id} job={j} onBlocked={() => setJobs((cur) => cur?.filter((x) => x.owner_id !== j.owner_id) || null)} />)}
           {more && <button type="button" onClick={() => void loadMore()} className="min-h-12 rounded-xl border-2 border-brand font-bold text-brand">{t('home.moreJobs')}</button>}
         </div>
       </main>
