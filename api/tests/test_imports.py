@@ -105,14 +105,23 @@ def test_excel_template_round_trip():
     wb = load_workbook(io.BytesIO(build("owner")))
     assert wb.sheetnames[0].startswith("भरें") and wb["सूची"].sheet_state == "hidden"
     ws = wb.worksheets[0]
-    ws["A2"], ws["B2"], ws["E2"], ws["F2"], ws["H2"] = "9826199991", "सुरेश", 12, "हाँ", "हाँ"
+    ws["A2"], ws["B2"], ws["E2"], ws["F2"], ws["G2"], ws["I2"] = "9826199991", "सुरेश", "486001", 12, "हाँ", "हाँ"
     buf = io.BytesIO()
     wb.save(buf)
     rows = read_table(buf.getvalue())
     cols, flags = map_columns(rows[0]), flag_columns(rows[0])
-    assert set(cols.values()) == {"phone", "name", "business_name", "district", "vehicle_count"}
+    assert set(cols.values()) == {"phone", "name", "business_name", "district", "pincode", "vehicle_count"}
     assert [flags[i] for i in sorted(flags)] == ["truck", "trailer", "bus", "pickup", "jcb", "tractor", "car", "auto"]
     assert len(rows) == 2
+
+
+def test_template_lists_all_districts():
+    """With the pincode directory loaded, every district is in the city dropdown, not only the curated ones."""
+    from vz.template import city_options
+    base = city_options()
+    more = city_options([("Sidhi", "Madhya Pradesh"), ("Rewari", "Haryana"), ("Rewa", "Madhya Pradesh")])
+    assert "Rewari, Haryana" in more and len(more) == len(base) + 1   # Sidhi and Rewa are curated already
+    assert not any(o == "Rewa, Madhya Pradesh" for o in more)   # curated "रीवा (Rewa), …" is not repeated
 
 
 def test_yes_values():

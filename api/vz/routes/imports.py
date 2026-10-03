@@ -271,9 +271,11 @@ def patch_prospect(prospect_id: int, body: ProspectPatch, ctx: dict = Depends(ad
 
 
 @router.get("/imports/template")
-def template(role: Literal["driver", "owner"], ctx: dict = Depends(admin_ctx)):
-    """Ready-to-fill Excel file: dropdowns for city and vehicles, 10-digit check on the mobile number."""
+def template(role: Literal["driver", "owner"], ctx: dict = Depends(admin_ctx), db=Depends(get_db)):
+    """Ready-to-fill Excel file: dropdowns for city and vehicles, 10-digit check on the mobile number.
+    The city list has every district from the pincode directory when it is loaded (else the curated cities)."""
     from ..template import build
+    rows = db.execute("select distinct district, state from public.pincodes where district is not null and state is not null").fetchall() or []
     name = "vahanza-drivers.xlsx" if role == "driver" else "vahanza-owners.xlsx"
-    return Response(build(role), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    return Response(build(role, [(r["district"], r["state"]) for r in rows]), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})

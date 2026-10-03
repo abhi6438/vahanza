@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Icon } from './ui'
 
 type Tone = 'info' | 'success' | 'error'
@@ -17,7 +18,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={show}>
       {children}
-      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 z-[60] flex flex-col items-center gap-2 px-4 lg:inset-x-auto lg:right-6 lg:items-end"
+      {/* on <body> above dialogs, so a message shown while a dialog is open is still seen */}
+      {createPortal(<div aria-live="polite" className="pointer-events-none fixed inset-x-0 z-[80] flex flex-col items-center gap-2 px-4 lg:inset-x-auto lg:right-6 lg:items-end"
         style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + var(--toast-offset, 16px))' }}>
         {items.map((t) => (
           <div key={t.id} role="status" className="anim-rise pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-md bg-text px-4 py-3 text-[0.95rem] text-bg shadow-md lg:w-auto lg:min-w-80">
@@ -28,7 +30,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             )}
           </div>
         ))}
-      </div>
+      </div>, document.body)}
     </Ctx.Provider>
   )
 }

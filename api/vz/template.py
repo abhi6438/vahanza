@@ -3,7 +3,8 @@
 Made so that almost nothing has to be typed:
   * mobile number: the only must; must be 10 digits (Excel refuses anything else)
   * name: Hindi or English, both fine
-  * city: pick from a list (other cities can still be typed)
+  * city: pick from a list (all districts when the pincode directory is loaded). Not there? type the
+    city / town name, or fill the 6-digit pincode instead. Nothing is refused.
   * vehicles: one column per vehicle, pick "हाँ" from a list. No commas, no spelling.
   * owners: number of vehicles must be a whole number
 The second sheet explains it in Hindi and English with an example. Only the first sheet is imported.
@@ -31,14 +32,17 @@ WHITE_BOLD = Font(bold=True, color="FFFFFF", size=12)
 THIN = Side(style="thin", color="DCE5E7")
 
 
-def city_options() -> list[str]:
-    """"रीवा (Rewa), Madhya Pradesh" — the importer understands this form."""
+def city_options(districts: list[tuple[str, str]] = ()) -> list[str]:
+    """"रीवा (Rewa), Madhya Pradesh" — the importer understands this form.
+    `districts` (district, state) from the pincode directory add every other district as "Sidhi, Madhya Pradesh"."""
     d = _places()
     opts = [f"{c['hi']} ({c['en']}), {c['state']}" for c in d["cities"]]
-    return sorted(opts)
+    known = {(c["en"].lower(), c["state"]) for c in d["cities"]}
+    opts += [f"{dist}, {st}" for dist, st in districts if dist and st and (dist.lower(), st) not in known]
+    return sorted(set(opts))
 
 
-def build(role: str) -> bytes:
+def build(role: str, districts: list[tuple[str, str]] = ()) -> bytes:
     wb = Workbook()
     ws = wb.active
     ws.title = "भरें - Fill here"
@@ -46,7 +50,8 @@ def build(role: str) -> bytes:
     cols: list[tuple[str, int, str]] = [("मोबाइल नंबर (10 अंक) *", 22, "phone"), ("नाम", 24, "name")]
     if role == "owner":
         cols.append(("फर्म / ट्रांसपोर्ट का नाम", 26, "business"))
-    cols.append(("शहर (सूची से चुनें)", 34, "city"))
+    cols.append(("शहर (सूची से चुनें या लिखें)", 34, "city"))
+    cols.append(("पिनकोड (शहर न मिले तो)", 16, "pincode"))
     if role == "owner":
         cols.append(("कुल गाड़ियाँ (गिनती)", 18, "count"))
     first_vehicle = len(cols) + 1
@@ -81,18 +86,27 @@ def build(role: str) -> bytes:
     for r in range(2, last + 1):
         ws[f"{letter['phone']}{r}"].number_format = "@"
 
-    # city: hidden list sheet, dropdown; typing another city only warns
+    # city: hidden list sheet, dropdown. Any other name can be typed with no error box at all.
     lists = wb.create_sheet("सूची")
-    for i, opt in enumerate(city_options(), start=1):
+    options = city_options(districts)
+    for i, opt in enumerate(options, start=1):
         lists.cell(row=i, column=1, value=opt)
     lists.cell(row=1, column=2, value=YES)
     lists.sheet_state = "hidden"
-    n = len(city_options())
-    city = DataValidation(type="list", formula1=f"='सूची'!$A$1:$A${n}", allow_blank=True, showErrorMessage=True, errorStyle="warning",
-                          errorTitle="शहर", error="यह शहर सूची में नहीं है। फिर भी रखना है तो \"Yes\" दबाएँ।\nCity not in the list. Press Yes to keep it anyway.",
-                          promptTitle="शहर", prompt="सूची से चुनें (टाइप करके खोज सकते हैं)", showInputMessage=True)
+    n = len(options)
+    city = DataValidation(type="list", formula1=f"='सूची'!$A$1:$A${n}", allow_blank=True, showErrorMessage=False,
+                          promptTitle="शहर", prompt="सूची से चुनें। सूची में न हो तो शहर / कस्बे का नाम खुद लिख दें, या बगल में पिनकोड भरें।", showInputMessage=True)
     ws.add_data_validation(city)
     city.add(f"{letter['city']}2:{letter['city']}{last}")
+
+    # pincode: optional, 6 digits, kept as text
+    pin = DataValidation(type="textLength", operator="equal", formula1="6", allow_blank=True, showErrorMessage=True,
+                         errorTitle="पिनकोड", error="6 अंक का पिनकोड डालें, जैसे 486001\nEnter the 6-digit pincode, e.g. 486001",
+                         promptTitle="पिनकोड", prompt="ज़रूरी नहीं। शहर सूची में न मिले तो 6 अंक का पिनकोड, जैसे 486001", showInputMessage=True)
+    ws.add_data_validation(pin)
+    pin.add(f"{letter['pincode']}2:{letter['pincode']}{last}")
+    for r in range(2, last + 1):
+        ws[f"{letter['pincode']}{r}"].number_format = "@"
 
     # vehicles: only "हाँ" or empty
     yes = DataValidation(type="list", formula1=f'"{YES}"', allow_blank=True, showErrorMessage=True,
@@ -131,7 +145,8 @@ def _help_sheet(wb: Workbook, role: str) -> None:
         ("1. पहली शीट \"भरें - Fill here\" में हर व्यक्ति की एक लाइन भरें।", False),
         ("2. मोबाइल नंबर ज़रूरी है: 10 अंक, बिना +91 या 0 के (जैसे 9876543210)। गलत नंबर Excel खुद रोक देगा।", False),
         ("3. नाम हिंदी या English, किसी में भी लिखें।", False),
-        ("4. शहर: खाने पर क्लिक करें, तीर से सूची खोलें और चुनें। सूची में न हो तो शहर का नाम लिख दें।", False),
+        ("4. शहर: खाने पर क्लिक करें, तीर से सूची खोलें और चुनें। सूची में न हो तो शहर / कस्बे का नाम खुद लिख दें (हिंदी या English)।", False),
+        ("   शहर समझ न आए तो \"पिनकोड\" वाले खाने में 6 अंक का पिनकोड भर दें, जैसे 486001। पिनकोड से जगह अपने आप पता चल जाएगी।", False),
         ("5. गाड़ी: जो गाड़ी चलाते / रखते हैं, उसके नीचे \"हाँ\" चुनें। कई गाड़ियाँ हों तो कई में \"हाँ\"। बाकी खाली छोड़ें।", False),
     ]
     if role == "owner":
@@ -141,7 +156,7 @@ def _help_sheet(wb: Workbook, role: str) -> None:
         ("", False),
         ("How to fill (English)", True),
         ("One row per person on the first sheet. Only the 10-digit mobile number is required.", False),
-        ("Name in Hindi or English. City: pick from the dropdown (or type it). Vehicles: pick \"हाँ\" under each vehicle, leave others empty.", False),
+        ("Name in Hindi or English. City: pick from the dropdown, or type any city / town, or just fill the 6-digit pincode. Vehicles: pick \"हाँ\" under each vehicle, leave others empty.", False),
         ("Not sure about a cell? Leave it empty.", False),
         ("", False),
         ("उदाहरण / Example", True),

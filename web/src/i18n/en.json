@@ -567,7 +567,7 @@
   "auth.point.direct": "Call or WhatsApp directly, no middlemen",
   "auth.point.checked": "Checked people, ratings and reporting",
   "admin.imp.step1": "1. Get the ready-to-fill Excel file",
-  "admin.imp.step1Sub": "City and vehicles are picked from lists, nothing to type. Excel itself stops a wrong mobile number. Send this file to the union / transporter.",
+  "admin.imp.step1Sub": "Pick the city from the list; not there? type it or fill the pincode. Vehicles: just pick \"हाँ\". Excel itself stops a wrong mobile number. Send this file to the union / transporter.",
   "admin.imp.step2": "2. Upload the filled file here",
   "role.otherNumber": "Log in with another number"
 }

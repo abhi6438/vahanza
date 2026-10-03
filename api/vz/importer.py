@@ -248,6 +248,15 @@ class PlaceFinder:
             rows = [r for r in rows if r["state"] == st] or rows
         if rows:
             return rows[0]["district"], rows[0]["state"]
+        # a town / tehsil that is not a district ("Mauganj"): find it by its post office name
+        rows = self.db.execute(
+            "select district, state from public.pincodes where lower(office) = %s or lower(office) like %s limit 5",
+            (low, low + " %"),
+        ).fetchall() or []
+        if st:
+            rows = [r for r in rows if r["state"] == st] or rows
+        if rows:
+            return rows[0]["district"], rows[0]["state"]
         return None, None
 
 

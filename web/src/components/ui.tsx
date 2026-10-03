@@ -3,6 +3,7 @@
  * Colours only through tokens (see styles.css); sizes only from the scale.
  */
 import { useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, type LinkProps } from 'react-router-dom'
 import { pushOverlay } from '../lib/layout'
@@ -211,6 +212,8 @@ export function Note({ children, tone = 'info', icon }: { children: ReactNode; t
 }
 
 // ---------------------------------------------------------------- dialog: bottom sheet on phones, centred on desktop
+let openDialogs = 0
+
 export function Dialog({ open, onClose, title, children, footer, size = 'md' }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; size?: 'md' | 'lg' }) {
   const { t } = useTranslation()
   const titleId = useId()
@@ -234,12 +237,19 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
     const unstack = pushOverlay(() => closeRef.current())
     const overflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    // the page behind can't be clicked or tabbed into while any dialog is open
+    const root = document.getElementById('root')
+    openDialogs++
+    root?.setAttribute('inert', '')
     window.setTimeout(() => box.current?.querySelector<HTMLElement>('[data-autofocus], button, a[href], input')?.focus(), 30)
-    return () => { window.removeEventListener('keydown', onKey); unstack(); document.body.style.overflow = overflow; prev?.focus?.() }
+    return () => { window.removeEventListener('keydown', onKey); unstack(); document.body.style.overflow = overflow
+      if (--openDialogs === 0) root?.removeAttribute('inert')
+      prev?.focus?.() }
   }, [open])
   if (!open) return null
-  return (
-    <div className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center md:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+  // rendered on <body>, so no sticky header / sidebar (their own stacking layer) can sit above the dimmed backdrop
+  return createPortal(
+    <div className="anim-fade fixed inset-0 z-[70] flex items-end justify-center bg-black/50 md:items-center md:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div ref={box} role="dialog" aria-modal="true" aria-labelledby={titleId}
         className={`anim-rise flex max-h-[92dvh] w-full flex-col rounded-t-xl bg-surface shadow-md md:rounded-xl ${size === 'lg' ? 'md:max-w-2xl' : 'md:max-w-md'}`}>
         <div className="flex items-start gap-2 px-5 pb-2 pt-3 md:pt-5">
@@ -253,7 +263,8 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
         {footer && <div className="border-t border-border px-5 pt-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>{footer}</div>}
         {!footer && <div style={{ height: 'calc(env(safe-area-inset-bottom, 0px) + 8px)' }} />}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
