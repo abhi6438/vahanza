@@ -118,6 +118,12 @@ function AppRoutes() {
   // signed out: language first only the very first time; then the live jobs (no login), or the
   // number straight away when they came from a personal invite
   if (status === 'signedOut') {
+    // language always comes first on a new phone, even when a shared job / invite link opened the app;
+    // after choosing, the person continues to where the link was going
+    if (!langChosen && loc.pathname !== '/language' && loc.pathname !== '/legal') {
+      const target = loc.pathname === '/' ? null : loc.pathname + loc.search
+      return <Navigate to="/language" state={{ next: target }} replace />
+    }
     if (isPublicJobs(loc.pathname)) {
       return (
         <Routes>

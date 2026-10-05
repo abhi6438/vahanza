@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/auth-layout'
 import { BigButton, H, Icon, Sub } from '../components/ui'
 import { useAuth, type Lang } from '../lib/auth'
@@ -16,10 +16,12 @@ export default function Language() {
   const { t } = useTranslation()
   const { lang, setLang } = useAuth()
   const nav = useNavigate()
+  // where the person was going when the app asked for the language first (shared job, invite, login)
+  const next = (useLocation().state as { next?: string | null } | null)?.next
   useEffect(() => { trackScreen('language') }, [])
 
   return (
-    <AuthLayout title={"भाषा चुनें · Language"} back={false} footer={<BigButton onClick={() => { void setLang(lang); nav(inviteCode() ? '/login' : seekPath(getSeeking())) }}>{t('continue')}</BigButton>}>
+    <AuthLayout title={"भाषा चुनें · Language"} back={false} footer={<BigButton onClick={() => { void setLang(lang); nav(next || (inviteCode() ? '/login' : seekPath(getSeeking())), { replace: true }) }}>{t('continue')}</BigButton>}>
         <H>{t('lang.title')}</H>
         <Sub>{t('lang.sub')}</Sub>
         <div className="flex flex-col gap-3">
