@@ -39,11 +39,11 @@ export function Wizard({ step, total, title, sub, children, onBack, footer, canN
       </div>
     </div>
   )
-  const back = onBack ? <IconButton tone={desktop ? 'outline' : 'plain'} label={t('back')} onClick={onBack}>{Icon.back}</IconButton> : <span className="size-11" />
+  const back = onBack ? <IconButton tone={desktop ? 'outline' : 'plain'} label={t('back')} onClick={onBack}>{Icon.back}</IconButton> : <span className="size-ctl-md" />
   const actions = (
     <>
       {footer ?? <Button size="lg" block disabled={!canNext} loading={busy} onClick={onNext}>{busy ? t('saving') : nextLabel || t('next')}</Button>}
-      {onLater && <button type="button" onClick={onLater} className="mt-2 min-h-10 w-full rounded-md text-center font-medium text-text-2 underline hover:text-text">{t('setup.later')}</button>}
+      {onLater && <button type="button" onClick={onLater} className="mt-2 min-h-ctl-sm w-full rounded-md text-center font-medium text-text-2 underline hover:text-text">{t('setup.later')}</button>}
     </>
   )
   const head = (
@@ -56,7 +56,7 @@ export function Wizard({ step, total, title, sub, children, onBack, footer, canN
     return (
       <div className="flex min-h-full flex-col">
         <header className="sticky top-0 z-20 border-b border-border bg-surface/95 backdrop-blur">
-          <div className="mx-auto flex h-16 max-w-3xl items-center gap-4 px-6">
+          <div className="mx-auto flex h-header max-w-3xl items-center gap-4 px-6">
             {back}
             {progress || <span className="flex-1" />}
             <span className="flex items-center gap-2 text-sm font-semibold text-text-2"><BrandMark size={28} />{brand.name}</span>
@@ -78,7 +78,7 @@ export function Wizard({ step, total, title, sub, children, onBack, footer, canN
   return (
     <div className="flex min-h-full flex-col">
       <header className="sticky top-0 z-20 border-b border-border bg-surface" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="mx-auto flex h-16 max-w-xl items-center gap-2 px-2 pr-4">{back}{progress}</div>
+        <div className="mx-auto flex h-header max-w-xl items-center gap-2 px-2 pr-4">{back}{progress}</div>
       </header>
       <main id="main" className="mx-auto w-full max-w-xl flex-1 px-4 pb-6 pt-5">
         {head}

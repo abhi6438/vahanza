@@ -48,7 +48,7 @@ export default function Profile() {
       </div>
       {!profile.verified && (
         <Link to="/verify" onClick={() => track('verify_open', { from: 'profile' })}
-          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-md bg-success-soft px-3 font-semibold text-success hover:brightness-95">
+          className="mt-3 inline-flex min-h-ctl-md items-center gap-2 rounded-md bg-success-soft px-3 font-semibold text-success hover:brightness-95">
           {Icon.shield}{t('verify.getBadge')}{Icon.chevron}
         </Link>
       )}
@@ -109,7 +109,7 @@ export default function Profile() {
 }
 
 function Row({ to, href, onClick, icon, label, last, danger }: { to?: string; href?: string; onClick?: () => void; icon: ReactNode; label: string; last?: boolean; danger?: boolean }) {
-  const cls = `flex min-h-14 w-full items-center gap-3 px-4 text-left font-medium transition-colors hover:bg-surface-2 ${last ? '' : 'border-b border-border'} ${danger ? 'text-error' : ''}`
+  const cls = `flex min-h-ctl-lg w-full items-center gap-3 px-4 text-left font-medium transition-colors hover:bg-surface-2 ${last ? '' : 'border-b border-border'} ${danger ? 'text-error' : ''}`
   const inner = (
     <>
       <span className={danger ? '' : 'text-primary'}>{icon}</span>

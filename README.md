@@ -183,6 +183,15 @@ npm run cap:open           # opens Android Studio → Build → Generate Signed 
   `<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />`
 - **Keep the keystore and its passwords safe** (outside the repo, with a backup). Without them, Play Store updates are impossible.
 
+## Sizes and spacing (design tokens)
+
+All sizes come from CSS variables in `web/src/styles.css`, so fixing a size once fixes it on every page.
+
+- Tokens: `--fs-*` (text), `--control-height-sm/md/lg`, `--chip-height`, `--icon-size-sm/md/lg`, `--avatar-size`, `--card-padding`, `--grid-gap`, `--section-gap`, `--page-gutter`, `--header-height`, `--bottom-nav-height`, `--sidebar-width`, `--radius-s/m/l`.
+- Tailwind names for them: `h-ctl-md`, `min-h-ctl-lg`, `h-chip`, `p-card`, `gap-grid`, `mb-section`, `h-header`, `h-nav`, `size-avatar`, `size-icon-md`; `text-sm`…`text-3xl` follow `--fs-*`.
+- Density: phone (touch-friendly) → tablet (≥768, more room) → computer (≥1024, smaller text and controls, web only; the APK keeps phone sizes via `data-native`) → large screens (≥1440 / ≥1600) get wider content and more columns, never bigger buttons.
+- Use the shared pieces (`Button size="sm|md|lg"`, `Chip`, `Card`, `TextField`, `AppShell`, `CardGrid`) instead of writing heights by hand.
+
 ## 6. New brand (white label)
 
 1. Copy `brands/vahanza.json` → `brands/<client>.json` and change name, colours, appId, support and grievance details.

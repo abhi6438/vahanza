@@ -78,9 +78,9 @@ const VARIANT: Record<Variant, string> = {
   whatsapp: 'border border-border bg-surface text-text hover:bg-surface-2 [&>svg]:text-whatsapp',
 }
 const SIZE: Record<Size, string> = {
-  sm: 'min-h-9 px-3 text-sm gap-1.5 rounded-sm',
-  md: 'min-h-11 px-4 text-base gap-2 rounded-md',
-  lg: 'min-h-13 px-5 text-lg gap-2 rounded-md',
+  sm: 'min-h-ctl-sm px-3 text-sm gap-1.5 rounded-sm [&>svg]:size-icon-sm',
+  md: 'min-h-ctl-md px-4 text-base gap-2 rounded-md [&>svg]:size-icon-md',
+  lg: 'min-h-ctl-lg px-5 text-lg gap-2 rounded-md [&>svg]:size-icon-md',
 }
 export function buttonClass(variant: Variant = 'primary', size: Size = 'md', block = false) {
   return `inline-flex items-center justify-center font-semibold transition-[filter,background-color] duration-150 select-none [&>svg]:shrink-0 disabled:cursor-not-allowed disabled:opacity-50 ${VARIANT[variant]} ${SIZE[size]} ${block ? 'w-full' : ''}`
@@ -104,7 +104,7 @@ export function ButtonLink({ variant = 'primary', size = 'md', block, icon, clas
 export function IconButton({ label, children, tone = 'plain', className = '', ...rest }: ButtonHTMLAttributes<HTMLButtonElement> & { label: string; tone?: 'plain' | 'onDark' | 'outline' }) {
   const look = tone === 'onDark' ? 'text-white hover:bg-white/15 active:bg-white/20' : tone === 'outline' ? 'border border-border bg-surface text-text hover:bg-surface-2' : 'text-text-2 hover:bg-surface-2 hover:text-text'
   return (
-    <button type="button" aria-label={label} title={label} className={`relative grid size-11 shrink-0 place-items-center rounded-md text-[1.1rem] transition-colors ${look} ${className}`} {...rest}>
+    <button type="button" aria-label={label} title={label} className={`relative grid size-ctl-md shrink-0 place-items-center rounded-md text-[length:var(--icon-size-md)] transition-colors ${look} ${className}`} {...rest}>
       {children}
     </button>
   )
@@ -121,7 +121,7 @@ export function Spinner({ className = '' }: { className?: string }) {
 
 // ---------------------------------------------------------------- surfaces
 export function Card({ children, className = '', as: As = 'section', pad = true, ...rest }: { children: ReactNode; className?: string; as?: 'section' | 'article' | 'div'; pad?: boolean } & React.HTMLAttributes<HTMLElement>) {
-  return <As className={`rounded-lg border border-border bg-surface shadow-sm ${pad ? 'p-4 md:p-5' : ''} ${className}`} {...rest}>{children}</As>
+  return <As className={`rounded-lg border border-border bg-surface shadow-sm ${pad ? 'p-card' : ''} ${className}`} {...rest}>{children}</As>
 }
 
 type Tone = 'neutral' | 'primary' | 'success' | 'warning' | 'error' | 'action'
@@ -142,21 +142,21 @@ export function Badge({ tone = 'neutral', icon, children, className = '' }: { to
 export function Chip({ selected, onClick, children, icon, className = '' }: { selected: boolean; onClick: () => void; children: ReactNode; icon?: ReactNode; className?: string }) {
   return (
     <button type="button" aria-pressed={selected} onClick={onClick}
-      className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors ${selected ? 'border-primary bg-primary-soft text-primary' : 'border-border bg-surface text-text hover:bg-surface-2'} ${className}`}>
+      className={`inline-flex h-chip shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-sm font-medium transition-colors ${selected ? 'border-primary bg-primary-soft text-primary' : 'border-border bg-surface text-text hover:bg-surface-2'} ${className}`}>
       {icon}{children}
     </button>
   )
 }
 
 // ---------------------------------------------------------------- headings used inside pages
-export const H = ({ children }: { children: ReactNode }) => <h1 className="font-display text-2xl font-bold md:text-3xl">{children}</h1>
-export const Sub = ({ children }: { children: ReactNode }) => <p className="mb-5 mt-1 text-text-2">{children}</p>
+export const H = ({ children }: { children: ReactNode }) => <h1 className="font-display text-2xl font-bold leading-tight">{children}</h1>
+export const Sub = ({ children }: { children: ReactNode }) => <p className="mb-section mt-1 text-text-2">{children}</p>
 
 export function SectionTitle({ title, sub, right, className = '' }: { title: ReactNode; sub?: ReactNode; right?: ReactNode; className?: string }) {
   return (
     <div className={`flex items-end justify-between gap-3 ${className}`}>
       <div className="min-w-0">
-        <h2 className="text-lg font-semibold md:text-xl">{title}</h2>
+        <h2 className="text-lg font-semibold">{title}</h2>
         {sub && <p className="text-sm text-text-2">{sub}</p>}
       </div>
       {right}
@@ -187,8 +187,8 @@ export function CardSkeletons({ count = 3, height = 'h-56' }: { count?: number; 
 
 export function EmptyState({ icon = Icon.inbox, title, body, action, compact }: { icon?: ReactNode; title: ReactNode; body?: ReactNode; action?: ReactNode; compact?: boolean }) {
   return (
-    <div className={`flex flex-col items-center rounded-lg border border-dashed border-border bg-surface text-center ${compact ? 'px-4 py-6' : 'px-6 py-10 md:py-14'}`}>
-      <span className="grid size-14 place-items-center rounded-full bg-primary-soft text-[1.5rem] text-primary">{icon}</span>
+    <div className={`flex flex-col items-center rounded-lg border border-dashed border-border bg-surface text-center ${compact ? 'px-4 py-6' : 'px-6 py-10 lg:py-12'}`}>
+      <span className="grid size-12 place-items-center rounded-full bg-primary-soft text-[length:var(--icon-size-lg)] text-primary">{icon}</span>
       <p className="mt-3 text-lg font-semibold">{title}</p>
       {body && <p className="mt-1 max-w-sm text-text-2">{body}</p>}
       {action && <div className="mt-4">{action}</div>}
@@ -201,7 +201,7 @@ export function ErrorState({ onRetry, message }: { onRetry?: () => void; message
   const offline = typeof navigator !== 'undefined' && !navigator.onLine
   return (
     <div role="alert" className="flex flex-col items-center rounded-lg border border-border bg-surface px-6 py-8 text-center">
-      <span className="grid size-12 place-items-center rounded-full bg-error-soft text-[1.4rem] text-error">{offline ? Icon.wifiOff : Icon.alert}</span>
+      <span className="grid size-12 place-items-center rounded-full bg-error-soft text-[length:var(--icon-size-lg)] text-error">{offline ? Icon.wifiOff : Icon.alert}</span>
       <p className="mt-3 font-semibold">{message || (offline ? t('error.network') : t('error.server'))}</p>
       {onRetry && <Button variant="outline" size="sm" className="mt-3" icon={Icon.refresh} onClick={onRetry}>{t('state.retry')}</Button>}
     </div>
@@ -302,7 +302,7 @@ export function TopBar({ title, back = true, right }: { title: string; back?: bo
   const { t } = useTranslation()
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-surface" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-      <div className="mx-auto flex h-14 max-w-3xl items-center gap-1 px-2 md:px-4">
+      <div className="mx-auto flex h-header max-w-3xl items-center gap-1 px-2 md:px-4">
         {back ? <IconButton label={t('back')} onClick={() => nav(-1)}>{Icon.back}</IconButton> : <span className="w-2" />}
         <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">{title}</h1>
         {right}
@@ -340,7 +340,7 @@ export function ThemeToggle({ tone = 'plain' }: { tone?: 'plain' | 'onDark' }) {
 export function Switch({ checked, onChange, label, sub, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: ReactNode; sub?: ReactNode; disabled?: boolean }) {
   return (
     <button type="button" role="switch" aria-checked={checked} disabled={disabled} onClick={() => onChange(!checked)}
-      className="flex min-h-14 w-full items-center gap-3 text-left disabled:opacity-60">
+      className="flex min-h-ctl-lg w-full items-center gap-3 py-1.5 text-left disabled:opacity-60">
       <span className="min-w-0 flex-1">
         <span className="block font-medium">{label}</span>
         {sub && <span className="block text-sm text-text-2">{sub}</span>}
@@ -358,7 +358,7 @@ export function Segmented<K extends string>({ value, onChange, options, label }:
     <div role="radiogroup" aria-label={label} className="inline-flex w-full rounded-md border border-border bg-surface-2 p-1 sm:w-auto">
       {options.map((o) => (
         <button key={o.key} type="button" role="radio" aria-checked={value === o.key} onClick={() => onChange(o.key)}
-          className={`min-h-10 flex-1 rounded-sm px-3 py-1 text-sm font-medium leading-tight transition-colors sm:flex-none sm:px-4 ${value === o.key ? 'bg-surface text-primary shadow-sm' : 'text-text-2 hover:text-text'}`}>
+          className={`min-h-ctl-sm flex-1 rounded-sm px-3 py-1 text-sm font-medium leading-tight transition-colors sm:flex-none sm:px-4 ${value === o.key ? 'bg-surface text-primary shadow-sm' : 'text-text-2 hover:text-text'}`}>
           {o.label}
         </button>
       ))}

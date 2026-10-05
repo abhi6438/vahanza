@@ -60,7 +60,7 @@ export function Bell({ tone = 'plain' }: { tone?: 'plain' | 'onDark' }) {
   const look = tone === 'onDark' ? 'text-white hover:bg-white/15' : 'text-text-2 hover:bg-surface-2 hover:text-text'
   return (
     <Link to="/notifications" aria-label={n ? t('notif.bellN', { n }) : t('notif.title')} title={t('notif.title')}
-      className={`relative grid size-11 shrink-0 place-items-center rounded-md text-[1.1rem] transition-colors ${look}`}>
+      className={`relative grid size-ctl-md shrink-0 place-items-center rounded-md text-[length:var(--icon-size-md)] transition-colors ${look}`}>
       {Icon.bell}
       {n > 0 && <CountDot n={n} ring={tone === 'onDark' ? 'ring-header' : 'ring-surface'} />}
     </Link>
@@ -69,7 +69,7 @@ export function Bell({ tone = 'plain' }: { tone?: 'plain' | 'onDark' }) {
 
 export function CountDot({ n, ring = 'ring-surface', className = 'absolute right-1 top-1' }: { n: number; ring?: string; className?: string }) {
   return (
-    <span className={`grid h-5 min-w-5 place-items-center rounded-full bg-action px-1 text-[11px] font-bold leading-none text-on-action ring-2 ${ring} ${className}`}>
+    <span className={`grid h-5 min-w-5 place-items-center rounded-full bg-action px-1 text-[0.6875rem] font-bold leading-none text-on-action ring-2 ${ring} ${className}`}>
       {n > 9 ? '9+' : n}
     </span>
   )

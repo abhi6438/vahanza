@@ -29,7 +29,7 @@ export function RatingBadge({ avg, count }: { avg?: number | null; count?: numbe
 }
 
 const Tag = ({ children, strong }: { children: ReactNode; strong?: boolean }) =>
-  <span className={`rounded-sm px-2 py-0.5 text-[0.8125rem] ${strong ? 'bg-primary-soft font-semibold text-primary' : 'bg-surface-2 font-medium text-text'}`}>{children}</span>
+  <span className={`rounded-sm px-2 py-0.5 text-sm ${strong ? 'bg-primary-soft font-semibold text-primary' : 'bg-surface-2 font-medium text-text'}`}>{children}</span>
 
 function Money({ prefix, amount, negotiable }: { prefix: string; amount: number; negotiable?: boolean }) {
   const { t } = useTranslation()
@@ -37,7 +37,7 @@ function Money({ prefix, amount, negotiable }: { prefix: string; amount: number;
     <div className="mt-3">
       <p className="flex flex-wrap items-baseline gap-x-1">
         <span className="text-sm text-text-2">{prefix}</span>
-        <span className="font-display text-[1.375rem] font-bold leading-none">{rupees(amount)}</span>
+        <span className="font-display text-2xl font-bold leading-none">{rupees(amount)}</span>
         <span className="text-sm text-text-2">{t('card.perMonthSavings')}</span>
       </p>
       {negotiable && <p className="mt-0.5 text-sm font-medium text-success">{t('card.negotiable')}</p>}
@@ -50,7 +50,7 @@ function CardHead({ photo, name, meta, verified, rating, extra, menu }: {
 }) {
   return (
     <div className="flex items-start gap-3">
-      <Avatar url={photo} name={name} size={48} />
+      <Avatar url={photo} name={name} size={44} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-lg font-semibold leading-snug">{name}</p>
         <p className="truncate text-sm text-text-2">{meta}</p>
@@ -68,7 +68,7 @@ function CardHead({ photo, name, meta, verified, rating, extra, menu }: {
 function DetailsLink({ onClick }: { onClick: () => void }) {
   const { t } = useTranslation()
   return (
-    <button type="button" onClick={onClick} className="mt-2 inline-flex min-h-10 items-center gap-1 self-start rounded-sm text-sm font-semibold text-primary hover:underline">
+    <button type="button" onClick={onClick} className="mt-2 inline-flex min-h-ctl-sm items-center gap-1 self-start rounded-sm text-sm font-semibold text-primary hover:underline">
       {t('card.details')}<span className="text-[0.9em]">{Icon.chevron}</span>
     </button>
   )
@@ -154,7 +154,7 @@ export function FleetRow({ g, onRemove, onEdit }: { g: FleetGroup; onRemove?: ()
         <span className="block truncate text-sm text-text-2">{bases}</span>
       </button>
       {onRemove && (
-        <button type="button" onClick={onRemove} aria-label={t('remove')} className="grid size-11 place-items-center rounded-md text-text-2 hover:bg-error-soft hover:text-error">{Icon.close}</button>
+        <button type="button" onClick={onRemove} aria-label={t('remove')} className="grid size-ctl-md place-items-center rounded-md text-text-2 hover:bg-error-soft hover:text-error">{Icon.close}</button>
       )}
     </div>
   )

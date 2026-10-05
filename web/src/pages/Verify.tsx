@@ -64,14 +64,14 @@ export default function Verify() {
         {!v && !error && <Skeleton className="h-64" />}
         {v?.verified && (
           <Card className="text-center">
-            <span className="mx-auto grid size-16 place-items-center rounded-full bg-success-soft text-[2rem] text-success">{Icon.shield}</span>
+            <span className="mx-auto grid size-14 place-items-center rounded-full bg-success-soft text-[1.75rem] text-success">{Icon.shield}</span>
             <p className="mt-3 text-xl font-semibold">{t('verify.doneTitle')}</p>
             <p className="mt-1 text-text-2">{t('verify.doneBody')}</p>
           </Card>
         )}
         {v && !v.verified && v.status === 'pending' && (
           <Card className="text-center">
-            <span className="mx-auto grid size-16 place-items-center rounded-full bg-warning-soft text-[2rem] text-warning">{Icon.shield}</span>
+            <span className="mx-auto grid size-14 place-items-center rounded-full bg-warning-soft text-[1.75rem] text-warning">{Icon.shield}</span>
             <p className="mt-3 text-xl font-semibold">{t('verify.pendingTitle')}</p>
             <p className="mt-1 text-text-2">{t('verify.pendingBody')}</p>
           </Card>

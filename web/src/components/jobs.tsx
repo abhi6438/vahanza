@@ -46,11 +46,13 @@ export function JobItem({ job, showStatus, onBlocked }: { job: Job; showStatus?:
       ) : (
         <>
           <ContactButtons target="owner" message={msg} reveal={(via) => contactOwner(job.id, via)} />
-          <Button variant={interested ? 'outline' : 'ghost'} block className={`mt-2 ${interested ? '!border-primary !bg-primary-soft !text-primary' : 'border border-primary/40'}`}
-            aria-pressed={interested} loading={busy} icon={interested ? Icon.check : Icon.heart} onClick={() => void toggle()}>
-            {interested ? t('job.interestSent') : t('job.interest')}
-          </Button>
-          <ShareJobButton post={job} from="job_list" compact fallbackCity={job.owner_district ? placeName(`${job.owner_district}, ${job.owner_state}`, lang) : ''} />
+          <div className="mt-2 flex gap-2">
+            <Button variant={interested ? 'outline' : 'ghost'} block className={interested ? '!border-primary !bg-primary-soft !text-primary' : 'border border-primary/40'}
+              aria-pressed={interested} loading={busy} icon={interested ? Icon.check : Icon.heart} onClick={() => void toggle()}>
+              {interested ? t('job.interestSent') : t('job.interest')}
+            </Button>
+            <ShareJobButton post={job} from="job_list" iconOnly fallbackCity={job.owner_district ? placeName(`${job.owner_district}, ${job.owner_state}`, lang) : ''} />
+          </div>
           {showStatus && interested && (
             <p className={`mt-2 text-center text-sm ${job.interest_status === 'seen' ? 'font-medium text-success' : 'text-text-2'}`}>{job.interest_status === 'seen' ? t('job.seen') : t('job.notSeen')}</p>
           )}

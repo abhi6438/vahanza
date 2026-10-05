@@ -46,7 +46,7 @@ export function AuthLayout({ title, back = true, footer, children }: { title: st
         <svg aria-hidden viewBox="0 0 200 200" className="pointer-events-none absolute -bottom-24 -right-24 size-96 text-white/5"><circle cx="100" cy="100" r="100" fill="currentColor" /></svg>
       </aside>
       <div className="flex min-w-0 flex-col">
-        <header className="flex h-16 items-center gap-2 px-8">
+        <header className="flex h-header items-center gap-2 px-8">
           {back && <IconButton tone="outline" label={t('back')} onClick={() => nav(-1)}>{Icon.back}</IconButton>}
           <span className="flex-1 text-sm font-medium text-text-2">{title}</span>
           <ThemeToggle />

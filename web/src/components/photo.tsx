@@ -96,16 +96,16 @@ export function PhotoNudge({ role, onLater }: { role: 'driver' | 'owner'; onLate
   const { busy, error, upload } = usePhotoUpload()
   return (
     <section className="flex items-start gap-3 rounded-lg border border-action/50 bg-warning-soft p-4">
-      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-surface text-warning">{userIcon}</span>
+      <span className="grid size-avatar shrink-0 place-items-center rounded-full bg-surface text-warning">{userIcon}</span>
       <div className="min-w-0 flex-1">
         <p className="font-semibold">{t('photo.nudgeTitle')}</p>
         <p className="text-sm text-text-2">{error ? t(error) : role === 'driver' ? t('photo.whyDriver') : t('photo.whyOwner')}</p>
         <div className="mt-3 flex items-center gap-2">
-          <label className="inline-flex min-h-10 cursor-pointer items-center rounded-md bg-action px-4 font-semibold text-on-action focus-within:outline focus-within:outline-3 focus-within:outline-primary">
+          <label className="inline-flex min-h-ctl-sm cursor-pointer items-center rounded-md bg-action px-4 font-semibold text-on-action focus-within:outline focus-within:outline-3 focus-within:outline-primary">
             {busy ? t('photo.uploading') : t('photo.addShort')}
             <input type="file" accept="image/*" className="sr-only" aria-label={t('photo.add')} onChange={(e) => void upload(e.target.files?.[0], 'nudge')} />
           </label>
-          <button type="button" onClick={onLater} className="min-h-10 rounded-md px-3 text-sm font-semibold text-text-2 hover:bg-surface">{t('later')}</button>
+          <button type="button" onClick={onLater} className="min-h-ctl-sm rounded-md px-3 text-sm font-semibold text-text-2 hover:bg-surface">{t('later')}</button>
         </div>
       </div>
     </section>

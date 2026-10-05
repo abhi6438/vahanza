@@ -38,7 +38,7 @@ function useCitySearch(q: string, preferState?: string | null) {
   return hits
 }
 
-const cityBtn = 'min-h-12 rounded-md border border-border bg-surface px-2 py-2 text-[16px] font-semibold leading-tight aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary'
+const cityBtn = 'min-h-ctl-lg rounded-md border border-border bg-surface px-2 py-2 text-base font-semibold leading-tight aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary'
 
 /** Pick one or more cities (e.g. where the vehicles run from). */
 export function CityPicker({ value, onToggle, preferState, multi = true }: {
@@ -139,7 +139,7 @@ export function PlaceField({ value, onChange }: { value: PlaceValue | null; onCh
 
   if (value) {
     return (
-      <div className="flex min-h-14 items-center gap-2.5 rounded-lg border-2 border-brand bg-brand-soft px-3.5 py-2.5">
+      <div className="flex min-h-ctl-lg items-center gap-2.5 rounded-lg border-2 border-brand bg-brand-soft px-3.5 py-2.5">
         <span className="text-brand">{pinIcon}</span>
         <span className="flex-1 font-semibold">{placeText(value, i18n.language)}</span>
         <button type="button" className="font-bold text-brand" onClick={() => { onChange(null); setPin(''); lastPin.current = ''; setChooseCity(false) }}>
@@ -152,7 +152,7 @@ export function PlaceField({ value, onChange }: { value: PlaceValue | null; onCh
   return (
     <div className="flex flex-col gap-3">
       <button type="button" onClick={useGps} disabled={busy !== ''}
-        className="flex min-h-14 items-center justify-center gap-2 rounded-lg border-2 border-brand bg-surface px-4 text-[17px] font-bold text-brand disabled:opacity-60">
+        className="flex min-h-ctl-lg items-center justify-center gap-2 rounded-lg border-2 border-brand bg-surface px-4 text-base font-bold text-brand disabled:opacity-60">
         {pinIcon}
         {busy === 'gps' ? t('place.finding') : t('place.gps')}
       </button>

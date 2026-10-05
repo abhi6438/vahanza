@@ -43,13 +43,13 @@ function PublicFrame({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-full">
       <header className="sticky top-0 z-30 bg-header text-white" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 md:px-6">
+        <div className="mx-auto flex h-header max-w-6xl items-center gap-2 px-4 md:px-6">
           <Link to="/start" className="flex min-w-0 flex-1 items-center gap-2.5">
             <BrandMark size={34} />
             <span className="truncate font-display text-xl font-bold">{brand.name}</span>
           </Link>
           <button type="button" onClick={() => void setLang(lang === 'hi' ? 'en' : 'hi')} aria-label={t('settings.language')}
-            className="min-h-11 rounded-md px-2.5 text-sm font-semibold text-white hover:bg-white/15">{lang === 'hi' ? 'English' : 'हिंदी'}</button>
+            className="min-h-ctl-md rounded-md px-2.5 text-sm font-semibold text-white hover:bg-white/15">{lang === 'hi' ? 'English' : 'हिंदी'}</button>
           <ThemeToggle tone="onDark" />
           <Button variant="action" size="sm" onClick={() => { track('public_login_tap'); nav('/login') }}>{t('pub.login')}</Button>
         </div>
@@ -101,8 +101,10 @@ function PublicJobCard({ job, onContact, full }: { job: PublicJob; onContact: ()
   const place = job.owner_district && job.owner_state ? placeName(`${job.owner_district}, ${job.owner_state}`, lang) : ''
   const actions = (
     <>
-      <Button variant="success" block icon={Icon.phone} className="mt-3" onClick={onContact}>{t('pub.callOwner')}</Button>
-      <ShareJobButton post={job} from="public" />
+      <div className="mt-3 flex gap-2">
+        <Button variant="success" block icon={Icon.phone} onClick={onContact}>{t('pub.callOwner')}</Button>
+        <ShareJobButton post={job} from="public" iconOnly />
+      </div>
     </>
   )
   return (
@@ -145,14 +147,14 @@ function Chooser() {
     pub.driverStats().then((s) => setDrivers(s.drivers)).catch(() => {})
   }, [])
   const go = (s: Seeking) => { setSeeking(s); track('seeking_set', { seeking: s }); nav(seekPath(s)) }
-  const card = 'flex w-full items-center gap-4 rounded-lg border border-border bg-surface p-4 text-left shadow-sm transition-colors hover:border-primary hover:bg-primary-soft/40'
+  const card = 'flex w-full items-center gap-4 rounded-lg border border-border bg-surface p-card text-left lg:flex-col lg:items-start lg:gap-3 shadow-sm transition-colors hover:border-primary hover:bg-primary-soft/40'
   return (
     <PublicFrame>
       <ReferralWelcome />
-      <div className="mx-auto max-w-xl">
-        <h1 className="font-display text-[1.75rem] font-bold leading-tight md:text-3xl">{t('pub.startTitle')}</h1>
+      <div className="mx-auto max-w-xl lg:max-w-4xl">
+        <h1 className="font-display text-3xl font-bold leading-tight">{t('pub.startTitle')}</h1>
         <p className="mt-1 text-text-2">{t('pub.startSub')}</p>
-        <div className="mt-5 flex flex-col gap-3">
+        <div className="mt-5 grid gap-3 lg:grid-cols-3 lg:gap-grid">
           <button type="button" className={card} onClick={() => go('job')}>
             <span className="grid h-[72px] w-[92px] shrink-0 place-items-center rounded-md bg-brand-soft"><WheelArt /></span>
             <span className="min-w-0 flex-1">
@@ -160,7 +162,7 @@ function Chooser() {
               <span className="block text-sm text-text-2">{t('pub.wantWorkSub')}</span>
               {!!jobs && <span className="mt-1 block text-sm font-semibold text-success">{t('pub.wantedAll', { n: jobs })}</span>}
             </span>
-            <span className="text-text-2">{Icon.chevron}</span>
+            <span className="text-text-2 lg:hidden">{Icon.chevron}</span>
           </button>
           <button type="button" className={card} onClick={() => go('driver')}>
             <span className="grid h-[72px] w-[92px] shrink-0 place-items-center rounded-md bg-accent-soft"><TruckArt /></span>
@@ -169,7 +171,7 @@ function Chooser() {
               <span className="block text-sm text-text-2">{t('pub.wantDriverSub')}</span>
               {!!drivers && <span className="mt-1 block text-sm font-semibold text-success">{t('pub.driversReady', { n: drivers })}</span>}
             </span>
-            <span className="text-text-2">{Icon.chevron}</span>
+            <span className="text-text-2 lg:hidden">{Icon.chevron}</span>
           </button>
           <button type="button" className={card} onClick={() => go('mechanic')}>
             <span className="grid h-[72px] w-[92px] shrink-0 place-items-center rounded-md bg-surface-2 text-text-2"><WrenchArt /></span>
@@ -178,7 +180,7 @@ function Chooser() {
               <span className="block text-sm text-text-2">{t('pub.wantMechanicSub')}</span>
               <span className="mt-1 inline-block rounded-full bg-accent-soft px-2 text-xs font-bold text-accent-ink">{t('soon')}</span>
             </span>
-            <span className="text-text-2">{Icon.chevron}</span>
+            <span className="text-text-2 lg:hidden">{Icon.chevron}</span>
           </button>
         </div>
       </div>
@@ -200,8 +202,8 @@ function SeekSwitch({ value }: { value: Seeking }) {
       {opts.map((o) => (
         <button key={o.key} type="button" role="tab" aria-selected={value === o.key}
           onClick={() => { if (o.key !== value) { setSeeking(o.key); track('seeking_set', { seeking: o.key, from: 'tabs' }); nav(seekPath(o.key)) } }}
-          className="flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-md px-1 text-center text-[0.8rem] font-semibold leading-tight text-text-2 aria-selected:bg-primary aria-selected:text-on-primary sm:flex-row sm:gap-2 sm:text-sm">
-          <span className="text-[1.1rem]">{o.icon}</span>{o.label}
+          className="flex min-h-ctl-lg flex-col items-center justify-center gap-0.5 rounded-md px-1 text-center text-xs font-semibold leading-tight text-text-2 aria-selected:bg-primary aria-selected:text-on-primary sm:flex-row sm:gap-2 sm:text-sm">
+          <span className="text-[length:var(--icon-size-md)]">{o.icon}</span>{o.label}
         </button>
       ))}
     </div>
@@ -248,7 +250,7 @@ function DriverList() {
     <PublicFrame>
       <SeekSwitch value="driver" />
       <section className="mb-5">
-        <h1 className="font-display text-[1.75rem] font-bold leading-tight md:text-3xl">{title}</h1>
+        <h1 className="font-display text-3xl font-bold leading-tight">{title}</h1>
         <p className="mt-1 text-text-2">{t('pub.driversSub')}</p>
       </section>
       <div role="group" aria-label={t('home.filter')} className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 md:-mx-6 md:px-6 lg:mx-0 lg:flex-wrap lg:px-0">
@@ -256,7 +258,7 @@ function DriverList() {
         <span className="mx-1 w-px shrink-0 self-stretch bg-border" aria-hidden />
         <Chip selected={!vehicle} onClick={() => setVehicle(null)}>{t('home.allVehicles')}</Chip>
         {VEHICLES.map((v) => (
-          <Chip key={v.key} selected={vehicle === v.key} onClick={() => setVehicle(vehicle === v.key ? null : v.key)} icon={<VehicleArt kind={v.key} className="h-5 w-8" />}>{pick(v.label, lang)}</Chip>
+          <Chip key={v.key} selected={vehicle === v.key} onClick={() => setVehicle(vehicle === v.key ? null : v.key)} icon={<VehicleArt kind={v.key} className="h-4 w-7" />}>{pick(v.label, lang)}</Chip>
         ))}
       </div>
       {error && <ErrorState onRetry={() => setTick((n) => n + 1)} />}
@@ -293,7 +295,7 @@ function MechanicSoon() {
     <PublicFrame>
       <SeekSwitch value="mechanic" />
       <div className="mx-auto max-w-xl rounded-lg border border-border bg-surface p-5 text-center shadow-sm">
-        <span className="mx-auto grid size-16 place-items-center rounded-full bg-accent-soft text-accent-ink"><WrenchArt /></span>
+        <span className="mx-auto grid size-14 place-items-center rounded-full bg-accent-soft text-accent-ink"><WrenchArt /></span>
         <h1 className="mt-3 font-display text-2xl font-bold">{t('pub.mechTitle')}</h1>
         <p className="mt-1 text-text-2">{t('pub.mechSub')}</p>
         <ul className="mx-auto mt-4 max-w-sm space-y-2 text-left">
@@ -351,7 +353,7 @@ function JobList() {
       <ReferralWelcome />
       <SeekSwitch value="job" />
       <section className="mb-5">
-        <h1 className="font-display text-[1.75rem] font-bold leading-tight md:text-3xl">{title}</h1>
+        <h1 className="font-display text-3xl font-bold leading-tight">{title}</h1>
         <p className="mt-1 text-text-2">{t('pub.sub')}</p>
         {city && stats && !here && stats.drivers > 0 && <p className="mt-1 text-sm text-text-2">{t('pub.noneInCity', { city: cityName })}</p>}
         {stats && (stats.hired || 0) > 0 && (
@@ -365,7 +367,7 @@ function JobList() {
         <span className="mx-1 w-px shrink-0 self-stretch bg-border" aria-hidden />
         <Chip selected={!vehicle} onClick={() => setVehicle(null)}>{t('home.allVehicles')}</Chip>
         {VEHICLES.map((v) => (
-          <Chip key={v.key} selected={vehicle === v.key} onClick={() => setVehicle(vehicle === v.key ? null : v.key)} icon={<VehicleArt kind={v.key} className="h-5 w-8" />}>{pick(v.label, lang)}</Chip>
+          <Chip key={v.key} selected={vehicle === v.key} onClick={() => setVehicle(vehicle === v.key ? null : v.key)} icon={<VehicleArt kind={v.key} className="h-4 w-7" />}>{pick(v.label, lang)}</Chip>
         ))}
       </div>
       {error && <ErrorState onRetry={() => setTick((n) => n + 1)} />}
@@ -425,7 +427,7 @@ function OneJob({ code }: { code: string }) {
           : job.open !== false
             ? <div className="rounded-lg border border-border bg-surface p-4 shadow-sm"><PublicJobCard job={job} full onContact={() => askLogin(code, 'shared')} /></div>
             : null)}
-      <Link to={signedIn ? '/home' : '/jobs'} className="mt-5 flex min-h-11 items-center justify-center gap-1 font-semibold text-primary hover:underline">
+      <Link to={signedIn ? '/home' : '/jobs'} className="mt-5 flex min-h-ctl-md items-center justify-center gap-1 font-semibold text-primary hover:underline">
         {t('pub.moreJobs')} {Icon.chevron}
       </Link>
     </div>

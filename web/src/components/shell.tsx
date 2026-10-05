@@ -72,7 +72,8 @@ export interface ShellProps {
   children: ReactNode
 }
 
-const WIDTH = { narrow: 'max-w-3xl', default: 'max-w-6xl', wide: 'max-w-[1440px]' }
+// large screens get more room through width / columns, never bigger components
+const WIDTH = { narrow: 'max-w-3xl', default: 'max-w-6xl min-[1600px]:max-w-7xl', wide: 'max-w-[1440px] min-[1600px]:max-w-[1680px]' }
 
 export function AppShell(p: ShellProps) {
   const layout = useLayout()
@@ -91,15 +92,15 @@ function DesktopShell({ title, sub, actions, back, width = 'default', adminQueue
   const nav = useNavigate()
   useEffect(() => { document.documentElement.style.setProperty('--toast-offset', '24px') }, [])
   return (
-    <div className="grid min-h-full grid-cols-[264px_minmax(0,1fr)]">
+    <div className="grid min-h-full grid-cols-[var(--sidebar-width)_minmax(0,1fr)]">
       <SkipLink />
       <Sidebar adminQueue={adminQueue} />
       <div className="flex min-w-0 flex-col">
         <header className="sticky top-0 z-30 border-b border-border bg-bg/90 backdrop-blur">
-          <div className={`mx-auto flex h-[4.5rem] w-full items-center gap-3 px-8 ${WIDTH[width]}`}>
+          <div className={`mx-auto flex h-header w-full items-center gap-3 px-[var(--page-gutter)] ${WIDTH[width]}`}>
             {back && <IconButton tone="outline" label={t('back')} onClick={() => nav(-1)}>{Icon.back}</IconButton>}
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-2xl font-semibold leading-tight">{title}</h1>
+              <h1 className="truncate text-xl font-semibold leading-tight">{title}</h1>
               {sub && <p className="truncate text-sm text-text-2">{sub}</p>}
             </div>
             {actions}
@@ -107,7 +108,7 @@ function DesktopShell({ title, sub, actions, back, width = 'default', adminQueue
             <ThemeToggle />
           </div>
         </header>
-        <main id="main" tabIndex={-1} className={`mx-auto w-full flex-1 px-8 pb-12 pt-6 outline-none ${WIDTH[width]}`}>{children}</main>
+        <main id="main" tabIndex={-1} className={`mx-auto w-full flex-1 px-[var(--page-gutter)] pb-12 pt-[var(--section-gap)] outline-none ${WIDTH[width]}`}>{children}</main>
       </div>
     </div>
   )
@@ -134,14 +135,14 @@ function Sidebar({ adminQueue }: { adminQueue?: number }) {
   const unread = useUnread()
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
   const item = ({ isActive }: { isActive: boolean }) =>
-    `group relative flex min-h-11 items-center gap-3 rounded-md px-3 font-medium transition-colors ${isActive ? 'bg-primary-soft text-primary' : 'text-text-2 hover:bg-surface-2 hover:text-text'}`
+    `group relative flex min-h-ctl-md items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors ${isActive ? 'bg-primary-soft text-primary' : 'text-text-2 hover:bg-surface-2 hover:text-text'}`
   return (
     <div className="border-r border-border bg-surface">
-    <aside className="sticky top-0 flex h-dvh flex-col px-4 pb-4 pt-5">
-      <Link to={isAdmin ? '/admin' : '/home'} className="mb-6 flex items-center gap-2.5 px-2">
-        <BrandMark />
+    <aside className="sticky top-0 flex h-dvh flex-col px-3 pb-3 pt-4">
+      <Link to={isAdmin ? '/admin' : '/home'} className="mb-5 flex items-center gap-2.5 px-2">
+        <BrandMark size={32} />
         <span className="leading-tight">
-          <span className="block font-display text-xl font-bold text-text">{brand.name}</span>
+          <span className="block font-display text-lg font-bold text-text">{brand.name}</span>
           <span className="block text-xs text-text-2">{isAdmin ? t('admin.title') : brand.nameHi}</span>
         </span>
       </Link>
@@ -172,10 +173,10 @@ function Sidebar({ adminQueue }: { adminQueue?: number }) {
           <span className="flex-1">{t('profile.help')}</span>
         </a>
       </nav>
-      <div className="mt-auto flex items-center gap-3 rounded-md border border-border p-2.5">
-        <Avatar url={profile?.photo_url} name={profile?.name} size={40} />
+      <div className="mt-auto flex items-center gap-2.5 rounded-md border border-border p-2">
+        <Avatar url={profile?.photo_url} name={profile?.name} size={36} />
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold leading-tight">{profile?.business_name || profile?.name || '—'}</p>
+          <p className="truncate text-sm font-semibold leading-tight">{profile?.business_name || profile?.name || '—'}</p>
           <p className="truncate text-xs text-text-2">{profile?.role ? t(`role.${profile.role}`, { defaultValue: profile.role }) : ''}</p>
         </div>
         <LogoutButton />
@@ -201,15 +202,15 @@ function MobileShell({ title, hero, back, mobileActions, adminQueue, children, t
   const nav = useNavigate()
   const tabs = !back
   useEffect(() => {
-    document.documentElement.style.setProperty('--toast-offset', tabs ? '84px' : '16px')
+    document.documentElement.style.setProperty('--toast-offset', tabs ? '76px' : '16px')
   }, [tabs])
   const container = tablet ? 'max-w-3xl px-6' : 'max-w-xl px-4'
   return (
-    <div className={`min-h-full ${tabs ? 'pb-[calc(env(safe-area-inset-bottom,0px)+76px)]' : 'pb-6'}`}>
+    <div className={`min-h-full ${tabs ? 'pb-[calc(env(safe-area-inset-bottom,0px)+var(--bottom-nav-height)+16px)]' : 'pb-6'}`}>
       <SkipLink />
       {back ? (
         <header className="sticky top-0 z-30 border-b border-border bg-surface" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-          <div className={`mx-auto flex h-14 items-center gap-1 ${tablet ? 'max-w-3xl px-4' : 'px-2'}`}>
+          <div className={`mx-auto flex h-header items-center gap-1 ${tablet ? 'max-w-3xl px-4' : 'px-2'}`}>
             <IconButton label={t('back')} onClick={() => nav(-1)}>{Icon.back}</IconButton>
             <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">{title}</h1>
             {mobileActions}
@@ -217,9 +218,9 @@ function MobileShell({ title, hero, back, mobileActions, adminQueue, children, t
         </header>
       ) : (
         <header className="bg-header text-white" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-          <div className={`mx-auto ${container} ${hero ? 'pb-4 pt-2' : ''}`}>
+          <div className={`mx-auto ${container} ${hero ? 'pb-3 pt-1' : ''}`}>
             {hero ?? (
-              <div className="flex h-14 items-center gap-1">
+              <div className="flex h-header items-center gap-1">
                 <h1 className="min-w-0 flex-1 truncate font-display text-xl font-semibold">{title}</h1>
                 {mobileActions}
                 {!admin && <Bell tone="onDark" />}
@@ -228,7 +229,7 @@ function MobileShell({ title, hero, back, mobileActions, adminQueue, children, t
                 {admin && (
                   <>
                     <Link to="/settings" aria-label={t('settings.title')} title={t('settings.title')}
-                      className="grid size-11 shrink-0 place-items-center rounded-md text-[1.1rem] text-white transition-colors hover:bg-white/15 active:bg-white/20">{Icon.settings}</Link>
+                      className="grid size-ctl-md shrink-0 place-items-center rounded-md text-[length:var(--icon-size-md)] text-white transition-colors hover:bg-white/15 active:bg-white/20">{Icon.settings}</Link>
                     <LogoutButton tone="onDark" />
                   </>
                 )}
@@ -246,8 +247,8 @@ function MobileShell({ title, hero, back, mobileActions, adminQueue, children, t
 /** Mobile hero header row: title + bell + theme (pages add their own content under it). */
 export function HeroBar({ title, badge }: { title: ReactNode; badge?: ReactNode }) {
   return (
-    <div className="flex h-14 items-center gap-1">
-      <h1 className="min-w-0 flex-1 truncate font-display text-[1.375rem] font-semibold">{title}</h1>
+    <div className="flex h-header items-center gap-1">
+      <h1 className="min-w-0 flex-1 truncate font-display text-xl font-semibold">{title}</h1>
       {badge}
       <Bell tone="onDark" />
       <ThemeToggle tone="onDark" />
@@ -264,10 +265,10 @@ export function BottomNav({ adminQueue }: { adminQueue?: number }) {
       <div className="mx-auto grid max-w-xl" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
         {items.map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end}
-            className={({ isActive }) => `relative flex min-h-16 flex-col items-center justify-center gap-0.5 text-[0.8rem] font-medium ${isActive ? 'text-primary' : 'text-text-2'}`}>
+            className={({ isActive }) => `relative flex h-nav flex-col items-center justify-center gap-0.5 text-xs font-medium ${isActive ? 'text-primary' : 'text-text-2'}`}>
             {({ isActive }) => (
               <>
-                <span className={`grid h-8 w-14 place-items-center rounded-full text-[1.2rem] transition-colors ${isActive ? 'bg-primary-soft' : ''}`}>{i.icon}</span>
+                <span className={`grid h-7 w-12 place-items-center rounded-full text-[length:var(--icon-size-md)] transition-colors ${isActive ? 'bg-primary-soft' : ''}`}>{i.icon}</span>
                 <span className="max-w-full truncate px-1 leading-tight">{i.label}</span>
                 {!!i.count && <CountDot n={i.count} className="absolute right-[22%] top-1.5" />}
               </>
@@ -290,9 +291,9 @@ export function WithRail({ main, rail, mobileTop }: { main: ReactNode; rail: Rea
   const layout = useLayout()
   if (layout !== 'desktop') return <>{mobileTop && <div className="mb-4 flex flex-col gap-3">{mobileTop}</div>}{main}</>
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-8">
+    <div className="grid items-start gap-section xl:grid-cols-[minmax(0,1fr)_340px] min-[1600px]:grid-cols-[minmax(0,1fr)_380px]">
       <div className="order-2 min-w-0 xl:order-1">{main}</div>
-      <aside className="order-1 grid content-start gap-4 lg:grid-cols-2 xl:order-2 xl:grid-cols-1">{rail}</aside>
+      <aside className="order-1 grid content-start items-start gap-grid lg:grid-cols-2 xl:order-2 xl:grid-cols-1">{rail}</aside>
     </div>
   )
 }
@@ -301,7 +302,7 @@ export function WithRail({ main, rail, mobileTop }: { main: ReactNode; rail: Rea
 export function CardGrid({ children }: { children: ReactNode }) {
   return (
     <div className="@container">
-      <div className="grid grid-cols-1 gap-3 @xl:grid-cols-2 @xl:gap-4 @4xl:grid-cols-3">{children}</div>
+      <div className="grid grid-cols-1 gap-grid @xl:grid-cols-2 @4xl:grid-cols-3 @[90rem]:grid-cols-4">{children}</div>
     </div>
   )
 }

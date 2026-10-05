@@ -59,7 +59,7 @@ export function MicButton({ onText, label }: { onText: (text: string) => void; l
   return (
     <>
       <button type="button" onClick={start} aria-label={on ? t('voice.stop') : `${t('voice.speak')}: ${label}`} title={t('voice.speak')} aria-pressed={on}
-        className={`grid size-12 shrink-0 place-items-center rounded-md border text-[1.2rem] transition-colors ${on ? 'animate-pulse border-error bg-error-soft text-error' : 'border-border bg-surface text-primary hover:bg-primary-soft'}`}>
+        className={`grid size-ctl-lg shrink-0 place-items-center rounded-md border text-[length:var(--icon-size-md)] transition-colors ${on ? 'animate-pulse border-error bg-error-soft text-error' : 'border-border bg-surface text-primary hover:bg-primary-soft'}`}>
         {Icon.mic}
       </button>
       {on && <span className="sr-only" role="status">{t('voice.listening')}</span>}

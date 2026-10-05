@@ -91,8 +91,8 @@ function PostRow({ p, onDone }: { p: QueuePost; onDone: () => void }) {
       <p className="mt-2">{t('post.savings')} <strong>{rupees(p.savings_monthly)}</strong>{t('card.perMonthSavings')} · {t('post.totalN', { n: p.drivers_needed })}</p>
       <Flags flags={p.check_flags} />
       <div className="mt-3 flex gap-2">
-        <button type="button" disabled={busy} onClick={() => void act('approve')} className="min-h-11 flex-1 rounded-md bg-success font-bold text-on-success disabled:opacity-50">{t('admin.approve')}</button>
-        <button type="button" disabled={busy} onClick={() => void act('reject')} className="min-h-11 flex-1 rounded-md border border-border font-bold text-error disabled:opacity-50">{t('admin.reject')}</button>
+        <button type="button" disabled={busy} onClick={() => void act('approve')} className="min-h-ctl-md flex-1 rounded-md bg-success font-bold text-on-success disabled:opacity-50">{t('admin.approve')}</button>
+        <button type="button" disabled={busy} onClick={() => void act('reject')} className="min-h-ctl-md flex-1 rounded-md border border-border font-bold text-error disabled:opacity-50">{t('admin.reject')}</button>
       </div>
     </div>
   )
@@ -117,8 +117,8 @@ function ProfileRow({ p, onDone }: { p: QueueProfile; onDone: () => void }) {
       </div>
       <Flags flags={p.check_flags} />
       <div className="mt-3 flex gap-2">
-        <button type="button" disabled={busy} onClick={() => void act('clear')} className="min-h-11 flex-1 rounded-md bg-success font-bold text-on-success disabled:opacity-50">{t('admin.looksOk')}</button>
-        <button type="button" disabled={busy} onClick={() => void act('block')} className="min-h-11 flex-1 rounded-md border border-border font-bold text-error disabled:opacity-50">{t('admin.block')}</button>
+        <button type="button" disabled={busy} onClick={() => void act('clear')} className="min-h-ctl-md flex-1 rounded-md bg-success font-bold text-on-success disabled:opacity-50">{t('admin.looksOk')}</button>
+        <button type="button" disabled={busy} onClick={() => void act('block')} className="min-h-ctl-md flex-1 rounded-md border border-border font-bold text-error disabled:opacity-50">{t('admin.block')}</button>
       </div>
     </div>
   )
@@ -132,7 +132,7 @@ function ReportRow({ r, onDone }: { r: QueueReport; onDone: () => void }) {
     setBusy(true)
     try { await admin.reviewReport(r.id, action); track('admin_review_report', { action }); onDone() } finally { setBusy(false) }
   }
-  const btn = 'min-h-11 flex-1 rounded-md border border-border px-2 text-sm font-bold disabled:opacity-50'
+  const btn = 'min-h-ctl-md flex-1 rounded-md border border-border px-2 text-sm font-bold disabled:opacity-50'
   return (
     <div className="rounded-lg border border-border bg-surface p-4">
       <div className="flex justify-between gap-2">
@@ -191,15 +191,15 @@ function VerifyRow({ v, onDone }: { v: VerifyItem; onDone: () => void }) {
           <div className="flex flex-wrap gap-2">
             {REASONS.map((r) => (
               <button key={r} type="button" disabled={busy} onClick={() => void act('reject', r)}
-                className="min-h-10 rounded-full border border-border px-3 text-sm font-medium hover:border-error hover:text-error disabled:opacity-50">{t(`verify.reason.${r}`)}</button>
+                className="min-h-ctl-sm rounded-full border border-border px-3 text-sm font-medium hover:border-error hover:text-error disabled:opacity-50">{t(`verify.reason.${r}`)}</button>
             ))}
-            <button type="button" onClick={() => setRejecting(false)} className="min-h-10 px-2 text-sm text-text-2 underline">{t('cancel')}</button>
+            <button type="button" onClick={() => setRejecting(false)} className="min-h-ctl-sm px-2 text-sm text-text-2 underline">{t('cancel')}</button>
           </div>
         </div>
       ) : (
         <div className="mt-3 flex gap-2">
-          <button type="button" disabled={busy} onClick={() => void act('approve')} className="min-h-11 flex-1 rounded-md bg-success font-bold text-on-success disabled:opacity-50">{t('admin.v.approve')}</button>
-          <button type="button" disabled={busy} onClick={() => setRejecting(true)} className="min-h-11 flex-1 rounded-md border border-border font-bold text-error disabled:opacity-50">{t('admin.reject')}</button>
+          <button type="button" disabled={busy} onClick={() => void act('approve')} className="min-h-ctl-md flex-1 rounded-md bg-success font-bold text-on-success disabled:opacity-50">{t('admin.v.approve')}</button>
+          <button type="button" disabled={busy} onClick={() => setRejecting(true)} className="min-h-ctl-md flex-1 rounded-md border border-border font-bold text-error disabled:opacity-50">{t('admin.reject')}</button>
         </div>
       )}
       <p className="mt-2 text-xs text-text-2">{t('admin.v.deleted')}</p>

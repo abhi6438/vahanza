@@ -70,11 +70,11 @@ export function CardMenu({ target, personId, name, onBlocked }: {
   }
 
   const toast = useToast()
-  const row = 'flex min-h-14 w-full items-center gap-3 rounded-md border border-border px-4 text-left font-medium hover:bg-surface-2'
+  const row = 'flex min-h-ctl-lg w-full items-center gap-3 rounded-md border border-border px-4 text-left font-medium hover:bg-surface-2'
   return (
     <>
       <button type="button" aria-label={t('trust.more')} title={t('trust.more')} onClick={() => setOpen('menu')}
-        className="-mr-2 -mt-1.5 grid size-11 shrink-0 place-items-center rounded-md text-text-2 hover:bg-surface-2 hover:text-text">
+        className="-mr-2 -mt-1.5 grid size-ctl-md shrink-0 place-items-center rounded-md text-text-2 hover:bg-surface-2 hover:text-text">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden><circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" /></svg>
       </button>
 
@@ -91,7 +91,7 @@ export function CardMenu({ target, personId, name, onBlocked }: {
         <div role="radiogroup" aria-label={t('trust.reportTitle')} className="flex flex-col gap-2">
           {REASONS.map((r) => (
             <button key={r.key} type="button" role="radio" aria-checked={reason === r.key} onClick={() => setReason(r.key)}
-              className="flex min-h-12 items-center gap-3 rounded-md border border-border px-3.5 text-left font-medium aria-checked:border-error aria-checked:bg-error-soft">
+              className="flex min-h-ctl-lg items-center gap-3 rounded-md border border-border px-3.5 text-left font-medium aria-checked:border-error aria-checked:bg-error-soft">
               <span className={`grid size-5 shrink-0 place-items-center rounded-full border-2 ${reason === r.key ? 'border-error' : 'border-border'}`}>{reason === r.key && <span className="size-2.5 rounded-full bg-error" />}</span>
               {pick(r.label, i18n.language)}
             </button>
@@ -180,7 +180,7 @@ export function RatePrompt() {
       <div className="mt-2 flex items-center justify-between" role="radiogroup" aria-label={t('trust.stars')}>
         {[1, 2, 3, 4, 5].map((n) => (
           <button key={n} type="button" role="radio" aria-checked={stars === n} aria-label={`${n}`} onClick={() => setStars(n)}
-            className={`grid size-12 place-items-center rounded-md text-[1.75rem] transition-colors hover:bg-surface-2 ${n <= stars ? 'text-action' : 'text-border'}`}>{Icon.star}</button>
+            className={`grid size-12 place-items-center rounded-md text-[1.75rem] lg:size-10 lg:text-[1.375rem] transition-colors hover:bg-surface-2 ${n <= stars ? 'text-action' : 'text-border'}`}>{Icon.star}</button>
         ))}
       </div>
       {stars > 0 && <p className="text-center text-sm font-medium">{pick(STAR_WORDS[stars], lang)}</p>}

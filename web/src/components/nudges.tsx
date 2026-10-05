@@ -48,7 +48,7 @@ export function CompleteCard({ role, percent, missing, listable, compact }: { ro
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label={t('complete.title', { n: percent })}>
         <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${percent}%` }} />
       </div>
-      {!compact && <p className="mt-3 text-[0.95rem] text-text-2">{t(role === 'driver' ? 'complete.whyDriver' : 'complete.whyOwner')}</p>}
+      {!compact && <p className="mt-3 text-sm text-text-2">{t(role === 'driver' ? 'complete.whyDriver' : 'complete.whyOwner')}</p>}
       {!listable && role === 'driver' && <div className="mt-3"><Note tone="warn">{t('complete.hiddenDriver')}</Note></div>}
       <ul className="mt-3 flex flex-wrap gap-2">
         {shown.map((m) => (

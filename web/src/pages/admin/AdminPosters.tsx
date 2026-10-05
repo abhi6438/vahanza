@@ -104,7 +104,7 @@ export default function AdminPosters() {
           {items?.map((p) => (
             <Card key={p.id} className="flex flex-col">
               <div className="flex items-start gap-3">
-                <span className="grid size-11 shrink-0 place-items-center rounded-md bg-primary-soft text-[1.25rem] text-primary">{Icon.qr}</span>
+                <span className="grid size-ctl-md shrink-0 place-items-center rounded-md bg-primary-soft text-[length:var(--icon-size-md)] text-primary">{Icon.qr}</span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{p.place}</p>
                   <p className="truncate text-sm text-text-2">{[cityOf(p), p.code, ago(p.created_at, lang)].filter(Boolean).join(' · ')}</p>

@@ -214,7 +214,7 @@ function DriverHome() {
   const hidden = blocker && (
     <Link to={`/setup?step=${blocker.step}`} onClick={() => track('hidden_banner_tap')}
       className="flex items-center gap-3 rounded-lg border border-action/50 bg-warning-soft px-4 py-3 font-medium text-warning">
-      <span className="text-[1.2rem]">{Icon.alert}</span>
+      <span className="text-[length:var(--icon-size-md)]">{Icon.alert}</span>
       <span className="flex-1">{t('home.hiddenBanner')}</span>
       {Icon.chevron}
     </Link>

@@ -54,7 +54,7 @@ export default function Invite() {
             <Card>
               <p className="text-sm text-text-2">{t('invite.yourLink')}</p>
               <div className="mt-1 flex items-center gap-2">
-                <code className="min-w-0 flex-1 truncate rounded-md bg-surface-2 px-3 py-2.5 text-[0.95rem]">{refLink(g.ref_code).replace(/^https?:\/\//, '')}</code>
+                <code className="min-w-0 flex-1 truncate rounded-md bg-surface-2 px-3 py-2.5 text-sm">{refLink(g.ref_code).replace(/^https?:\/\//, '')}</code>
                 <Button variant="outline" aria-label={t('invite.copy')} title={t('invite.copy')} className="shrink-0 !px-3" onClick={() => void copy(refLink(g.ref_code))}>{Icon.copy}</Button>
               </div>
               <p className="mt-2 text-sm text-text-2">{t('invite.code')}: <strong className="tracking-widest text-text">{g.ref_code}</strong></p>

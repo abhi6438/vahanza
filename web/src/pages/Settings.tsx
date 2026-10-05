@@ -51,8 +51,8 @@ export default function Settings() {
             {keys.map((k) => (
               <button key={k} type="button" aria-current={current === k ? 'page' : undefined}
                 onClick={() => setParams({ s: k }, { replace: true })}
-                className={`flex min-h-11 items-center gap-3 rounded-md px-3 text-left font-medium transition-colors ${current === k ? 'bg-primary-soft text-primary' : 'text-text-2 hover:bg-surface-2 hover:text-text'}`}>
-                <span className="text-[1.1rem]">{ICONS[k]}</span>{t(`settings.cat.${k}`)}
+                className={`flex min-h-ctl-md items-center gap-3 rounded-md px-3 text-left font-medium transition-colors ${current === k ? 'bg-primary-soft text-primary' : 'text-text-2 hover:bg-surface-2 hover:text-text'}`}>
+                <span className="text-[length:var(--icon-size-md)]">{ICONS[k]}</span>{t(`settings.cat.${k}`)}
               </button>
             ))}
           </nav>
@@ -169,7 +169,7 @@ function AccountSection() {
 
 function PrivacySection({ isUser }: { isUser: boolean }) {
   const { t } = useTranslation()
-  const link = 'flex min-h-12 items-center gap-3 border-b border-border py-2 font-medium last:border-0 hover:text-primary'
+  const link = 'flex min-h-ctl-lg items-center gap-3 border-b border-border py-2 font-medium last:border-0 hover:text-primary'
   return (
     <div>
       <ul className="mb-4 space-y-2 text-sm text-text-2">
@@ -189,7 +189,7 @@ function HelpSection() {
   return (
     <div>
       <SettingRow label={t('settings.help')} sub={brand.supportPhone}>
-        <a href={`tel:${brand.supportPhone}`} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-success px-4 font-semibold text-on-success">{Icon.phone}{t('card.call')}</a>
+        <a href={`tel:${brand.supportPhone}`} className="inline-flex min-h-ctl-md items-center gap-2 rounded-md bg-success px-4 font-semibold text-on-success">{Icon.phone}{t('card.call')}</a>
       </SettingRow>
       <SettingRow label={t('settings.grievance')} sub={<>{brand.grievanceOfficer.name} · <span className="select-all">{brand.grievanceOfficer.email}</span></>}>
         <span />

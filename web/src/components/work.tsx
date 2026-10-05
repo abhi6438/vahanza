@@ -79,7 +79,7 @@ export function HireDialog({ postId, open, onClose, onDone }: { postId: string; 
           const on = picked.includes(c.id)
           return (
             <li key={c.id}>
-              <label className={`flex min-h-16 items-center gap-3 rounded-md border px-3 py-2 ${on ? 'border-primary bg-primary-soft' : 'border-border bg-surface'} ${done ? 'opacity-60' : ''}`}>
+              <label className={`flex min-h-14 items-center gap-3 rounded-md border px-3 py-2 ${on ? 'border-primary bg-primary-soft' : 'border-border bg-surface'} ${done ? 'opacity-60' : ''}`}>
                 <input type="checkbox" className="size-5 accent-[var(--c-brand)]" checked={on || done} disabled={done}
                   onChange={() => setPicked(on ? picked.filter((x) => x !== c.id) : [...picked, c.id])} />
                 <Avatar url={c.photo_url} name={c.name} size={40} />

@@ -23,10 +23,17 @@ export function jobShareText(post: Pick<Post, 'groups' | 'base_cities' | 'saving
 }
 
 /** WhatsApp share for a job (owners share their own post, drivers forward a job to a friend). */
-export function ShareJobButton({ post, from, fallbackCity, compact }: { post: Pick<Post, 'groups' | 'base_cities' | 'savings_monthly' | 'share_code' | 'status'>; from: string; fallbackCity?: string; compact?: boolean }) {
+export function ShareJobButton({ post, from, fallbackCity, compact, iconOnly }: { post: Pick<Post, 'groups' | 'base_cities' | 'savings_monthly' | 'share_code' | 'status'>; from: string; fallbackCity?: string; compact?: boolean; iconOnly?: boolean }) {
   const { t, i18n } = useTranslation()
   if (!post.share_code || post.status !== 'live') return null
   const text = jobShareText(post, i18n.language, fallbackCity)
+  // iconOnly: sits in the same row as another button (job lists), so the card stays short
+  if (iconOnly) return (
+    <Button variant="outline" aria-label={t('share.job')} title={t('share.job')} className="shrink-0 !border-whatsapp/50 !px-3 !text-whatsapp"
+      onClick={() => shareWhatsApp(text, 'job_share', { from })}>
+      {Icon.whatsapp}
+    </Button>
+  )
   return (
     <div className="mt-2 flex gap-2">
       <Button variant="outline" size={compact ? 'sm' : 'md'} block icon={Icon.whatsapp} className="!border-whatsapp/50 !text-whatsapp"
@@ -80,7 +87,7 @@ export function GrowthCard() {
     <Card>
       {isDriver && (
         <div className="flex items-center gap-3">
-          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-warning-soft text-[1.2rem] text-warning">{Icon.eye}</span>
+          <span className="grid size-avatar shrink-0 place-items-center rounded-full bg-warning-soft text-[length:var(--icon-size-md)] text-warning">{Icon.eye}</span>
           <div className="min-w-0">
             <p className="font-semibold leading-snug">{g.views_week > 0 ? t('growth.viewsWeek', { n: g.views_week }) : t('growth.viewsNone')}</p>
             <p className="text-sm text-text-2">{g.views_week > 0 ? t('growth.viewsSub') : t('growth.viewsNoneSub')}</p>
@@ -95,7 +102,7 @@ export function GrowthCard() {
       <div className={`grid gap-2 ${isDriver ? 'mt-3 grid-cols-2' : ''}`}>
         {isDriver && <Button variant="outline" icon={Icon.idcard} onClick={() => { setCard(true); track('card_open', { from: 'home' }) }}>{t('card.mine')}</Button>}
         <Link to="/invite" onClick={() => track('invite_open', { from: 'home' })}
-          className="flex min-h-11 items-center justify-center gap-2 rounded-md bg-action px-3 font-semibold text-on-action hover:brightness-95">
+          className="flex min-h-ctl-md items-center justify-center gap-2 whitespace-nowrap rounded-md bg-action px-3 font-semibold text-on-action hover:brightness-95">
           {Icon.gift}{t('growth.invite')}
         </Link>
       </div>

@@ -30,9 +30,9 @@ export default function Language() {
               onClick={() => setLang(o.code)}
               className="flex items-center gap-3.5 rounded-lg border border-border bg-surface p-4 text-left aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary"
             >
-              <span className="grid h-14 w-14 place-items-center rounded-md bg-brand-soft font-display text-3xl font-bold text-brand">{o.glyph}</span>
+              <span className="grid size-12 place-items-center rounded-md bg-brand-soft font-display text-2xl font-bold text-brand">{o.glyph}</span>
               <span>
-                <strong className="block text-[22px] leading-tight">{o.name}</strong>
+                <strong className="block text-xl leading-tight">{o.name}</strong>
                 <span className="text-sm text-text-2">{o.sub}</span>
               </span>
             </button>

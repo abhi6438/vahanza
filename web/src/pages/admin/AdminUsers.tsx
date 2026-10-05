@@ -49,7 +49,7 @@ export default function AdminUsers() {
       <div className="grid gap-3 md:grid-cols-2">
         {items?.map((u) => <UserRow key={u.id} u={u} onChange={update} />)}
       </div>
-      {more && <button type="button" onClick={() => void loadMore()} className="mt-4 min-h-11 w-full rounded-md border-2 border-brand font-bold text-brand">{t('admin.u.more')}</button>}
+      {more && <button type="button" onClick={() => void loadMore()} className="mt-4 min-h-ctl-md w-full rounded-md border-2 border-brand font-bold text-brand">{t('admin.u.more')}</button>}
     </AdminLayout>
   )
 }
@@ -89,11 +89,11 @@ function UserRow({ u, onChange }: { u: AdminUser; onChange: (u: AdminUser) => vo
       </p>
       <div className="mt-3 flex gap-2">
         <button type="button" disabled={busy} onClick={() => void patch({ verified: !u.verified })}
-          className="min-h-10 flex-1 rounded-md border-2 border-brand text-sm font-bold text-brand disabled:opacity-50">
+          className="min-h-ctl-sm flex-1 rounded-md border-2 border-brand text-sm font-bold text-brand disabled:opacity-50">
           {u.verified ? t('admin.u.unverify') : t('admin.u.verify')}
         </button>
         <button type="button" disabled={busy} onClick={() => void patch({ blocked: !u.blocked })}
-          className="min-h-10 flex-1 rounded-md border border-border text-sm font-bold text-error disabled:opacity-50">
+          className="min-h-ctl-sm flex-1 rounded-md border border-border text-sm font-bold text-error disabled:opacity-50">
           {u.blocked ? t('admin.u.unblock') : t('admin.block')}
         </button>
       </div>

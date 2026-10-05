@@ -79,7 +79,7 @@ export default function Notifications() {
                       <span className={`min-w-0 flex-1 ${n.read_at ? 'font-medium' : 'font-semibold'}`}>{title}</span>
                       <span className="shrink-0 text-xs text-text-2">{ago(n.created_at, i18n.language)}</span>
                     </span>
-                    <span className="block text-[0.95rem] text-text-2">{body}</span>
+                    <span className="block text-sm text-text-2">{body}</span>
                   </span>
                   {!n.read_at && <span className={`mt-2 size-2.5 shrink-0 rounded-full ${DOT[n.kind]}`} aria-label={t('notif.new')} />}
                 </button>

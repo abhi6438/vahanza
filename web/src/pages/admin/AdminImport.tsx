@@ -140,9 +140,9 @@ function Upload({ onDone }: { onDone: () => void }) {
           {!!preview.rows?.length && <PreviewTable rows={preview.rows} />}
           <div className="mt-3 flex gap-2">
             <button type="button" onClick={() => { setPreview(null); setFile(null); if (input.current) input.current.value = '' }}
-              className="min-h-12 flex-1 rounded-md border border-border font-bold">{t('cancel')}</button>
+              className="min-h-ctl-lg flex-1 rounded-md border border-border font-bold">{t('cancel')}</button>
             <button type="button" disabled={!ready} onClick={() => void save()}
-              className="min-h-12 flex-[2] rounded-md bg-primary font-bold text-on-primary disabled:opacity-50">{t('admin.imp.save', { n: nf(ready) })}</button>
+              className="min-h-ctl-lg flex-[2] rounded-md bg-primary font-bold text-on-primary disabled:opacity-50">{t('admin.imp.save', { n: nf(ready) })}</button>
           </div>
         </div>
       )}
@@ -319,7 +319,7 @@ function People({ cfg, importFilter, clearImport, reload, onInvited }: {
 
       <div className="mb-3 rounded-md bg-bg p-3">
         <button type="button" disabled={busy || !readyN || !!smsBlocked} onClick={() => void smsAll()}
-          className="min-h-12 w-full rounded-md bg-brand px-3 font-bold text-white disabled:opacity-50">
+          className="min-h-ctl-lg w-full rounded-md bg-brand px-3 font-bold text-white disabled:opacity-50">
           {t('admin.imp.smsAll', { n: nf(Math.min(readyN, 500)) })}
         </button>
         {smsBlocked && <p className="mt-2 text-sm text-text-2">{smsBlocked}</p>}
@@ -332,7 +332,7 @@ function People({ cfg, importFilter, clearImport, reload, onInvited }: {
       <div className="flex flex-col gap-2">
         {data?.items.map((p) => <PersonRow key={p.id} p={p} onChange={replace} onInvited={invitedOne} />)}
       </div>
-      {data?.has_more && <button type="button" onClick={() => void more()} className="mt-3 min-h-11 w-full rounded-md border-2 border-brand font-bold text-brand">{t('admin.u.more')}</button>}
+      {data?.has_more && <button type="button" onClick={() => void more()} className="mt-3 min-h-ctl-md w-full rounded-md border-2 border-brand font-bold text-brand">{t('admin.u.more')}</button>}
     </section>
   )
 }
@@ -380,7 +380,7 @@ function PersonRow({ p, onChange, onInvited }: { p: Prospect; onChange: (p: Pros
         </div>
         {p.can_invite && (
           <button type="button" disabled={busy} onClick={() => void whatsapp()}
-            className="min-h-11 shrink-0 rounded-md bg-success px-3 text-sm font-semibold text-on-success disabled:opacity-50">WhatsApp</button>
+            className="min-h-ctl-md shrink-0 rounded-md bg-success px-3 text-sm font-semibold text-on-success disabled:opacity-50">WhatsApp</button>
         )}
       </div>
       {err && <p className="mt-1 text-sm text-error">{err}</p>}

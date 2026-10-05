@@ -235,7 +235,7 @@ function PostItem({ post, onChange, startOpen = false }: { post: MyPost; onChang
         actions={
           <>
             <button type="button" onClick={toggle} aria-expanded={open} aria-controls={panelId}
-              className="mt-3 flex min-h-12 w-full items-center justify-between gap-2 rounded-md bg-primary-soft px-4 font-semibold text-primary">
+              className="mt-3 flex min-h-ctl-lg w-full items-center justify-between gap-2 rounded-md bg-primary-soft px-4 font-semibold text-primary">
               <span className="flex items-center gap-2">
                 {t('post.interestedN', { n: post.interested })}
                 {post.new_interested > 0 && <Badge tone="action">{t('post.newN', { n: post.new_interested })}</Badge>}

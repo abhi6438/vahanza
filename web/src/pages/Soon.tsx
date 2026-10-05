@@ -43,7 +43,7 @@ export default function Soon() {
     <AppShell title={t('tabs.mechanic')} sub={t('soonPage.sub')} width="default">
       <p className="mb-4 text-text-2 lg:hidden">{t('soonPage.sub')}</p>
       <section className="mb-4 flex flex-col gap-4 rounded-lg border border-action/50 bg-warning-soft p-5 md:flex-row md:items-center">
-        <span className="grid size-14 shrink-0 place-items-center rounded-lg bg-surface text-[1.6rem] text-warning">{Icon.wrench}</span>
+        <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-surface text-[length:var(--icon-size-lg)] text-warning">{Icon.wrench}</span>
         <div className="min-w-0 flex-1">
           <Badge tone="action">{t('soon')}</Badge>
           <p className="mt-1 text-xl font-semibold">{en ? first.n[1] : first.n[0]}</p>

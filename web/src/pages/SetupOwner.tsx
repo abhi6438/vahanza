@@ -181,7 +181,7 @@ export default function SetupOwner() {
         <div className="grid grid-cols-3 gap-2.5">
           {WHEELS.map((w) => (
             <button key={w} type="button" aria-pressed={g.wheels === w} onClick={() => setA((x) => ({ ...x, g: { ...x.g, wheels: w }, sub: 2 }))}
-              className="flex min-h-20 flex-col items-center justify-center rounded-lg border border-border bg-surface font-display text-[28px] font-bold leading-none aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary">
+              className="flex min-h-20 flex-col items-center justify-center rounded-lg border border-border bg-surface font-display text-3xl font-bold leading-none aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary">
               {w}
               <small className="mt-1 font-sans text-sm font-semibold text-text-2">{t('wheeler')}</small>
             </button>

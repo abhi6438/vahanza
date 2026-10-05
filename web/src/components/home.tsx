@@ -29,7 +29,7 @@ export function VehicleFilter({ value, onChange, verified, onVerified }: { value
       <span className="mx-1 w-px shrink-0 self-stretch bg-border" aria-hidden />
       <Chip selected={!value} onClick={() => onChange(null)}>{t('home.allVehicles')}</Chip>
       {VEHICLES.map((v) => (
-        <Chip key={v.key} selected={value === v.key} onClick={() => onChange(value === v.key ? null : v.key)} icon={<VehicleArt kind={v.key} className="h-5 w-8" />}>
+        <Chip key={v.key} selected={value === v.key} onClick={() => onChange(value === v.key ? null : v.key)} icon={<VehicleArt kind={v.key} className="h-4 w-7" />}>
           {pick(v.label, i18n.language)}
         </Chip>
       ))}

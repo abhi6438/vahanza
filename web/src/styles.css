@@ -52,31 +52,136 @@
   --font-sans: "Mukta", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-display: "Baloo 2", "Mukta", system-ui, sans-serif;
 
-  /* type scale: 12 / 14 / 16 / 18 / 20 / 24 / 30 */
-  --text-xs: 0.75rem;
+  /* Type scale: the sizes live in the density tokens below (--fs-*), so every text-* class follows the
+     device: comfortable on phones, a little denser on desktop, never bigger on huge screens. */
+  --text-xs: var(--fs-xs);
   --text-xs--line-height: 1.5;
-  --text-sm: 0.875rem;
+  --text-sm: var(--fs-sm);
   --text-sm--line-height: 1.5;
-  --text-base: 1rem;
-  --text-base--line-height: 1.6;
-  --text-lg: 1.125rem;
-  --text-lg--line-height: 1.5;
-  --text-xl: 1.25rem;
-  --text-xl--line-height: 1.4;
-  --text-2xl: 1.5rem;
+  --text-base: var(--fs-md);
+  --text-base--line-height: 1.55;
+  --text-lg: var(--fs-lg);
+  --text-lg--line-height: 1.45;
+  --text-xl: var(--fs-xl);
+  --text-xl--line-height: 1.35;
+  --text-2xl: var(--fs-2xl);
   --text-2xl--line-height: 1.3;
-  --text-3xl: 1.875rem;
+  --text-3xl: var(--fs-3xl);
   --text-3xl--line-height: 1.25;
 
-  /* radius: sm 8 · md 12 · lg 16 (cards) · xl 24 (sheets) */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
+  /* Named sizes from the density tokens: h-ctl-md, min-h-ctl-lg, size-ctl-md, h-chip, p-card, gap-grid,
+     gap-section, h-header, w-sidebar ... (use these instead of fixed numbers in components) */
+  --spacing-ctl-sm: var(--control-height-sm);
+  --spacing-ctl-md: var(--control-height-md);
+  --spacing-ctl-lg: var(--control-height-lg);
+  --spacing-chip: var(--chip-height);
+  --spacing-card: var(--card-padding);
+  --spacing-grid: var(--grid-gap);
+  --spacing-section: var(--section-gap);
+  --spacing-header: var(--header-height);
+  --spacing-nav: var(--bottom-nav-height);
+  --spacing-sidebar: var(--sidebar-width);
+  --spacing-icon-sm: var(--icon-size-sm);
+  --spacing-icon-md: var(--icon-size-md);
+  --spacing-icon-lg: var(--icon-size-lg);
+  --spacing-avatar: var(--avatar-size);
+
+  /* radius: sm 8 · md 12 · lg 16 (cards) · xl 24 (sheets); desktop tightens them a little */
+  --radius-sm: var(--radius-s);
+  --radius-md: var(--radius-m);
+  --radius-lg: var(--radius-l);
   --radius-xl: 1.5rem;
 
   /* two elevation levels only */
   --shadow-sm: 0 1px 2px rgb(16 40 45 / 0.06), 0 1px 1px rgb(16 40 45 / 0.04);
   --shadow-md: 0 8px 24px -6px rgb(16 40 45 / 0.16), 0 2px 6px rgb(16 40 45 / 0.06);
+}
+
+/*
+ * Density tokens — ONE design system, four densities. Components only use these (through the Tailwind
+ * names above), so changing a value here changes it on every page.
+ *   phone (default)      comfortable, touch-friendly, but not oversized
+ *   tablet  ≥768         balanced
+ *   desktop ≥1024        compact and information-dense (web only: the Android app keeps touch sizes)
+ *   large   ≥1440        more room around and more columns, component sizes stay controlled
+ * Font sizes use clamp() so they glide between widths instead of jumping.
+ */
+:root {
+  --fs-xs: 0.75rem;                                              /* 12  captions, badges */
+  --fs-sm: 0.875rem;                                             /* 14  secondary text, chips, labels */
+  --fs-md: 1rem;                                                 /* 16  body */
+  --fs-lg: clamp(1.0625rem, 1.02rem + 0.2vw, 1.125rem);          /* 17–18 card titles */
+  --fs-xl: clamp(1.125rem, 1.06rem + 0.3vw, 1.25rem);            /* 18–20 section titles */
+  --fs-2xl: clamp(1.3125rem, 1.2rem + 0.5vw, 1.5rem);            /* 21–24 page titles */
+  --fs-3xl: clamp(1.5rem, 1.35rem + 0.7vw, 1.75rem);             /* 24–28 hero titles */
+
+  --control-height-sm: 2.25rem;   /* 36  secondary / tertiary actions */
+  --control-height-md: 2.75rem;   /* 44  default buttons, inputs, icon buttons (touch minimum) */
+  --control-height-lg: 3rem;      /* 48  the one main action on a screen */
+  --chip-height: 2.25rem;         /* 36  filters: compact, rows scroll sideways instead of growing */
+
+  --icon-size-sm: 1rem;
+  --icon-size-md: 1.25rem;
+  --icon-size-lg: 1.5rem;
+  --avatar-size: 2.75rem;
+
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.75rem;
+  --spacing-lg: 1rem;
+  --spacing-xl: 1.5rem;
+
+  --card-padding: 0.875rem;
+  --grid-gap: 0.75rem;
+  --section-gap: 1.25rem;
+  --page-gutter: 1rem;
+  --header-height: 3.5rem;
+  --bottom-nav-height: 3.75rem;
+  --sidebar-width: 15rem;
+
+  --radius-s: 0.5rem;
+  --radius-m: 0.75rem;
+  --radius-l: 1rem;
+}
+@media (min-width: 768px) {
+  :root {
+    --card-padding: 1rem;
+    --grid-gap: 1rem;
+    --section-gap: 1.5rem;
+    --page-gutter: 1.5rem;
+  }
+}
+/* desktop browser: denser. The Android app (data-native) keeps phone/tablet touch sizes on big screens. */
+@media (min-width: 1024px) {
+  :root:not([data-native]) {
+    --fs-sm: 0.8125rem;                                          /* 13 */
+    --fs-md: 0.9375rem;                                          /* 15 */
+    --fs-lg: 1.0625rem;                                          /* 17 */
+    --fs-xl: 1.1875rem;                                          /* 19 */
+    --fs-2xl: clamp(1.3125rem, 1.1rem + 0.35vw, 1.5rem);
+    --fs-3xl: clamp(1.5rem, 1.25rem + 0.45vw, 1.75rem);
+    --control-height-sm: 2rem;    /* 32 */
+    --control-height-md: 2.375rem; /* 38 */
+    --control-height-lg: 2.75rem; /* 44 */
+    --chip-height: 2rem;          /* 32 */
+    --icon-size-md: 1.125rem;
+    --avatar-size: 2.5rem;
+    --card-padding: 1rem;
+    --header-height: 4rem;
+    --page-gutter: 1.5rem;
+    --radius-m: 0.625rem;
+    --radius-l: 0.875rem;
+  }
+  /* Devanagari needs a touch more size than Latin at the same px to stay readable */
+  :root:not([data-native]):lang(hi) { --fs-sm: 0.84375rem; --fs-md: 0.96875rem; }
+}
+@media (min-width: 1440px) {
+  :root:not([data-native]) {
+    --grid-gap: 1.25rem;
+    --section-gap: 1.75rem;
+    --page-gutter: 2rem;
+    --sidebar-width: 16rem;
+  }
 }
 
 /* derived colours, light */
@@ -129,8 +234,8 @@ body {
   background: var(--c-bg);
   color: var(--c-ink);
   font-family: var(--font-sans);
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: var(--fs-md);
+  line-height: 1.55;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;

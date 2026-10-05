@@ -8,10 +8,13 @@ import { AuthProvider } from './lib/auth'
 import { applyBrandColors } from './lib/brand'
 import { loadTheme } from './lib/theme'
 import { captureSource } from './lib/share'
+import { isNative } from './lib/platform'
 import { initTracking } from './lib/track'
 import './styles.css'
 
 applyBrandColors()
+// the Android app keeps touch sizes even on a big tablet (desktop density is for the web only)
+if (isNative) document.documentElement.dataset.native = '1'
 // invite link from a bulk-import SMS / WhatsApp (…/?inv=driver): remember the role before any redirect
 try {
   const inv = new URLSearchParams(window.location.search).get('inv')
