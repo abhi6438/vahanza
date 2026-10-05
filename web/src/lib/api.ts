@@ -244,6 +244,11 @@ export interface PublicJob extends Omit<Post, 'check_flags'> {
   /** only on the single-job answer: still taking drivers */
   open?: boolean
 }
+/** A listed driver as an owner sees them before login: first name + initial, no photo / number / id. */
+export interface PublicDriver extends DriverDetails {
+  name: string | null; district: string | null; state: string | null; verified: boolean
+  rating_avg: number | null; rating_count: number; jobs_done: number; top: boolean
+}
 export interface PublicStats { posts: number; drivers: number; posts_here: number; drivers_here: number; hired?: number; hired_here?: number; district: string | null }
 export const pub = {
   jobs: (q: { district?: string | null; vehicle?: string | null; offset?: number }) => {
@@ -256,6 +261,14 @@ export const pub = {
   stats: (district?: string | null) => api<PublicStats>(`/public/stats${district ? `?district=${encodeURIComponent(district)}` : ''}`, { auth: false }),
   job: (code: string) => api<PublicJob>(`/public/jobs/${encodeURIComponent(code)}`, { auth: false }),
   invite: (code: string) => api<{ role: 'driver' | 'owner'; name: string | null; phone: string }>(`/public/invite/${encodeURIComponent(code)}`, { auth: false }),
+  drivers: (q: { district?: string | null; vehicle?: string | null; offset?: number }) => {
+    const p = new URLSearchParams()
+    if (q.district) p.set('district', q.district)
+    if (q.vehicle) p.set('vehicle', q.vehicle)
+    if (q.offset) p.set('offset', String(q.offset))
+    return api<{ items: PublicDriver[]; has_more: boolean }>(`/public/drivers?${p}`, { auth: false })
+  },
+  driverStats: (district?: string | null) => api<{ drivers: number; drivers_here: number; ready_now: number; district: string | null }>(`/public/driver-stats${district ? `?district=${encodeURIComponent(district)}` : ''}`, { auth: false }),
   ref: (code: string) => api<{ name: string | null; photo_url: string | null; role: string | null }>(`/public/ref/${encodeURIComponent(code)}`, { auth: false }),
 }
 export interface Growth { ref_code: string; joined: number; completed: number; boost_until: string | null; boost_days: number; views_week: number; views_total: number; looking_due?: boolean }

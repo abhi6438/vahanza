@@ -18,7 +18,7 @@ import AdminPosters from './pages/admin/AdminPosters'
 import Invite from './pages/Invite'
 import Verify from './pages/Verify'
 import PublicJobs from './pages/PublicJobs'
-import { inviteCode, takeNext } from './lib/share'
+import { getSeeking, inviteCode, seekPath, takeNext } from './lib/share'
 import Login from './pages/Login'
 import Otp from './pages/Otp'
 import Role from './pages/Role'
@@ -33,7 +33,7 @@ import Splash from './pages/Splash'
 
 const PUBLIC = ['/language', '/login', '/otp']
 // no login needed: live jobs and one shared job (Sprint 8)
-const isPublicJobs = (p: string) => p === '/jobs' || /^\/jobs\/[A-Za-z0-9]{4,16}$/.test(p)
+const isPublicJobs = (p: string) => ['/start', '/jobs', '/drivers', '/mechanics'].includes(p) || /^\/jobs\/[A-Za-z0-9]{4,16}$/.test(p)
 const OPEN = ['/legal'] // reachable in any state
 
 export default function App() {
@@ -82,8 +82,15 @@ export default function App() {
   // signed out: language first only the very first time; then the live jobs (no login), or the
   // number straight away when they came from a personal invite
   if (status === 'signedOut') {
-    if (isPublicJobs(loc.pathname)) return <Routes><Route path="/jobs" element={<PublicJobs />} /><Route path="/jobs/:code" element={<PublicJobs />} /></Routes>
-    if (!PUBLIC.includes(loc.pathname)) return <Navigate to={!langChosen ? '/language' : inviteCode() ? '/login' : '/jobs'} replace />
+    if (isPublicJobs(loc.pathname)) {
+      return (
+        <Routes>
+          {['/start', '/jobs', '/drivers', '/mechanics', '/jobs/:code'].map((p) => <Route key={p} path={p} element={<PublicJobs />} />)}
+        </Routes>
+      )
+    }
+    // first time: "what are you looking for?"; after that straight to the list they chose
+    if (!PUBLIC.includes(loc.pathname)) return <Navigate to={!langChosen ? '/language' : inviteCode() ? '/login' : seekPath(getSeeking())} replace />
   }
   if (status === 'ready' && loc.pathname === '/role') return <Navigate to="/home" replace />
   if (status === 'ready' && PUBLIC.includes(loc.pathname)) return <Navigate to="/home" replace />
@@ -123,7 +130,7 @@ export default function App() {
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/invite" element={<Invite />} />
       <Route path="/verify" element={<Verify />} />
-      <Route path="/jobs" element={<Navigate to="/home" replace />} />
+      {['/jobs', '/start', '/drivers', '/mechanics'].map((p) => <Route key={p} path={p} element={<Navigate to="/home" replace />} />)}
       <Route path="/jobs/:code" element={<PublicJobs />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>

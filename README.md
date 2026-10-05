@@ -110,6 +110,7 @@ Settings: `PUBLIC_APP_URL` (the address in invites, e.g. `https://vahanza.in`) a
 
 ## Driver growth (Sprint 8)
 
+- **First page: "आप क्या ढूंढ रहे हैं?"** (`/start`): three big choices — I need work (driver → `/jobs`), I need a driver (owner → `/drivers`), mechanic (coming soon → `/mechanics`). Tabs on top switch between them; the choice is remembered for the next visit and pre-selects the role after OTP. The public driver list shows first name + initial, place, vehicles, licence, experience and badges — no photo, number or id.
 - **Jobs without login** (`/jobs`): after choosing a language, a new visitor sees live jobs in their city ("आज रीवा में 12 ड्राइवर चाहिए"). Number + OTP are asked only on "Call the owner", and the app then opens that job. Owner names and numbers are never shown there.
 - **WhatsApp share**: every live post has "WhatsApp पर भेजें" (owners in My posts, drivers on each job). The link `/j/<code>` shows a preview in WhatsApp (title + savings) and opens the job.
 - **Driver's Digital Card**: Profile / Home → "मेरा कार्ड". A 1080×1920 picture (WhatsApp Status size) with photo, vehicles, licence, experience and a QR to the driver's invite link. No phone number on it.

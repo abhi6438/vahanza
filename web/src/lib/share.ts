@@ -119,3 +119,14 @@ export async function shareImage(blob: Blob, name: string, text: string): Promis
   downloadBlob(blob, name)
   return 'downloaded'
 }
+
+// ---------------------------------------------------------------- what the visitor is looking for
+/** job = a driver looking for work, driver = an owner looking for drivers, mechanic = coming soon */
+export type Seeking = 'job' | 'driver' | 'mechanic'
+const SEEK = 'vz-seeking'
+export function getSeeking(): Seeking | null {
+  const v = get(SEEK)
+  return v === 'job' || v === 'driver' || v === 'mechanic' ? v : null
+}
+export const setSeeking = (s: Seeking) => set(SEEK, s)
+export const seekPath = (s: Seeking | null) => (s === 'driver' ? '/drivers' : s === 'mechanic' ? '/mechanics' : s === 'job' ? '/jobs' : '/start')

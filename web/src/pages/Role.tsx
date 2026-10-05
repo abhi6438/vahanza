@@ -4,20 +4,8 @@ import { AuthLayout } from '../components/auth-layout'
 import { H, Sub } from '../components/ui'
 import { useAuth, type Role as R } from '../lib/auth'
 import { track, trackScreen } from '../lib/track'
-
-const Truck = () => (
-  <svg viewBox="0 0 80 50" width="80" height="50" aria-hidden>
-    <rect x="4" y="12" width="46" height="24" rx="3" fill="#E8742A" /><rect x="4" y="30" width="46" height="4" fill="#0E5A6B" />
-    <path d="M50 18h14l10 10v8H50z" fill="#2F5DA8" /><path d="M54 21h9l6 7H54z" fill="#CFE3F7" />
-    <circle cx="16" cy="40" r="5" fill="#2B2F2C" /><circle cx="36" cy="40" r="5" fill="#2B2F2C" /><circle cx="64" cy="40" r="5" fill="#2B2F2C" />
-  </svg>
-)
-const Wheel = () => (
-  <svg viewBox="0 0 60 60" width="56" height="56" aria-hidden>
-    <circle cx="30" cy="30" r="22" fill="none" stroke="#234680" strokeWidth="6" /><circle cx="30" cy="30" r="6" fill="#234680" />
-    <path d="M8 30h16M36 30h16M30 36v16" stroke="#234680" strokeWidth="6" />
-  </svg>
-)
+import { getSeeking } from '../lib/share'
+import { TruckArt, WheelArt } from '../components/role-art'
 
 export default function Role() {
   const { t } = useTranslation()
@@ -25,7 +13,10 @@ export default function Role() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   // invite link (?inv=driver) or a number we imported earlier: put that card first, marked "for you"
-  const invited = (() => { try { return (sessionStorage.getItem('vz-inv') as R | null) || suggestedRole } catch { return suggestedRole } })()
+  // invite link, a number we imported earlier, or what they looked at before login ("I need a driver" → owner)
+  const seeking = getSeeking()
+  const fromSeeking: R | null = seeking === 'driver' ? 'owner' : seeking === 'job' ? 'driver' : null
+  const invited = (() => { try { return (sessionStorage.getItem('vz-inv') as R | null) || suggestedRole || fromSeeking } catch { return suggestedRole || fromSeeking } })()
   useEffect(() => {
     trackScreen('role')
     if (invited) track('invite_open', { role: invited })
@@ -53,12 +44,12 @@ export default function Role() {
         <div className="flex flex-col gap-3">
           <button className={card} disabled={busy} data-invited={invited === 'owner'} onClick={() => pick('owner')}>
             {forYou('owner')}
-            <span className="grid h-[72px] w-[92px] place-items-center rounded-md bg-accent-soft"><Truck /></span>
+            <span className="grid h-[72px] w-[92px] place-items-center rounded-md bg-accent-soft"><TruckArt /></span>
             <span><strong className="block text-[21px]">{t('role.owner')}</strong><span className="text-sm text-text-2">{t('role.ownerSub')}</span></span>
           </button>
           <button className={`${card} ${invited === 'driver' ? 'order-first' : ''}`} disabled={busy} data-invited={invited === 'driver'} onClick={() => pick('driver')}>
             {forYou('driver')}
-            <span className="grid h-[72px] w-[92px] place-items-center rounded-md bg-brand-soft"><Wheel /></span>
+            <span className="grid h-[72px] w-[92px] place-items-center rounded-md bg-brand-soft"><WheelArt /></span>
             <span><strong className="block text-[21px]">{t('role.driver')}</strong><span className="text-sm text-text-2">{t('role.driverSub')}</span></span>
           </button>
           <button className={card} disabled>

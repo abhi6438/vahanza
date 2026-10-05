@@ -174,3 +174,16 @@ def test_codes_are_easy_to_read():
     from vz import growth
     c = growth.new_code()
     assert len(c) == 6 and not set(c) & set("01OI")
+
+
+def test_public_drivers_hide_full_name_photo_and_id(client, db):
+    db.respond("from public.profiles p join public.driver_details dd", [{
+        "name": "Ramesh Kumar Singh", "district": "Rewa", "state": "Madhya Pradesh", "verified": True, "rating_avg": None,
+        "rating_count": 0, "jobs_done": 2, "top": False, "vehicles": ["truck"], "max_wheels": 14, "licence_type": "HMV",
+        "experience_years": 8, "savings_wanted": 18000, "savings_negotiable": True, "pay_prefs": None, "work_type": None,
+        "area": None, "languages": None, "available_from": "now"}])
+    r = client.get("/api/v1/public/drivers?district=Rewa")
+    item = r.json()["items"][0]
+    assert item["name"] == "Ramesh K." and "id" not in item and "photo_url" not in item and "phone" not in item
+    sql = db.calls[0][0]
+    assert "not p.is_test" in sql and "dd.is_available" in sql

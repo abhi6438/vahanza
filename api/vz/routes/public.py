@@ -133,3 +133,65 @@ def referral(code: str, db=Depends(get_db), tenant: str = Depends(tenant_id)):
     if not row:
         raise HTTPException(404, "Code not found")
     return {"name": (row["name"] or "").split(" ")[0] or None, "photo_url": row["photo_url"], "role": row["role"]}
+
+
+# ---------------------------------------------------------------- drivers (for owners, no login)
+@router.get("/drivers")
+def public_drivers(
+    district: Optional[str] = Query(None, max_length=60),
+    vehicle: Optional[str] = Query(None),
+    limit: int = Query(20, ge=1, le=30),
+    offset: int = Query(0, ge=0, le=300),
+    db=Depends(get_db),
+    tenant: str = Depends(tenant_id),
+):
+    """Listed drivers for an owner who has not logged in yet: first name + initial, place, vehicles, licence,
+    experience, badges. No photo, no number, no id: "Call" asks the owner to log in first."""
+    if vehicle is not None and vehicle not in VEHICLES:
+        raise HTTPException(422, "Unknown vehicle")
+    d = (district or "").strip()
+    rows = db.execute(
+        """
+        select p.name, p.district, p.state, p.verified, p.rating_avg, p.rating_count, p.jobs_done,
+               (coalesce(p.boost_until, now()) > now()) as top,
+               dd.vehicles, dd.max_wheels, dd.licence_type, dd.experience_years, dd.savings_wanted, dd.savings_negotiable,
+               dd.pay_prefs, dd.work_type, dd.area, dd.languages, dd.available_from
+        from public.profiles p join public.driver_details dd on dd.profile_id = p.id
+        where p.tenant_id = %(tenant)s and p.role = 'driver' and p.setup_done and not p.blocked and not p.is_test
+          and dd.is_available and cardinality(dd.vehicles) > 0 and dd.available_from is not null
+          and (%(vehicle)s::text is null or %(vehicle)s = any(dd.vehicles))
+        order by (%(district)s <> '' and lower(p.district) = lower(%(district)s)) desc,
+                 (coalesce(dd.looking_checked_at, dd.updated_at, p.created_at) > now() - interval '21 days') desc,
+                 p.verified desc, (dd.available_from = 'now') desc, p.last_seen_at desc nulls last
+        limit %(limit)s offset %(offset)s
+        """,
+        {"tenant": tenant, "district": d, "vehicle": vehicle, "limit": limit, "offset": offset},
+    ).fetchall() or []
+    items = []
+    for r in rows:
+        r = dict(r)
+        parts = (r.pop("name") or "").split()
+        r["name"] = (parts[0] + (f" {parts[1][0]}." if len(parts) > 1 else "")) if parts else None
+        r["rating_avg"] = float(r["rating_avg"]) if r.get("rating_avg") is not None else None
+        for k in ("vehicles", "pay_prefs", "languages"):
+            r[k] = r[k] or []
+        items.append(r)
+    return {"items": items, "has_more": len(items) == limit}
+
+
+@router.get("/driver-stats")
+def public_driver_stats(district: Optional[str] = Query(None, max_length=60), db=Depends(get_db), tenant: str = Depends(tenant_id)):
+    """"Rewa: 14 drivers ready for work" — listed drivers, in the district and everywhere."""
+    d = (district or "").strip()
+    row = db.execute(
+        """
+        select count(*) as drivers,
+               count(*) filter (where %(district)s <> '' and lower(p.district) = lower(%(district)s)) as drivers_here,
+               count(*) filter (where dd.available_from = 'now') as ready_now
+        from public.profiles p join public.driver_details dd on dd.profile_id = p.id
+        where p.tenant_id = %(tenant)s and p.role = 'driver' and p.setup_done and not p.blocked and not p.is_test
+          and dd.is_available and cardinality(dd.vehicles) > 0 and dd.available_from is not null
+        """,
+        {"tenant": tenant, "district": d},
+    ).fetchone() or {}
+    return {k: int(row.get(k) or 0) for k in ("drivers", "drivers_here", "ready_now")} | {"district": d or None}
