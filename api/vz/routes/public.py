@@ -7,9 +7,10 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from .. import search as S
 from ..deps import get_db, tenant_id
 from ..growth import clean_code
-from .posts import POST_SELECT, VEHICLES, _clean
+from .posts import POST_SELECT, _clean
 
 router = APIRouter(prefix="/public", tags=["public"])
 
@@ -34,34 +35,33 @@ def _public(row: dict) -> dict:
 
 @router.get("/jobs")
 def public_jobs(
-    district: Optional[str] = Query(None, max_length=60),
-    vehicle: Optional[str] = Query(None),
+    f: S.Common = Depends(S.common),
+    jf: S.JobFilters = Depends(S.job_filters),
     limit: int = Query(20, ge=1, le=30),
     offset: int = Query(0, ge=0, le=300),
     db=Depends(get_db),
     tenant: str = Depends(tenant_id),
 ):
-    """Live jobs, the chosen district first, then the newest. Owners who brought friends come first."""
-    if vehicle is not None and vehicle not in VEHICLES:
-        raise HTTPException(422, "Unknown vehicle")
-    d = (district or "").strip()
+    """Live jobs, the chosen district first, then the newest. Owners who brought friends come first.
+    Same search + filters as the logged-in list (no search on the owner's firm name here)."""
+    f.resolve(db)
+    near = f"""(%(district)s <> '' and {_IN_DISTRICT}) desc,
+                 o.location operator(extensions.<->) %(loc)s::extensions.geography nulls last,
+                 (coalesce(o.boost_until, now()) > now()) desc,
+                 p.created_at desc"""
     rows = db.execute(
         f"""
-        select {POST_SELECT}, {_OWNER_COLS}
+        select {POST_SELECT}, {_OWNER_COLS}, count(*) over () as total
         from public.posts p join public.profiles o on o.id = p.owner_id
         where {_VISIBLE} and p.status = 'live' and p.expires_at > now()
-          and (%(vehicle)s::text is null or exists (
-                select 1 from public.post_groups pg join public.fleet_groups fg on fg.id = pg.fleet_group_id
-                where pg.post_id = p.id and fg.vehicle_type = %(vehicle)s))
-        order by (%(district)s <> '' and {_IN_DISTRICT}) desc,
-                 (coalesce(o.boost_until, now()) > now()) desc,
-                 p.created_at desc
+          {S.job_where(public=True)}
+        order by {S.job_order(f.sort, near)}
         limit %(limit)s offset %(offset)s
         """,
-        {"tenant": tenant, "district": d, "vehicle": vehicle, "limit": limit, "offset": offset},
+        f.params() | jf.params() | {"tenant": tenant, "limit": limit, "offset": offset},
     ).fetchall() or []
-    items = [_public(r) for r in rows]
-    return {"items": items, "has_more": len(items) == limit}
+    items, total, more = S.page(rows, limit, offset)
+    return {"items": [_public(r) for r in items], "has_more": more, "total": total, "place": f.district if f.chosen else None}
 
 
 @router.get("/stats")
@@ -138,45 +138,45 @@ def referral(code: str, db=Depends(get_db), tenant: str = Depends(tenant_id)):
 # ---------------------------------------------------------------- drivers (for owners, no login)
 @router.get("/drivers")
 def public_drivers(
-    district: Optional[str] = Query(None, max_length=60),
-    vehicle: Optional[str] = Query(None),
+    f: S.Common = Depends(S.common),
+    df: S.DriverFilters = Depends(S.driver_filters),
     limit: int = Query(20, ge=1, le=30),
     offset: int = Query(0, ge=0, le=300),
     db=Depends(get_db),
     tenant: str = Depends(tenant_id),
 ):
     """Listed drivers for an owner who has not logged in yet: first name + initial, place, vehicles, licence,
-    experience, badges. No photo, no number, no id: "Call" asks the owner to log in first."""
-    if vehicle is not None and vehicle not in VEHICLES:
-        raise HTTPException(422, "Unknown vehicle")
-    d = (district or "").strip()
+    experience, badges. No photo, no number, no id: "Call" asks the owner to log in first.
+    Same search + filters as the logged-in list (names: first name only)."""
+    f.resolve(db)
+    near = """(%(district)s <> '' and lower(p.district) = lower(%(district)s)) desc,
+                 (coalesce(d.looking_checked_at, d.updated_at, p.created_at) > now() - interval '21 days') desc,
+                 p.location operator(extensions.<->) %(loc)s::extensions.geography nulls last,
+                 p.verified desc, (d.available_from = 'now') desc, p.last_seen_at desc nulls last"""
     rows = db.execute(
-        """
+        f"""
         select p.name, p.district, p.state, p.verified, p.rating_avg, p.rating_count, p.jobs_done,
                (coalesce(p.boost_until, now()) > now()) as top,
-               dd.vehicles, dd.max_wheels, dd.licence_type, dd.experience_years, dd.savings_wanted, dd.savings_negotiable,
-               dd.pay_prefs, dd.work_type, dd.area, dd.languages, dd.available_from
-        from public.profiles p join public.driver_details dd on dd.profile_id = p.id
+               d.vehicles, d.max_wheels, d.licence_type, d.experience_years, d.savings_wanted, d.savings_negotiable,
+               d.pay_prefs, d.work_type, d.area, d.languages, d.available_from,
+               count(*) over () as total
+        from public.profiles p join public.driver_details d on d.profile_id = p.id
         where p.tenant_id = %(tenant)s and p.role = 'driver' and p.setup_done and not p.blocked and not p.is_test
-          and dd.is_available and cardinality(dd.vehicles) > 0 and dd.available_from is not null
-          and (%(vehicle)s::text is null or %(vehicle)s = any(dd.vehicles))
-        order by (%(district)s <> '' and lower(p.district) = lower(%(district)s)) desc,
-                 (coalesce(dd.looking_checked_at, dd.updated_at, p.created_at) > now() - interval '21 days') desc,
-                 p.verified desc, (dd.available_from = 'now') desc, p.last_seen_at desc nulls last
+          and d.is_available and cardinality(d.vehicles) > 0 and d.available_from is not null
+          {S.driver_where(public=True)}
+        order by {S.driver_order(f.sort, near)}
         limit %(limit)s offset %(offset)s
         """,
-        {"tenant": tenant, "district": d, "vehicle": vehicle, "limit": limit, "offset": offset},
+        f.params() | df.params() | {"tenant": tenant, "limit": limit, "offset": offset},
     ).fetchall() or []
-    items = []
-    for r in rows:
-        r = dict(r)
+    items, total, more = S.page(rows, limit, offset)
+    for r in items:
         parts = (r.pop("name") or "").split()
         r["name"] = (parts[0] + (f" {parts[1][0]}." if len(parts) > 1 else "")) if parts else None
         r["rating_avg"] = float(r["rating_avg"]) if r.get("rating_avg") is not None else None
         for k in ("vehicles", "pay_prefs", "languages"):
             r[k] = r[k] or []
-        items.append(r)
-    return {"items": items, "has_more": len(items) == limit}
+    return {"items": items, "has_more": more, "total": total, "place": f.district if f.chosen else None}
 
 
 @router.get("/driver-stats")

@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field, field_validator
 from ..auth import AuthUser, current_user
 from ..deps import get_db, tenant_id
 from .. import notify
+from .. import search as S
 from .trust import is_blocked
 
 router = APIRouter(tags=["posts"])
@@ -264,19 +265,27 @@ def post_interests(post_id: str, user: AuthUser = Depends(current_user), db=Depe
 # ---------------------------------------------------------------- driver side
 @router.get("/jobs")
 def list_jobs(
-    vehicle: Optional[str] = Query(None),
-    verified: bool = Query(False),
+    f: S.Common = Depends(S.common),
+    jf: S.JobFilters = Depends(S.job_filters),
     limit: int = Query(20, ge=1, le=50),
     offset: int = Query(0, ge=0, le=1000),
     user: AuthUser = Depends(current_user),
     db=Depends(get_db),
     tenant: str = Depends(tenant_id),
 ):
-    """Live posts for drivers: same district first, then nearest owner, then newest."""
+    """Live posts for drivers: same district first, then nearest owner, then newest (or newest / most savings / best rated).
+    Search box: city / pincode / firm / vehicle. Filters: see vz/search.py."""
     me = _me(db, user, tenant)
     _require(me, "driver")
-    if vehicle is not None and vehicle not in VEHICLES:
-        raise HTTPException(422, "Unknown vehicle")
+    f.resolve(db, me["district"], me["location"])
+    near = """
+          (exists (select 1 from unnest(p.base_cities) c where lower(split_part(c, ',', 1)) = lower(%(district)s))) desc,
+          -- owners who brought friends ("Top" boost) first, but only nearby ones
+          (coalesce(o.boost_until, now()) > now() and (lower(o.district) = lower(%(district)s)
+             or (o.location is not null and %(loc)s::extensions.geography is not null
+                 and extensions.st_dwithin(o.location, %(loc)s::extensions.geography, 150000)))) desc,
+          o.location operator(extensions.<->) %(loc)s::extensions.geography nulls last,
+          p.created_at desc"""
     rows = db.execute(
         f"""
         select {POST_SELECT},
@@ -287,32 +296,22 @@ def list_jobs(
           case when o.location is not null and %(loc)s::extensions.geography is not null
                then round((extensions.st_distance(o.location, %(loc)s::extensions.geography) / 1000)::numeric)::int end
             as distance_km,
-          exists (select 1 from public.interests i where i.post_id = p.id and i.driver_id = %(me)s) as interested
+          exists (select 1 from public.interests i where i.post_id = p.id and i.driver_id = %(me)s) as interested,
+          count(*) over () as total
         from public.posts p
         join public.profiles o on o.id = p.owner_id
         where p.tenant_id = %(tenant)s and p.status = 'live' and p.expires_at > now()
           and not o.blocked and o.is_test = %(test)s
-          and (%(vehicle)s::text is null or exists (
-                select 1 from public.post_groups pg join public.fleet_groups fg on fg.id = pg.fleet_group_id
-                where pg.post_id = p.id and fg.vehicle_type = %(vehicle)s))
-          and (not %(verified)s or o.verified)
+          {S.job_where()}
           and not exists (select 1 from public.blocks bl
                   where (bl.blocker_id = %(me)s::uuid and bl.blocked_id = o.id) or (bl.blocker_id = o.id and bl.blocked_id = %(me)s::uuid))
-        order by
-          (exists (select 1 from unnest(p.base_cities) c where lower(split_part(c, ',', 1)) = lower(%(district)s))) desc,
-          -- owners who brought friends ("Top" boost) first, but only nearby ones
-          (coalesce(o.boost_until, now()) > now() and (lower(o.district) = lower(%(district)s)
-             or (o.location is not null and %(loc)s::extensions.geography is not null
-                 and extensions.st_dwithin(o.location, %(loc)s::extensions.geography, 150000)))) desc,
-          o.location operator(extensions.<->) %(loc)s::extensions.geography nulls last,
-          p.created_at desc
+        order by {S.job_order(f.sort, near)}
         limit %(limit)s offset %(offset)s
         """,
-        {"loc": me["location"], "district": me["district"] or "", "tenant": tenant, "test": me["is_test"],
-         "me": user.id, "vehicle": vehicle, "verified": verified, "limit": limit, "offset": offset},
+        f.params() | jf.params() | {"tenant": tenant, "test": me["is_test"], "me": user.id, "limit": limit, "offset": offset},
     ).fetchall() or []
-    items = [_clean(r) for r in rows]
-    return {"items": items, "has_more": len(items) == limit}
+    items, total, more = S.page(rows, limit, offset)
+    return {"items": [_clean(r) for r in items], "has_more": more, "total": total, "place": f.district if f.chosen else None}
 
 
 def _live_post(db, post_id: str, tenant: str, is_test: bool) -> dict:

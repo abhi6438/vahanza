@@ -1,5 +1,6 @@
 import { brand } from './brand'
 import { supabase } from './supabase'
+import { toParams, type DriverQuery, type JobQuery } from './search'
 
 const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api/v1'
 
@@ -149,13 +150,10 @@ export interface DriverListItem extends DriverDetails {
   /** confirmed jobs through the app */
   jobs_done?: number
 }
-export const listDrivers = (q: { vehicle?: string | null; verified?: boolean; offset?: number }) => {
-  const p = new URLSearchParams()
-  if (q.vehicle) p.set('vehicle', q.vehicle)
-  if (q.verified) p.set('verified', 'true')
-  if (q.offset) p.set('offset', String(q.offset))
-  return api<{ items: DriverListItem[]; has_more: boolean }>(`/drivers?${p}`)
-}
+/** A list page with search + filters: `total` = all matches, `place` = the city the list is centred on. */
+export interface ListPage<T> { items: T[]; has_more: boolean; total?: number; place?: string | null }
+type Paging = { offset?: number; limit?: number }
+export const listDrivers = (q: DriverQuery, page: Paging = {}) => api<ListPage<DriverListItem>>(`/drivers?${toParams(q, page)}`)
 export const contactDriver = (id: string, via: 'call' | 'whatsapp') =>
   api<{ phone: string }>(`/drivers/${id}/contact`, { method: 'POST', json: { via } })
 export const setAvailability = (is_available: boolean) =>
@@ -215,18 +213,11 @@ export interface PostIn {
 }
 export interface InterestedDriver extends DriverListItem { interest_status: string; interested_at: string }
 
-const qs = (q: { vehicle?: string | null; verified?: boolean; offset?: number }) => {
-  const p = new URLSearchParams()
-  if (q.vehicle) p.set('vehicle', q.vehicle)
-  if (q.verified) p.set('verified', 'true')
-  if (q.offset) p.set('offset', String(q.offset))
-  return p.toString()
-}
 export const createPost = (body: PostIn) => api<{ id: string; status: Post['status']; check_flags: string[] }>('/posts', { method: 'POST', json: body })
 export const myPosts = () => api<{ items: MyPost[] }>('/posts/mine')
 export const setPostStatus = (id: string, status: 'live' | 'paused' | 'filled' | 'closed') => api<{ status: string }>(`/posts/${id}`, { method: 'PATCH', json: { status } })
 export const postInterests = (id: string) => api<{ items: InterestedDriver[] }>(`/posts/${id}/interests`)
-export const listJobs = (q: { vehicle?: string | null; verified?: boolean; offset?: number }) => api<{ items: Job[]; has_more: boolean }>(`/jobs?${qs(q)}`)
+export const listJobs = (q: JobQuery, page: Paging = {}) => api<ListPage<Job>>(`/jobs?${toParams(q, page)}`)
 export const showInterest = (id: string) => api<{ interested: boolean }>(`/jobs/${id}/interest`, { method: 'POST' })
 export const removeInterest = (id: string) => api<void>(`/jobs/${id}/interest`, { method: 'DELETE' })
 export const contactOwner = (id: string, via: 'call' | 'whatsapp') => api<{ phone: string }>(`/jobs/${id}/contact`, { method: 'POST', json: { via } })
@@ -251,23 +242,11 @@ export interface PublicDriver extends DriverDetails {
 }
 export interface PublicStats { posts: number; drivers: number; posts_here: number; drivers_here: number; hired?: number; hired_here?: number; district: string | null }
 export const pub = {
-  jobs: (q: { district?: string | null; vehicle?: string | null; offset?: number }) => {
-    const p = new URLSearchParams()
-    if (q.district) p.set('district', q.district)
-    if (q.vehicle) p.set('vehicle', q.vehicle)
-    if (q.offset) p.set('offset', String(q.offset))
-    return api<{ items: PublicJob[]; has_more: boolean }>(`/public/jobs?${p}`, { auth: false })
-  },
+  jobs: (q: JobQuery, page: Paging = {}) => api<ListPage<PublicJob>>(`/public/jobs?${toParams(q, page)}`, { auth: false }),
   stats: (district?: string | null) => api<PublicStats>(`/public/stats${district ? `?district=${encodeURIComponent(district)}` : ''}`, { auth: false }),
   job: (code: string) => api<PublicJob>(`/public/jobs/${encodeURIComponent(code)}`, { auth: false }),
   invite: (code: string) => api<{ role: 'driver' | 'owner'; name: string | null; phone: string }>(`/public/invite/${encodeURIComponent(code)}`, { auth: false }),
-  drivers: (q: { district?: string | null; vehicle?: string | null; offset?: number }) => {
-    const p = new URLSearchParams()
-    if (q.district) p.set('district', q.district)
-    if (q.vehicle) p.set('vehicle', q.vehicle)
-    if (q.offset) p.set('offset', String(q.offset))
-    return api<{ items: PublicDriver[]; has_more: boolean }>(`/public/drivers?${p}`, { auth: false })
-  },
+  drivers: (q: DriverQuery, page: Paging = {}) => api<ListPage<PublicDriver>>(`/public/drivers?${toParams(q, page)}`, { auth: false }),
   driverStats: (district?: string | null) => api<{ drivers: number; drivers_here: number; ready_now: number; district: string | null }>(`/public/driver-stats${district ? `?district=${encodeURIComponent(district)}` : ''}`, { auth: false }),
   ref: (code: string) => api<{ name: string | null; photo_url: string | null; role: string | null }>(`/public/ref/${encodeURIComponent(code)}`, { auth: false }),
 }

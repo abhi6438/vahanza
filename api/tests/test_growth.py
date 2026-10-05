@@ -28,8 +28,9 @@ def test_public_jobs_need_no_login_and_hide_private_fields(client, db):
     assert r.status_code == 200, r.text
     item = r.json()["items"][0]
     assert "check_flags" not in item and "owner_id" not in item and "phone" not in item and "owner_name" not in item
-    sql, params = db.calls[0]
+    sql, params = next(c for c in db.calls if "from public.posts p" in c[0])
     assert "not o.is_test" in sql and "not o.blocked" in sql and params["district"] == "Rewa"
+    assert params["place_filter"] is False          # the old city chip only puts that city first
 
 
 def test_public_jobs_unknown_vehicle(client):
@@ -177,7 +178,7 @@ def test_codes_are_easy_to_read():
 
 
 def test_public_drivers_hide_full_name_photo_and_id(client, db):
-    db.respond("from public.profiles p join public.driver_details dd", [{
+    db.respond("from public.profiles p join public.driver_details d on", [{
         "name": "Ramesh Kumar Singh", "district": "Rewa", "state": "Madhya Pradesh", "verified": True, "rating_avg": None,
         "rating_count": 0, "jobs_done": 2, "top": False, "vehicles": ["truck"], "max_wheels": 14, "licence_type": "HMV",
         "experience_years": 8, "savings_wanted": 18000, "savings_negotiable": True, "pay_prefs": None, "work_type": None,
@@ -185,5 +186,5 @@ def test_public_drivers_hide_full_name_photo_and_id(client, db):
     r = client.get("/api/v1/public/drivers?district=Rewa")
     item = r.json()["items"][0]
     assert item["name"] == "Ramesh K." and "id" not in item and "photo_url" not in item and "phone" not in item
-    sql = db.calls[0][0]
-    assert "not p.is_test" in sql and "dd.is_available" in sql
+    sql = next(c for c in db.calls if "driver_details d on" in c[0])[0]
+    assert "not p.is_test" in sql and "d.is_available" in sql

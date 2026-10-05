@@ -19,7 +19,7 @@ def test_list_uses_viewer_test_flag(client, db):
     db.respond("from public.profiles where id", ME(test=True))
     db.respond("from public.profiles p", [])
     r = client.get("/api/v1/drivers", headers=H)
-    assert r.status_code == 200 and r.json() == {"items": [], "has_more": False}
+    assert r.status_code == 200 and r.json() == {"items": [], "has_more": False, "total": 0, "place": None}
     sql, params = next(c for c in db.calls if "from public.profiles p" in c[0])
     assert params["test"] is True and "d.available_from is not null" in sql
 

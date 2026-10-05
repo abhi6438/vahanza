@@ -3,17 +3,19 @@ import { useTranslation } from 'react-i18next'
 import { DiscoverArt, DriverArt, SearchArt } from '../assets/illustrations'
 import { Link } from 'react-router-dom'
 import { DriverCard } from '../components/cards'
-import { DriverContact, usePlaceName, VehicleFilter } from '../components/home'
+import { DriverContact, usePlaceName } from '../components/home'
 import { JobItem } from '../components/jobs'
 import { AppShell, CardGrid, HeroBar, WithRail } from '../components/shell'
 import { CardMenu, RatePrompt } from '../components/trust'
 import { useToast } from '../components/toast'
 import { Badge, Button, ButtonLink, Card, CardSkeletons, EmptyState, ErrorState, Icon, SectionTitle, Switch } from '../components/ui'
-import { listDrivers, listJobs, recordView, setAvailability, type DriverListItem, type Job } from '../lib/api'
+import { listDrivers, listJobs, recordView, setAvailability, type DriverListItem, type Job, type ListPage } from '../lib/api'
+import { cleared, EMPTY_DRIVERS, EMPTY_JOBS, isFiltered, useListQuery } from '../lib/search'
+import { SearchFilterBar } from '../components/search'
 import { GrowthCard } from '../components/growth'
 import { PendingHires } from '../components/work'
 import { useAuth } from '../lib/auth'
-import { placeName } from '../lib/catalog'
+import { districtName, placeName } from '../lib/catalog'
 import { driverCompletion, ownerCompletion } from '../lib/completion'
 import { useIsDesktop } from '../lib/layout'
 import { track, trackScreen } from '../lib/track'
@@ -56,8 +58,10 @@ function CityLine({ city, onDark }: { city: string; onDark?: boolean }) {
 }
 
 /** Generic paged list loader used by both homes. */
-function usePaged<T>(load: (offset: number) => Promise<{ items: T[]; has_more: boolean }>, deps: unknown[]) {
+function usePaged<T>(load: (offset: number) => Promise<ListPage<T>>, deps: unknown[]) {
   const [items, setItems] = useState<T[] | null>(null)
+  const [total, setTotal] = useState<number | null>(null)
+  const [place, setPlace] = useState<string | null>(null)
   const [more, setMore] = useState(false)
   const [error, setError] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -66,7 +70,7 @@ function usePaged<T>(load: (offset: number) => Promise<{ items: T[]; has_more: b
     let alive = true
     setItems(null)
     setError(false)
-    load(0).then((r) => { if (alive) { setItems(r.items); setMore(r.has_more) } }).catch(() => alive && setError(true))
+    load(0).then((r) => { if (alive) { setItems(r.items); setMore(r.has_more); setTotal(r.total ?? null); setPlace(r.place ?? null) } }).catch(() => alive && setError(true))
     return () => { alive = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, tick])
@@ -80,7 +84,7 @@ function usePaged<T>(load: (offset: number) => Promise<{ items: T[]; has_more: b
       setLoadingMore(false)
     }
   }
-  return { items, setItems, more, error, loadMore, loadingMore, retry: useCallback(() => setTick((n) => n + 1), []) }
+  return { items, setItems, total, place, more, error, loadMore, loadingMore, retry: useCallback(() => setTick((n) => n + 1), []) }
 }
 
 function SafetyTips() {
@@ -104,28 +108,27 @@ function OwnerHome() {
   const city = usePlaceName()
   const greeting = useGreeting()
   const desktop = useIsDesktop()
-  const [vehicle, setVehicle] = useState<string | null>(null)
-  const [verified, setVerified] = useState(false)
+  const [query, setQuery] = useListQuery('owner-drivers', EMPTY_DRIVERS)
   useEffect(() => { trackScreen('owner_home') }, [])
-  useEffect(() => { if (vehicle || verified) track('driver_filter', { vehicle, verified }) }, [vehicle, verified])
-  const list = usePaged<DriverListItem>((offset) => listDrivers({ vehicle, verified, offset }), [vehicle, verified])
+  const list = usePaged<DriverListItem>((offset) => listDrivers(query, { offset }), [JSON.stringify(query)])
   const lang = i18n.language
   const postTo = fleet.length ? '/posts/new' : '/setup?step=fleet&next=/posts/new'
   const onPost = () => track('post_tap', { has_fleet: fleet.length > 0 })
-  const filtered = !!vehicle || verified
+  const filtered = isFiltered(query)
+  const near = list.place ? districtName(list.place, lang) : ''
   const done = profile ? ownerCompletion(profile, fleet) : null
 
   const main = (
     <section aria-labelledby="list-title">
       <SectionTitle className="mb-3"
-        title={<span id="list-title">{city ? t('home.driversNearCity', { city }) : t('home.driversNear')}</span>}
-        right={list.items && <span className="shrink-0 text-sm text-text-2">{t('home.countDrivers', { n: list.items.length + (list.more ? '+' : '') })}</span>} />
-      <VehicleFilter value={vehicle} onChange={setVehicle} verified={verified} onVerified={setVerified} />
+        title={<span id="list-title">{near ? t('sf.driversNear', { city: near }) : query.q.trim() ? t('sf.results') : city ? t('home.driversNearCity', { city }) : t('home.driversNear')}</span>}
+        right={list.items && <span className="shrink-0 text-sm text-text-2" aria-live="polite">{t(filtered ? 'sf.foundDrivers' : 'home.countDrivers', { n: list.total ?? list.items.length + (list.more ? '+' : ''), count: list.total ?? 2 })}</span>} />
+      <SearchFilterBar kind="drivers" value={query} onChange={setQuery} count={(q) => listDrivers(q, { limit: 1 }).then((r) => r.total ?? r.items.length)} />
       <div className="mt-4">
         {list.error && <ErrorState onRetry={list.retry} />}
         {list.items?.length === 0 && (filtered
           ? <EmptyState art={<SearchArt />} title={t('home.emptyFilterTitle')} body={t('home.noDriversFilter')}
-              action={<Button variant="outline" onClick={() => { setVehicle(null); setVerified(false) }}>{t('home.clearFilter')}</Button>} />
+              action={<Button variant="outline" onClick={() => setQuery(cleared('drivers', query))}>{t('home.clearFilter')}</Button>} />
           : <EmptyState art={<DriverArt />} title={t('home.emptyDriversTitle')} body={t('home.emptyDriversBody')}
               action={<ButtonLink to={postTo} onClick={onPost} variant="action" icon={Icon.plus}>{t('home.post')}</ButtonLink>} />)}
         <CardGrid>
@@ -208,15 +211,15 @@ function DriverHome() {
   const city = usePlaceName()
   const greeting = useGreeting()
   const desktop = useIsDesktop()
-  const [vehicle, setVehicle] = useState<string | null>(null)
-  const [verified, setVerified] = useState(false)
+  const { i18n } = useTranslation()
+  const [query, setQuery] = useListQuery('driver-jobs', EMPTY_JOBS)
   useEffect(() => { trackScreen('driver_home') }, [])
-  useEffect(() => { if (vehicle || verified) track('job_filter', { vehicle, verified }) }, [vehicle, verified])
-  const list = usePaged<Job>((offset) => listJobs({ vehicle, verified, offset }), [vehicle, verified])
+  const list = usePaged<Job>((offset) => listJobs(query, { offset }), [JSON.stringify(query)])
   const done = driverCompletion(profile, driver)
   // the one thing that matters on the main screen: can owners see me?
   const blocker = done.missing.find((m) => m.key === 'vehicles' || m.key === 'when')
-  const filtered = !!vehicle || verified
+  const filtered = isFiltered(query)
+  const near = list.place ? districtName(list.place, i18n.language) : ''
 
   const hidden = blocker && (
     <Link to={`/setup?step=${blocker.step}`} onClick={() => track('hidden_banner_tap')}
@@ -230,14 +233,14 @@ function DriverHome() {
     <section aria-labelledby="list-title">
       {desktop && hidden && <div className="mb-4">{hidden}</div>}
       <SectionTitle className="mb-3"
-        title={<span id="list-title">{city ? t('home.jobsNearCity', { city }) : t('home.jobsNear')}</span>}
-        right={list.items && <span className="shrink-0 text-sm text-text-2">{t('home.countJobs', { n: list.items.length + (list.more ? '+' : '') })}</span>} />
-      <VehicleFilter value={vehicle} onChange={setVehicle} verified={verified} onVerified={setVerified} />
+        title={<span id="list-title">{near ? t('sf.jobsNear', { city: near }) : query.q.trim() ? t('sf.results') : city ? t('home.jobsNearCity', { city }) : t('home.jobsNear')}</span>}
+        right={list.items && <span className="shrink-0 text-sm text-text-2" aria-live="polite">{t(filtered ? 'sf.foundJobs' : 'home.countJobs', { n: list.total ?? list.items.length + (list.more ? '+' : ''), count: list.total ?? 2 })}</span>} />
+      <SearchFilterBar kind="jobs" value={query} onChange={setQuery} count={(q) => listJobs(q, { limit: 1 }).then((r) => r.total ?? r.items.length)} />
       <div className="mt-4">
         {list.error && <ErrorState onRetry={list.retry} />}
         {list.items?.length === 0 && (filtered
           ? <EmptyState art={<SearchArt />} title={t('home.emptyFilterTitle')} body={t('home.noJobsFilter')}
-              action={<Button variant="outline" onClick={() => { setVehicle(null); setVerified(false) }}>{t('home.clearFilter')}</Button>} />
+              action={<Button variant="outline" onClick={() => setQuery(cleared('jobs', query))}>{t('home.clearFilter')}</Button>} />
           : <EmptyState art={<DiscoverArt />} title={t('home.emptyJobsTitle')} body={t('home.emptyJobsBody')}
               action={<ButtonLink to="/profile" variant="outline">{t('home.improveProfile')}</ButtonLink>} />)}
         <CardGrid>

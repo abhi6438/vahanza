@@ -83,6 +83,11 @@ export function placeName(value: string, lang: string): string {
   if (c) return lang === 'en' ? c.en : c.hi || c.en
   return value.split(',')[0]
 }
+/** "Rewa" (English district from the server) → "रीवा" when known. */
+export function districtName(district: string, lang: string): string {
+  if (lang === 'en') return district
+  return CURATED.find((c) => c.en.toLowerCase() === district.toLowerCase())?.hi || district
+}
 export const stateName = (state: string, lang: string) => (lang === 'en' ? state : P.states[state] || state)
 
 export function searchCurated(q: string, preferState?: string | null, limit = 12): PlaceOption[] {

@@ -3,16 +3,17 @@ import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { DriverCard, JobCard } from '../components/cards'
 import { DriverArt, FleetArt, HeroRoadArt, MechanicArt, DiscoverArt, SearchArt } from '../assets/illustrations'
-import { VehicleArt } from '../components/form'
 import { ShareJobButton } from '../components/growth'
 import { JobItem } from '../components/jobs'
 import { CityPicker } from '../components/places'
 import { AppShell, BrandMark, CardGrid } from '../components/shell'
 import { Button, CardSkeletons, Chip, Dialog, EmptyState, ErrorState, Icon, IconButton, Note, ThemeToggle } from '../components/ui'
-import { geo, pub, type Job, type PublicDriver, type PublicJob, type PublicStats } from '../lib/api'
+import { geo, pub, type Job, type ListPage, type PublicJob, type PublicStats } from '../lib/api'
+import { cleared, EMPTY_DRIVERS, EMPTY_JOBS, isFiltered, useListQuery, type AnyQuery } from '../lib/search'
+import { SearchFilterBar } from '../components/search'
 import { useAuth } from '../lib/auth'
 import { brand } from '../lib/brand'
-import { pick, placeName, VEHICLES } from '../lib/catalog'
+import { placeName } from '../lib/catalog'
 import { referralCode, seekPath, setNext, setSeeking, type Seeking } from '../lib/share'
 import { track, trackScreen } from '../lib/track'
 
@@ -30,6 +31,35 @@ type City = { district: string; state: string }
 const CITY_KEY = 'vz-city'
 const loadCity = (): City | null => { try { return JSON.parse(localStorage.getItem(CITY_KEY) || 'null') } catch { return null } }
 const saveCity = (c: City) => { try { localStorage.setItem(CITY_KEY, JSON.stringify(c)) } catch { /* storage blocked */ } }
+/** the city chosen on the chip is shared by both public lists */
+const withSavedCity = <T extends AnyQuery>(q: T): T => { const c = loadCity(); return c ? { ...q, place: c, radius: q.place?.district === c.district ? q.radius : null } : q }
+
+/** Paged no-login list that reloads when the search / filters change. */
+function usePublicList<T>(load: (offset: number) => Promise<ListPage<T>>, query: AnyQuery) {
+  const [items, setItems] = useState<T[] | null>(null)
+  const [total, setTotal] = useState<number | null>(null)
+  const [more, setMore] = useState(false)
+  const [error, setError] = useState(false)
+  const [tick, setTick] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const key = JSON.stringify(query)
+  useEffect(() => {
+    let alive = true
+    setItems(null)
+    setError(false)
+    load(0).then((r) => { if (alive) { setItems(r.items); setMore(r.has_more); setTotal(r.total ?? null) } }).catch(() => alive && setError(true))
+    return () => { alive = false }
+  }, [key, tick]) // eslint-disable-line react-hooks/exhaustive-deps
+  async function loadMore() {
+    setLoadingMore(true)
+    try {
+      const r = await load(items?.length || 0)
+      setItems((cur) => [...(cur || []), ...r.items])
+      setMore(r.has_more)
+    } finally { setLoadingMore(false) }
+  }
+  return { items, total, more, error, loadMore, loadingMore, retry: () => setTick((n) => n + 1) }
+}
 
 const asJob = (j: PublicJob): Job => ({
   ...j, check_flags: [], owner_name: null, business_name: null, owner_photo: null, distance_km: null, interested: false,
@@ -197,56 +227,42 @@ function DriverList() {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
   const nav = useNavigate()
-  const [city, setCity] = useState<City | null>(loadCity)
+  const [query, setQuery] = useListQuery('pub-drivers', EMPTY_DRIVERS, withSavedCity)
+  const city = query.place
+  const setCity = (c: City) => { saveCity(c); setQuery({ ...query, place: c, radius: null }) }
   const [pickOpen, setPickOpen] = useState(false)
-  const [vehicle, setVehicle] = useState<string | null>(null)
   const [stats, setStats] = useState<{ drivers: number; drivers_here: number } | null>(null)
-  const [items, setItems] = useState<PublicDriver[] | null>(null)
-  const [more, setMore] = useState(false)
-  const [error, setError] = useState(false)
-  const [tick, setTick] = useState(0)
-  const [loadingMore, setLoadingMore] = useState(false)
+  const { items, total, more, error, retry, loadMore, loadingMore } = usePublicList((offset) => pub.drivers(query, { offset }), query)
   useEffect(() => { setSeeking('driver'); trackScreen('public_drivers'); track('public_drivers_view', { city: city?.district || null }) }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     let alive = true
-    setItems(null)
-    setError(false)
     pub.driverStats(city?.district).then((s) => alive && setStats(s)).catch(() => {})
-    pub.drivers({ district: city?.district, vehicle }).then((r) => { if (alive) { setItems(r.items); setMore(r.has_more) } }).catch(() => alive && setError(true))
     return () => { alive = false }
-  }, [city, vehicle, tick])
+  }, [city?.district])
   const cityName = city ? placeName(`${city.district}, ${city.state}`, lang) : ''
   const here = !!city && (stats?.drivers_here || 0) > 0
   const title = here ? t('pub.driversIn', { n: stats!.drivers_here, city: cityName })
     : (stats?.drivers || 0) > 0 ? t('pub.driversReady', { n: stats!.drivers }) : t('pub.driversTitleEmpty')
   const askLogin = (from: string) => { track('public_contact_tap', { from, target: 'driver' }); setNext('/home'); nav('/login') }
-  async function loadMore() {
-    setLoadingMore(true)
-    try {
-      const r = await pub.drivers({ district: city?.district, vehicle, offset: items?.length || 0 })
-      setItems((cur) => [...(cur || []), ...r.items])
-      setMore(r.has_more)
-    } finally { setLoadingMore(false) }
-  }
+  const filtered = isFiltered(query)
   return (
     <PublicFrame>
       <section className="mb-5">
         <h1 className="font-display text-3xl font-semibold leading-tight">{title}</h1>
         <p className="mt-1 text-text-2">{t('pub.driversSub')}</p>
       </section>
-      <div role="group" aria-label={t('home.filter')} className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 md:-mx-6 md:px-6 lg:mx-0 lg:flex-wrap lg:px-0">
-        <Chip selected={!!city} onClick={() => setPickOpen(true)} icon={Icon.pin}>{cityName || t('pub.pickCity')} <span className="text-[0.8em]">{Icon.down}</span></Chip>
-        <span className="mx-1 w-px shrink-0 self-stretch bg-border" aria-hidden />
-        <Chip selected={!vehicle} onClick={() => setVehicle(null)}>{t('home.allVehicles')}</Chip>
-        {VEHICLES.map((v) => (
-          <Chip key={v.key} selected={vehicle === v.key} onClick={() => setVehicle(vehicle === v.key ? null : v.key)} icon={<VehicleArt kind={v.key} className="h-4 w-7" />}>{pick(v.label, lang)}</Chip>
-        ))}
+      <div className="mb-4">
+        <SearchFilterBar kind="drivers" value={query} onChange={setQuery} keepPlace publicMode
+          count={(q) => pub.drivers(q, { limit: 1 }).then((r) => r.total ?? r.items.length)}
+          lead={<Chip selected={!!city} onClick={() => setPickOpen(true)} icon={Icon.pin}>{cityName || t('pub.pickCity')} <span className="text-[0.8em]">{Icon.down}</span></Chip>} />
+        {filtered && items && <p className="mt-2 text-sm font-medium text-text-2" aria-live="polite">{t('sf.foundDrivers', { n: total ?? items.length, count: total ?? items.length })}</p>}
       </div>
-      {error && <ErrorState onRetry={() => setTick((n) => n + 1)} />}
-      {items?.length === 0 && (
-        <EmptyState art={<DriverArt />} title={t('pub.driversEmptyTitle')} body={t('pub.driversEmptyBody')}
-          action={<Button variant="action" onClick={() => askLogin('empty')}>{t('pub.postFree')}</Button>} />
-      )}
+      {error && <ErrorState onRetry={retry} />}
+      {items?.length === 0 && (filtered
+        ? <EmptyState art={<SearchArt />} title={t('home.emptyFilterTitle')} body={t('home.noDriversFilter')}
+            action={<Button variant="outline" onClick={() => setQuery(cleared('drivers', query, true))}>{t('home.clearFilter')}</Button>} />
+        : <EmptyState art={<DriverArt />} title={t('pub.driversEmptyTitle')} body={t('pub.driversEmptyBody')}
+            action={<Button variant="action" onClick={() => askLogin('empty')}>{t('pub.postFree')}</Button>} />)}
       <CardGrid>
         {items === null && !error && <CardSkeletons count={4} height="h-64" />}
         {items?.map((d, i) => (
@@ -262,7 +278,7 @@ function DriverList() {
           {[1, 2, 3].map((n) => <li key={n} className="flex gap-2"><span className="font-semibold text-primary">{n}.</span>{t(`pub.ownerHow${n}`)}</li>)}
         </ol>
       </section>
-      <CityDialog open={pickOpen} onClose={() => setPickOpen(false)} onPick={(c) => { setCity(c); saveCity(c); setPickOpen(false); track('public_city_set') }} />
+      <CityDialog open={pickOpen} onClose={() => setPickOpen(false)} onPick={(c) => { setCity(c); setPickOpen(false); track('public_city_set') }} />
     </PublicFrame>
   )
 }
@@ -296,38 +312,25 @@ function JobList() {
   const lang = i18n.language
   const nav = useNavigate()
   const askLogin = useAskLogin()
-  const [city, setCity] = useState<City | null>(loadCity)
+  const [query, setQuery] = useListQuery('pub-jobs', EMPTY_JOBS, withSavedCity)
+  const city = query.place
+  const setCity = (c: City) => { saveCity(c); setQuery({ ...query, place: c, radius: null }) }
   const [pickOpen, setPickOpen] = useState(false)
-  const [vehicle, setVehicle] = useState<string | null>(null)
   const [stats, setStats] = useState<PublicStats | null>(null)
-  const [items, setItems] = useState<PublicJob[] | null>(null)
-  const [more, setMore] = useState(false)
-  const [error, setError] = useState(false)
-  const [tick, setTick] = useState(0)
-  const [loadingMore, setLoadingMore] = useState(false)
+  const { items, total, more, error, retry, loadMore, loadingMore } = usePublicList((offset) => pub.jobs(query, { offset }), query)
+  const filtered = isFiltered(query)
   useEffect(() => { setSeeking('job'); trackScreen('public_jobs'); track('public_jobs_view', { city: city?.district || null }) }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     let alive = true
-    setItems(null)
-    setError(false)
     pub.stats(city?.district).then((s) => alive && setStats(s)).catch(() => {})
-    pub.jobs({ district: city?.district, vehicle }).then((r) => { if (alive) { setItems(r.items); setMore(r.has_more) } }).catch(() => alive && setError(true))
     return () => { alive = false }
-  }, [city, vehicle, tick])
+  }, [city?.district])
 
   const cityName = city ? placeName(`${city.district}, ${city.state}`, lang) : ''
   const here = !!city && (stats?.drivers_here || 0) > 0
   const title = here ? t('pub.wantedIn', { n: stats!.drivers_here, city: cityName })
     : (stats?.drivers || 0) > 0 ? t('pub.wantedAll', { n: stats!.drivers }) : t('pub.titleEmpty')
 
-  async function loadMore() {
-    setLoadingMore(true)
-    try {
-      const r = await pub.jobs({ district: city?.district, vehicle, offset: items?.length || 0 })
-      setItems((cur) => [...(cur || []), ...r.items])
-      setMore(r.has_more)
-    } finally { setLoadingMore(false) }
-  }
 
   return (
     <PublicFrame>
@@ -342,19 +345,18 @@ function JobList() {
           </p>
         )}
       </section>
-      <div role="group" aria-label={t('home.filter')} className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 md:-mx-6 md:px-6 lg:mx-0 lg:flex-wrap lg:px-0">
-        <Chip selected={!!city} onClick={() => setPickOpen(true)} icon={Icon.pin}>{cityName || t('pub.pickCity')} <span className="text-[0.8em]">{Icon.down}</span></Chip>
-        <span className="mx-1 w-px shrink-0 self-stretch bg-border" aria-hidden />
-        <Chip selected={!vehicle} onClick={() => setVehicle(null)}>{t('home.allVehicles')}</Chip>
-        {VEHICLES.map((v) => (
-          <Chip key={v.key} selected={vehicle === v.key} onClick={() => setVehicle(vehicle === v.key ? null : v.key)} icon={<VehicleArt kind={v.key} className="h-4 w-7" />}>{pick(v.label, lang)}</Chip>
-        ))}
+      <div className="mb-4">
+        <SearchFilterBar kind="jobs" value={query} onChange={setQuery} keepPlace publicMode
+          count={(q) => pub.jobs(q, { limit: 1 }).then((r) => r.total ?? r.items.length)}
+          lead={<Chip selected={!!city} onClick={() => setPickOpen(true)} icon={Icon.pin}>{cityName || t('pub.pickCity')} <span className="text-[0.8em]">{Icon.down}</span></Chip>} />
+        {filtered && items && <p className="mt-2 text-sm font-medium text-text-2" aria-live="polite">{t('sf.foundJobs', { n: total ?? items.length, count: total ?? items.length })}</p>}
       </div>
-      {error && <ErrorState onRetry={() => setTick((n) => n + 1)} />}
-      {items?.length === 0 && (
-        <EmptyState art={<DiscoverArt />} title={t('pub.emptyTitle')} body={t('pub.emptyBody')}
-          action={<Button variant="action" onClick={() => askLogin(undefined, 'empty')}>{t('pub.joinFree')}</Button>} />
-      )}
+      {error && <ErrorState onRetry={retry} />}
+      {items?.length === 0 && (filtered
+        ? <EmptyState art={<SearchArt />} title={t('home.emptyFilterTitle')} body={t('home.noJobsFilter')}
+            action={<Button variant="outline" onClick={() => setQuery(cleared('jobs', query, true))}>{t('home.clearFilter')}</Button>} />
+        : <EmptyState art={<DiscoverArt />} title={t('pub.emptyTitle')} body={t('pub.emptyBody')}
+            action={<Button variant="action" onClick={() => askLogin(undefined, 'empty')}>{t('pub.joinFree')}</Button>} />)}
       <CardGrid>
         {items === null && !error && <CardSkeletons count={4} height="h-72" />}
         {items?.map((j) => <PublicJobCard key={j.id} job={j} onContact={() => askLogin(j.share_code, 'list')} />)}
@@ -374,7 +376,7 @@ function JobList() {
           <Button variant="primary" className="mt-3 self-start" icon={Icon.users} onClick={() => { setSeeking('driver'); nav('/drivers') }}>{t('pub.ownerCta')}</Button>
         </div>
       </section>
-      <CityDialog open={pickOpen} onClose={() => setPickOpen(false)} onPick={(c) => { setCity(c); saveCity(c); setPickOpen(false); track('public_city_set') }} />
+      <CityDialog open={pickOpen} onClose={() => setPickOpen(false)} onPick={(c) => { setCity(c); setPickOpen(false); track('public_city_set') }} />
     </PublicFrame>
   )
 }

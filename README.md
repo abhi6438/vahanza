@@ -37,7 +37,7 @@ A white-label app for vehicle owners and drivers. One codebase serves the web/PW
 ## 1. Supabase setup (one time)
 
 1. Create a project in region **Mumbai (ap-south-1)**.
-2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql` → `0009_trust.sql` → `0010_mpin.sql`).
+2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql` → `0009_trust.sql` → `0010_mpin.sql` → `0011_search.sql`).
 3. Auth → Providers → **Phone**: enable it. You can pick any SMS provider here because the hook below replaces it.
 4. Auth → Hooks → **Send SMS hook** → HTTPS:
    `https://<your-domain>/api/v1/hooks/send-sms`. Generate the secret and copy it into `SEND_SMS_HOOK_SECRET` (format `v1,whsec_...`).
@@ -153,6 +153,19 @@ Go-live checklist:
 5. `npm install` in `web/` (new: `@capgo/capacitor-native-biometric`); `npm run apk` adds the `USE_BIOMETRIC` permission itself.
 
 Local testing: `DEV_MINT_SESSIONS=1` lets the API sign the session with `SUPABASE_JWT_SECRET` (never in production).
+
+## Search and filter (one bar on every list)
+
+The same bar sits on the owner's driver list, the driver's job list and the no-login `/drivers` and `/jobs` pages (`web/src/components/search.tsx`, `api/vz/search.py`).
+
+- **Search box**: a city in Hindi or English ("रीवा", "Rewa"), a pincode ("486001"), a name or firm ("ramesh", "shree transport"), or a vehicle word ("truck rewa", "ट्रक"). A voice (mic) button is shown where the phone supports it. **Phone numbers are never searched**: long digit runs are dropped. The no-login pages don't search owner firm names, and match driver names only by first name.
+- **Filter** (bottom sheet on phones, panel on the right on desktop) with a live "N ड्राइवर दिखाएँ" button and "साफ़ करें":
+  - Both lists: sort (nearest / newest / savings / rating), city + distance (25 / 50 / 100 km / any), wheels, verified only.
+  - Owner (drivers): licence (LMV also accepts HMV and badge holders), experience 1+/3+/5+/10+ years, most savings asked, can start by, rating 4★+, languages.
+  - Driver (jobs): least savings, kind of work, where the vehicle runs, facilities (all of them), new jobs only (3 days).
+- What is on shows as removable chips with "सब हटाएँ". The vehicle row stays. Filters are remembered on the device per list; the search text is not.
+- The API answers with `total` (all matches), which drives "N मिले" and the live button. A typed city with no distance chosen = within 50 km. The public city chip still only puts that city first and hides nothing.
+- Go-live: run `0011_search.sql` (adds `pg_trgm` and indexes; safe to run again).
 
 ## 2. MSG91
 

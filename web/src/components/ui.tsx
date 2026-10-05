@@ -262,7 +262,7 @@ export function Note({ children, tone = 'info', icon }: { children: ReactNode; t
 // ---------------------------------------------------------------- dialog: bottom sheet on phones, centred on desktop
 let openDialogs = 0
 
-export function Dialog({ open, onClose, title, children, footer, size = 'md' }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; size?: 'md' | 'lg' }) {
+export function Dialog({ open, onClose, title, children, footer, size = 'md', side }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; size?: 'md' | 'lg'; /** desktop: a panel on the right instead of a centred box */ side?: boolean }) {
   const { t } = useTranslation()
   const titleId = useId()
   const box = useRef<HTMLDivElement>(null)
@@ -297,9 +297,9 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
   if (!open) return null
   // rendered on <body>, so no sticky header / sidebar (their own stacking layer) can sit above the dimmed backdrop
   return createPortal(
-    <div className="anim-fade fixed inset-0 z-[70] flex items-end justify-center bg-[rgb(4_14_17/0.55)] backdrop-blur-[2px] md:items-center md:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div className={`anim-fade fixed inset-0 z-[70] flex items-end justify-center bg-[rgb(4_14_17/0.55)] backdrop-blur-[2px] ${side ? 'md:items-center md:p-6 lg:items-stretch lg:justify-end lg:p-0' : 'md:items-center md:p-6'}`} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div ref={box} role="dialog" aria-modal="true" aria-labelledby={titleId}
-        className={`anim-sheet flex max-h-[92dvh] w-full flex-col rounded-t-2xl border border-border bg-surface-3 shadow-lg md:rounded-xl ${size === 'lg' ? 'md:max-w-2xl' : 'md:max-w-md'}`}>
+        className={`anim-sheet flex max-h-[92dvh] w-full flex-col rounded-t-2xl border border-border bg-surface-3 shadow-lg md:rounded-xl ${size === 'lg' ? 'md:max-w-2xl' : 'md:max-w-md'} ${side ? 'lg:h-dvh lg:max-h-none lg:max-w-[26rem] lg:rounded-none lg:rounded-l-2xl lg:border-y-0 lg:border-r-0' : ''}`}>
         <div className="flex items-start gap-2 px-5 pb-2 pt-3 md:pt-5">
           <div className="min-w-0 flex-1">
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-border md:hidden" aria-hidden />
