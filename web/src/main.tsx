@@ -11,6 +11,7 @@ import { loadTheme } from './lib/theme'
 import { captureSource } from './lib/share'
 import { isNative } from './lib/platform'
 import { initTracking } from './lib/track'
+import { registerSW } from 'virtual:pwa-register'
 // fonts are bundled (the APK works offline): Anek for headings, Mukta for text — both cover Hindi + English
 import '@fontsource-variable/anek-latin/wght.css'
 import '@fontsource-variable/anek-devanagari/wght.css'
@@ -42,6 +43,15 @@ document.addEventListener('visibilitychange', () => {
   }
 })
 void initTracking()
+// offline cache (web): when a new version is deployed the new service worker takes over at once and the
+// page reloads by itself; it also checks for a new version every 30 minutes while the app stays open.
+// In the APK build this registers a worker that removes itself (the APK ships its own files).
+registerSW({
+  immediate: true,
+  onRegisteredSW(_url, reg) {
+    if (reg) window.setInterval(() => { if (navigator.onLine) void reg.update() }, 30 * 60_000)
+  },
+})
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

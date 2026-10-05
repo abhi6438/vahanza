@@ -24,11 +24,18 @@ export default defineConfig(({ mode }) => {
         // showing the OLD screens after an app update; in the APK build the worker removes itself instead.
         selfDestroying: mode === 'apk',
         registerType: 'autoUpdate',
+        // registered from main.tsx (virtual:pwa-register): a new deploy takes over and the page reloads itself,
+        // so phones never keep showing an old cached version
+        injectRegister: false,
         includeAssets: ['icons/icon.svg'],
         // the manifest comes from the API (/app.webmanifest) so "Add to home screen" follows the
         // published brand theme (Admin → Appearance) without a new build
         manifest: false,
         workbox: {
+          // a new version takes over immediately (the page then reloads itself, see main.tsx)
+          skipWaiting: true,
+          clientsClaim: true,
+          cleanupOutdatedCaches: true,
           importScripts: ['push-sw.js'],
           navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [

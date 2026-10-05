@@ -178,7 +178,7 @@ function PreviewTable({ rows }: { rows: ImportPreviewRow[] }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
   return (
-    <div className="mt-3 max-h-96 overflow-auto rounded-md border border-border">
+    <div className="mt-3 overflow-x-auto rounded-md border border-border lg:max-h-96 lg:overflow-auto">
       <table className="w-full min-w-[480px] text-left text-sm">
         <thead className="sticky top-0 bg-surface text-xs text-text-2">
           <tr><th className="p-2">#</th><th className="p-2">{t('admin.imp.status')}</th><th className="p-2">{t('admin.imp.f.name')}</th><th className="p-2">{t('admin.imp.f.phone')}</th><th className="p-2">{t('admin.imp.place')}</th></tr>
