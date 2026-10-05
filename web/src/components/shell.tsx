@@ -13,7 +13,7 @@ import { brand } from '../lib/brand'
 import { useLayout } from '../lib/layout'
 import { Bell, CountDot, useUnread } from './notify'
 import { Avatar } from './photo'
-import { ConfirmDialog, Icon, IconButton, ThemeToggle } from './ui'
+import { ConfirmDialog, Frame, Icon, IconButton, ThemeToggle } from './ui'
 
 export type NavItem = { to: string; icon: ReactNode; label: string; count?: number; end?: boolean }
 
@@ -59,7 +59,9 @@ export interface ShellProps {
   title: string
   /** Small line under the desktop title (e.g. the user's city). */
   sub?: ReactNode
-  /** Mobile/tablet only: custom content for the teal header (greeting, main action...). */
+  /** Mobile/tablet only: the header row that stays fixed at the top (greeting, bell, theme, profile). */
+  heroTop?: ReactNode
+  /** Mobile/tablet only: teal block under it (city, main action...); scrolls with the page. */
   hero?: ReactNode
   /** Desktop top-bar actions, right side (e.g. the page's main button). */
   actions?: ReactNode
@@ -200,7 +202,7 @@ function SkipLink() {
 }
 
 // ---------------------------------------------------------------- mobile / tablet
-function MobileShell({ title, hero, back, mobileActions, adminQueue, children, tablet }: ShellProps & { tablet: boolean }) {
+function MobileShell({ title, heroTop, hero, back, mobileActions, adminQueue, children, tablet }: ShellProps & { tablet: boolean }) {
   const { t } = useTranslation()
   const admin = useIsAdmin()
   const nav = useNavigate()
@@ -209,42 +211,53 @@ function MobileShell({ title, hero, back, mobileActions, adminQueue, children, t
     document.documentElement.style.setProperty('--toast-offset', tabs ? '76px' : '16px')
   }, [tabs])
   const container = tablet ? 'max-w-3xl px-6' : 'max-w-xl px-4'
-  return (
-    <div className={`min-h-full ${tabs ? 'pb-[calc(env(safe-area-inset-bottom,0px)+var(--bottom-nav-height)+16px)]' : 'pb-6'}`}>
-      <SkipLink />
-      {back ? (
-        <header className="glass sticky top-0 z-30 border-b border-border" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-          <div className={`mx-auto flex h-header items-center gap-1 ${tablet ? 'max-w-3xl px-4' : 'px-2'}`}>
-            <IconButton label={t('back')} onClick={() => nav(-1)}>{Icon.back}</IconButton>
-            <h1 className="min-w-0 flex-1 truncate font-display text-lg font-semibold">{title}</h1>
+  const safeTop = { paddingTop: 'var(--safe-area-inset-top, env(safe-area-inset-top, 0px))' }
+
+  // header: always on screen
+  const header = back ? (
+    <header className="glass border-b border-border" style={safeTop}>
+      <div className={`mx-auto flex h-header items-center gap-1 ${tablet ? 'max-w-3xl px-4' : 'px-2'}`}>
+        <IconButton label={t('back')} onClick={() => nav(-1)}>{Icon.back}</IconButton>
+        <h1 className="min-w-0 flex-1 truncate font-display text-lg font-semibold">{title}</h1>
+        {mobileActions}
+      </div>
+    </header>
+  ) : (
+    <header className="surface-hero" style={safeTop}>
+      <div className={`mx-auto ${container}`}>
+        {heroTop ?? (
+          <div className="flex h-header items-center gap-1">
+            <h1 className="min-w-0 flex-1 truncate font-display text-xl font-semibold tracking-[-0.01em]">{title}</h1>
             {mobileActions}
-          </div>
-        </header>
-      ) : (
-        <header className={`surface-hero ${hero ? 'rounded-b-[1.75rem] shadow-md' : ''}`} style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-          <div className={`mx-auto ${container} ${hero ? 'pb-4 pt-1' : ''}`}>
-            {hero ?? (
-              <div className="flex h-header items-center gap-1">
-                <h1 className="min-w-0 flex-1 truncate font-display text-xl font-semibold tracking-[-0.01em]">{title}</h1>
-                {mobileActions}
-                {!admin && <Bell tone="onDark" />}
-                <ThemeToggle tone="onDark" />
-                {/* admins have no Profile tab on phones: settings and log out sit in the header */}
-                {admin && (
-                  <>
-                    <Link to="/settings" aria-label={t('settings.title')} title={t('settings.title')}
-                      className="press grid size-ctl-md shrink-0 place-items-center rounded-full text-[length:var(--icon-size-md)] text-white/90 hover:bg-white/12 active:bg-white/20">{Icon.settings}</Link>
-                    <LogoutButton tone="onDark" />
-                  </>
-                )}
-              </div>
+            {!admin && <Bell tone="onDark" />}
+            <ThemeToggle tone="onDark" />
+            {/* admins have no Profile tab on phones: settings and log out sit in the header */}
+            {admin && (
+              <>
+                <Link to="/settings" aria-label={t('settings.title')} title={t('settings.title')}
+                  className="press grid size-ctl-md shrink-0 place-items-center rounded-full text-[length:var(--icon-size-md)] text-white/90 hover:bg-white/12 active:bg-white/20">{Icon.settings}</Link>
+                <LogoutButton tone="onDark" />
+              </>
             )}
           </div>
-        </header>
-      )}
-      <main id="main" tabIndex={-1} className={`mx-auto w-full pt-4 outline-none ${container}`}>{children}</main>
-      {tabs && <BottomNav adminQueue={adminQueue} />}
-    </div>
+        )}
+      </div>
+    </header>
+  )
+
+  return (
+    <>
+      <SkipLink />
+      <Frame header={header} footer={tabs ? <BottomNav adminQueue={adminQueue} /> : undefined}>
+        {/* the rest of the teal header (city, main action) scrolls away under the fixed bar */}
+        {!back && hero && (
+          <div className="surface-hero surface-hero-cont -mt-px rounded-b-[1.75rem] shadow-md">
+            <div className={`mx-auto pb-4 ${container}`}>{hero}</div>
+          </div>
+        )}
+        <main id="main" tabIndex={-1} className={`mx-auto w-full pb-6 pt-4 outline-none ${container}`}>{children}</main>
+      </Frame>
+    </>
   )
 }
 
@@ -266,8 +279,8 @@ export function BottomNav({ adminQueue }: { adminQueue?: number }) {
   const { t } = useTranslation()
   const items = useNavItems(adminQueue)
   return (
-    <nav aria-label={t('nav.main')} className="glass fixed inset-x-0 bottom-0 z-30 border-t border-border shadow-[0_-8px_24px_-12px_rgb(0_0_0/0.18)]"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+    <nav aria-label={t('nav.main')} className="glass border-t border-border shadow-[0_-8px_24px_-12px_rgb(0_0_0/0.18)]"
+      style={{ paddingBottom: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))' }}>
       <div className="mx-auto grid max-w-xl px-1" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
         {items.map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end}

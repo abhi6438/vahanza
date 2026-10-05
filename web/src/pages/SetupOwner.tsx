@@ -5,7 +5,7 @@ import { FleetRow } from '../components/cards'
 import { Label, Note, Stepper, TextField, VehicleArt, VehicleGrid } from '../components/form'
 import { PhotoPicker } from '../components/photo'
 import { CityPicker, PlaceField, type PlaceValue } from '../components/places'
-import { BigButton } from '../components/ui'
+import { BigButton, scrollToTop } from '../components/ui'
 import { Wizard } from '../components/Wizard'
 import { ApiError, saveProfile, type FleetGroup } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -48,7 +48,7 @@ export default function SetupOwner() {
 
   useEffect(() => {
     trackScreen(step === 0 ? `owner_${mode}_about` : a.open ? `owner_${mode}_fleet_add_${a.sub}` : `owner_${mode}_fleet`)
-    window.scrollTo(0, 0)
+    scrollToTop()
   }, [step, a.open, a.sub, mode])
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((cur) => ({ ...cur, [k]: v }))

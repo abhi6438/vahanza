@@ -5,7 +5,7 @@ import { DriverCard } from '../components/cards'
 import { Chips, Label, OptionList, Stepper, TextField, Toggle, VehicleGrid } from '../components/form'
 import { PhotoPicker } from '../components/photo'
 import { placeText, PlaceField, type PlaceValue } from '../components/places'
-import { Icon } from '../components/ui'
+import { Icon, scrollToTop } from '../components/ui'
 import { Wizard } from '../components/Wizard'
 import { ApiError, saveProfile, type DriverDetails } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -92,7 +92,7 @@ export default function SetupDriver() {
       return x
     })
     trackScreen(`driver_${mode}_${cur}`)
-    window.scrollTo(0, 0)
+    scrollToTop()
   }, [step, STEPS, mode, lang])
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((cur) => ({ ...cur, [k]: v }))

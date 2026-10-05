@@ -5,6 +5,7 @@ import { JobCard } from '../components/cards'
 import { Chips, Label, Note, OptionList, Stepper, Toggle, VehicleArt } from '../components/form'
 import { CityPicker } from '../components/places'
 import { Wizard } from '../components/Wizard'
+import { scrollToTop } from '../components/ui'
 import { ApiError, createPost, type Post, type PostIn } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { COVERAGE, FACILITIES, label, LICENCES, PAY, PAY_UNIT, placeName, rupees, VEHICLES, WORK } from '../lib/catalog'
@@ -38,7 +39,7 @@ export default function PostNew() {
 
   useEffect(() => {
     trackScreen(`post_new_${STEPS[step]}`)
-    window.scrollTo(0, 0)
+    scrollToTop()
   }, [step])
 
   const chosen = fleet.filter((g) => g.id && need[g.id])

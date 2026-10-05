@@ -5,11 +5,11 @@ import { brand } from '../lib/brand'
 import { useIsDesktop } from '../lib/layout'
 import { BrandMark } from './shell'
 import { HeroRoadArt } from '../assets/illustrations'
-import { Icon, IconButton, Screen, ThemeToggle, TopBar } from './ui'
+import { FooterBar, Frame, Icon, IconButton, Screen, ThemeToggle, TopBar } from './ui'
 
 /**
  * Frame for the sign-in steps (language, role, number, OTP).
- *   phone:   plain top bar, content, sticky main button at the bottom (thumb reach)
+ *   phone:   fixed top bar, scrolling content, main button pinned at the bottom (thumb reach, above the keyboard)
  *   desktop: brand panel on the left, the step in a focused column on the right
  */
 export function AuthLayout({ title, back = true, footer, children }: { title: string; back?: boolean; footer?: ReactNode; children: ReactNode }) {
@@ -17,11 +17,11 @@ export function AuthLayout({ title, back = true, footer, children }: { title: st
   const { t, i18n } = useTranslation()
   const nav = useNavigate()
   if (!desktop) {
+    // top bar and the main button stay put; the step in between scrolls (the button rides above the keyboard)
     return (
-      <>
-        <TopBar title={title} back={back} />
-        <Screen footer={footer}>{children}</Screen>
-      </>
+      <Frame header={<TopBar title={title} back={back} />} footer={footer && <FooterBar>{footer}</FooterBar>}>
+        <Screen>{children}</Screen>
+      </Frame>
     )
   }
   const en = i18n.language === 'en'

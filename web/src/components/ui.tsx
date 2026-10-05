@@ -309,8 +309,8 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md', si
           <IconButton label={t('close')} onClick={onClose} className="-mr-2 hidden md:grid">{Icon.close}</IconButton>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4">{children}</div>
-        {footer && <div className="border-t border-border px-5 pt-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>{footer}</div>}
-        {!footer && <div style={{ height: 'calc(env(safe-area-inset-bottom, 0px) + 8px)' }} />}
+        {footer && <div className="border-t border-border px-5 pt-3" style={{ paddingBottom: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 16px)' }}>{footer}</div>}
+        {!footer && <div style={{ height: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 8px)' }} />}
       </div>
     </div>,
     document.body,
@@ -341,7 +341,7 @@ export function TopBar({ title, back = true, right }: { title: string; back?: bo
   const nav = useNavigate()
   const { t } = useTranslation()
   return (
-    <header className="glass sticky top-0 z-20 border-b border-border" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+    <header className="glass sticky top-0 z-20 border-b border-border" style={{ paddingTop: 'var(--safe-area-inset-top, env(safe-area-inset-top, 0px))' }}>
       <div className="mx-auto flex h-header max-w-3xl items-center gap-1 px-2 md:px-4">
         {back ? <IconButton label={t('back')} onClick={() => nav(-1)}>{Icon.back}</IconButton> : <span className="w-2" />}
         <h1 className="min-w-0 flex-1 truncate font-display text-lg font-semibold">{title}</h1>
@@ -358,10 +358,39 @@ export function TopBar({ title, back = true, right }: { title: string; back?: bo
 export function Screen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   return (
     <div>
-      <main className="mx-auto w-full max-w-xl px-4 py-5 md:py-8" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)' }}>
+      <main className="mx-auto w-full max-w-xl px-4 py-5 md:py-8" style={{ paddingBottom: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 24px)' }}>
         {children}
         {footer && <div className="mt-6">{footer}</div>}
       </main>
+    </div>
+  )
+}
+
+/**
+ * Phone / tablet screen frame: the header and the footer (bottom tabs, main button) stay put and only
+ * the middle scrolls — one scroll area per screen, the page itself never scrolls (web and APK alike).
+ */
+export function Frame({ header, footer, children }: { header?: ReactNode; footer?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="flex h-full flex-col overflow-hidden">
+      {header && <div className="relative z-30 shrink-0">{header}</div>}
+      <div data-scroller className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain">{children}</div>
+      {footer && <div className="relative z-30 shrink-0">{footer}</div>}
+    </div>
+  )
+}
+
+/** Back to the top of the screen (the frame's scroll area, or the page on desktop). */
+export function scrollToTop() {
+  document.querySelectorAll<HTMLElement>('[data-scroller]').forEach((el) => { el.scrollTop = 0 })
+  window.scrollTo(0, 0)
+}
+
+/** Main button bar pinned under the content (sign-in steps, wizards): stays above the keyboard. */
+export function FooterBar({ children }: { children: ReactNode }) {
+  return (
+    <div className="border-t border-border bg-bg/95 px-4 pt-3 backdrop-blur" style={{ paddingBottom: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 12px)' }}>
+      <div className="mx-auto max-w-xl">{children}</div>
     </div>
   )
 }

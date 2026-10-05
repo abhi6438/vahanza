@@ -7,7 +7,7 @@ import { ShareJobButton } from '../components/growth'
 import { JobItem } from '../components/jobs'
 import { CityPicker } from '../components/places'
 import { AppShell, BrandMark, CardGrid } from '../components/shell'
-import { Button, CardSkeletons, Chip, Dialog, EmptyState, ErrorState, Icon, IconButton, Note, ThemeToggle } from '../components/ui'
+import { Button, CardSkeletons, Chip, Dialog, EmptyState, ErrorState, Frame, Icon, IconButton, Note, ThemeToggle } from '../components/ui'
 import { geo, pub, type Job, type ListPage, type PublicJob, type PublicStats } from '../lib/api'
 import { cleared, EMPTY_DRIVERS, EMPTY_JOBS, isFiltered, useListQuery, type AnyQuery } from '../lib/search'
 import { SearchFilterBar } from '../components/search'
@@ -74,8 +74,8 @@ function PublicFrame({ children }: { children: ReactNode }) {
   // lists / shared job: back goes to "आप क्या ढूंढ रहे हैं?" to choose again
   const back = loc.pathname !== '/start' ? () => nav('/start') : null
   return (
-    <div className="min-h-full">
-      <header className="surface-hero sticky top-0 z-30 shadow-md" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+    <Frame header={
+      <header className="surface-hero shadow-md" style={{ paddingTop: 'var(--safe-area-inset-top, env(safe-area-inset-top, 0px))' }}>
         <div className="mx-auto flex h-header max-w-6xl items-center gap-2 px-4 md:px-6">
           {back && <IconButton tone="onDark" label={t('back')} onClick={back} className="-ml-2">{Icon.back}</IconButton>}
           <Link to="/start" className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -88,8 +88,9 @@ function PublicFrame({ children }: { children: ReactNode }) {
           <Button variant="action" size="sm" onClick={() => { track('public_login_tap'); nav('/login') }}>{t('pub.login')}</Button>
         </div>
       </header>
+    }>
       <main id="main" className="mx-auto w-full max-w-6xl px-4 pb-16 pt-5 md:px-6">{children}</main>
-    </div>
+    </Frame>
   )
 }
 

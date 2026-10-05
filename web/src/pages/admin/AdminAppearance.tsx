@@ -144,7 +144,7 @@ export default function AdminAppearance() {
             </div>
           </div>
 
-          <div className="sticky bottom-[calc(env(safe-area-inset-bottom,0px)+8px)] z-20 mt-5 rounded-lg border border-border bg-surface-3/95 p-3 shadow-lg backdrop-blur lg:hidden">{actions}</div>
+          <div className="sticky bottom-[calc(var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px))+8px)] z-20 mt-5 rounded-lg border border-border bg-surface-3/95 p-3 shadow-lg backdrop-blur lg:hidden">{actions}</div>
           <ConfirmDialog open={confirmReset} title={t('appearance.backToBrandTitle')} body={t('appearance.backToBrandBody')}
             confirmLabel={t('appearance.backToBrandYes')} busy={busy === 'reset'} onConfirm={() => void run('reset')} onCancel={() => setConfirmReset(false)} />
         </>

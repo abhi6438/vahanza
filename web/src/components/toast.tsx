@@ -20,7 +20,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       {/* on <body> above dialogs, so a message shown while a dialog is open is still seen */}
       {createPortal(<div aria-live="polite" className="pointer-events-none fixed inset-x-0 z-[80] flex flex-col items-center gap-2 px-4 lg:inset-x-auto lg:right-6 lg:items-end"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + var(--toast-offset, 16px))' }}>
+        style={{ bottom: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + var(--toast-offset, 16px))' }}>
         {items.map((t) => (
           <div key={t.id} role="status" className="anim-pop pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-lg border border-white/10 bg-[color-mix(in_srgb,var(--c-ink)_94%,var(--c-brand))] py-2.5 pl-2.5 pr-4 text-sm text-bg shadow-lg dark:border-border lg:w-auto lg:min-w-80">
             <span className={`icon-tile size-8 rounded-md ${t.tone === 'error' ? 'bg-error text-on-error' : t.tone === 'success' ? 'bg-success text-on-success' : 'bg-white/10 text-bg'}`}>{t.tone === 'error' ? Icon.alert : t.tone === 'success' ? Icon.check : Icon.info}</span>

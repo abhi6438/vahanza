@@ -1,16 +1,15 @@
 import { useTranslation } from 'react-i18next'
-import { Screen, TopBar } from '../components/ui'
+import { Frame, Screen, TopBar } from '../components/ui'
 import { brand } from '../lib/brand'
 
 export default function Legal() {
   const { t } = useTranslation()
   return (
-    <>
-      <TopBar title={t('legal.title')} />
+    <Frame header={<TopBar title={t('legal.title')} />}>
       <Screen>
         <p className="whitespace-pre-line leading-relaxed">{t('legal.body')}</p>
         <p className="mt-4 text-sm text-text-2">{brand.grievanceOfficer.name} · {brand.grievanceOfficer.email}</p>
       </Screen>
-    </>
+    </Frame>
   )
 }

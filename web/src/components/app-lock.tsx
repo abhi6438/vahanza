@@ -136,7 +136,7 @@ export function AppLock() {
   const name = (profile?.name || '').split(' ')[0]
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center overflow-y-auto bg-bg px-6 pb-8 anim-fade"
-      style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }} role="dialog" aria-modal="true" aria-label={t('lock.title')}>
+      style={{ paddingTop: 'calc(var(--safe-area-inset-top, env(safe-area-inset-top, 0px)) + 3rem)' }} role="dialog" aria-modal="true" aria-label={t('lock.title')}>
       <BrandMark size={48} />
       <p className="mt-4 font-display text-2xl font-semibold">{name ? t('lock.hello', { name }) : t('lock.title')}</p>
       <p className="mt-1 text-center text-text-2">{t(bio ? 'lock.subBio' : 'lock.sub')}</p>

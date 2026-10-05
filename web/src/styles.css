@@ -483,6 +483,12 @@ h1, h2, h3 { text-wrap: balance; }
     background-size: 240px 120px;
   }
 
+  /* the part of the teal header that scrolls (under the fixed header bar): continues its colour */
+  .surface-hero-cont {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--c-header) 86%, #000) 0%, color-mix(in srgb, var(--c-header) 78%, #000) 100%);
+  }
+  .surface-hero-cont::after { background-position: 0 -56px; }
+
   /* "available now" dot with a soft pulse */
   .live-dot { position: relative; display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 9999px; background: var(--c-call); flex-shrink: 0; }
   .live-dot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: vz-pulse 1.9s var(--ease-out) infinite; }

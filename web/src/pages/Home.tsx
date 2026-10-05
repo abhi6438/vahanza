@@ -148,10 +148,10 @@ function OwnerHome() {
   return (
     <AppShell title={greeting} sub={<CityLine city={city} />} width="wide"
       actions={<><TestBadge /><ButtonLink to={postTo} onClick={onPost} variant="action" icon={Icon.plus}>{t('home.post')}</ButtonLink></>}
+      heroTop={<HeroBar title={greeting} badge={<TestBadge />} />}
       hero={
         <>
-          <HeroBar title={greeting} badge={<TestBadge />} />
-          <p className="-mt-1 mb-4"><CityLine city={city} onDark /></p>
+          <p className="mb-4 pt-0.5"><CityLine city={city} onDark /></p>
           <ButtonLink to={postTo} onClick={onPost} variant="action" size="lg" block icon={Icon.plus}>{t('home.post')}</ButtonLink>
         </>
       }>
@@ -253,10 +253,10 @@ function DriverHome() {
   )
   return (
     <AppShell title={greeting} sub={<CityLine city={city} />} width="wide" actions={<TestBadge />}
+      heroTop={<HeroBar title={greeting} badge={<TestBadge />} />}
       hero={
         <>
-          <HeroBar title={greeting} badge={<TestBadge />} />
-          <p className="-mt-1 mb-3"><CityLine city={city} onDark /></p>
+          <p className="mb-3 pt-0.5"><CityLine city={city} onDark /></p>
           <AvailabilitySwitch onDark />
         </>
       }>

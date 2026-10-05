@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { brand } from '../lib/brand'
 import { useIsDesktop } from '../lib/layout'
 import { BrandMark } from './shell'
-import { Button, Icon, IconButton, Note } from './ui'
+import { Button, FooterBar, Frame, Icon, IconButton, Note } from './ui'
 
 export interface WizardProps {
   step: number
@@ -25,7 +25,7 @@ export interface WizardProps {
 
 /**
  * Shared frame for setup / post steps: one question at a time.
- *   phone:   sticky top bar with progress, sticky main button at the bottom
+ *   phone:   fixed top bar with progress, main button pinned at the bottom, only the step scrolls
  *   desktop: focused card in the middle of the page (like a checkout), buttons at the card's foot
  */
 export function Wizard({ step, total, title, sub, children, onBack, footer, canNext = true, nextLabel, onNext, busy, error, onLater }: WizardProps) {
@@ -76,18 +76,18 @@ export function Wizard({ step, total, title, sub, children, onBack, footer, canN
     )
   }
   return (
-    <div className="flex min-h-full flex-col">
-      <header className="sticky top-0 z-20 border-b border-border bg-surface" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="mx-auto flex h-header max-w-xl items-center gap-2 px-2 pr-4">{back}{progress}</div>
-      </header>
-      <main id="main" className="mx-auto w-full max-w-xl flex-1 px-4 pb-6 pt-5">
+    <Frame
+      header={
+        <header className="border-b border-border bg-surface" style={{ paddingTop: 'var(--safe-area-inset-top, env(safe-area-inset-top, 0px))' }}>
+          <div className="mx-auto flex h-header max-w-xl items-center gap-2 px-2 pr-4">{back}{progress}</div>
+        </header>
+      }
+      footer={<FooterBar>{actions}</FooterBar>}>
+      <main id="main" className="mx-auto w-full max-w-xl px-4 pb-6 pt-5">
         {head}
         <div className="mt-5">{children}</div>
         {error && <div className="mt-4"><Note tone="error">{error}</Note></div>}
       </main>
-      <footer className="sticky bottom-0 z-10 border-t border-border bg-bg/95 px-4 pt-3 backdrop-blur" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
-        <div className="mx-auto max-w-xl">{actions}</div>
-      </footer>
-    </div>
+    </Frame>
   )
 }

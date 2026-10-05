@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { AppLock } from './components/app-lock'
+import { scrollToTop } from './components/ui'
 import { getPinAsk, pinApi, setPinAsk } from './lib/pin'
 import MpinLogin from './pages/MpinLogin'
 import PinSetup from './pages/PinSetup'
@@ -58,7 +59,7 @@ function AppRoutes() {
   const loc = useLocation()
 
   const nav = useNavigate()
-  useEffect(() => { window.scrollTo(0, 0) }, [loc.pathname])
+  useEffect(() => { scrollToTop() }, [loc.pathname])
   // a tapped push opens its screen (web: message from push-sw.js; Android app: Capacitor listener)
   useEffect(() => {
     const onMsg = (e: MessageEvent) => {

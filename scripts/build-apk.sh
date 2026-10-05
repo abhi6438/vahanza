@@ -69,8 +69,11 @@ if [ -z "$ANDROID_HOME" ]; then
   say "Android SDK nahi mila: ek baar bana rahe hain → $ANDROID_HOME"
 fi
 mkdir -p "$ANDROID_HOME"
-# sdkmanager (Android "command-line tools"): an SDK from Android Studio often doesn't have it — add it once
-find_sdkm() { ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager "$ANDROID_HOME"/tools/bin/sdkmanager 2>/dev/null | head -1 || true; }
+# sdkmanager (Android "command-line tools"). Only a recent one works with Java 21: the old "tools/bin"
+# sdkmanager and early cmdline-tools fail with "javax/xml/bind" errors — so use cmdline-tools/latest
+# and replace it if it doesn't run.
+SDKM_PATH="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+find_sdkm() { [ -x "$SDKM_PATH" ] && "$SDKM_PATH" --sdk_root="$ANDROID_HOME" --version >/dev/null 2>&1 && echo "$SDKM_PATH" || true; }
 if [ -z "$(find_sdkm)" ]; then
   say "Android command-line tools download ho rahe hain (~150 MB, ek baar) → $ANDROID_HOME"
   mkdir -p "$ANDROID_HOME/cmdline-tools" "$TOOLS"
@@ -84,7 +87,7 @@ export ANDROID_HOME ANDROID_SDK_ROOT="$ANDROID_HOME"
 # the SDK parts this app needs (Android 16 / API 36); licences accepted once
 SDKM="$(find_sdkm)"
 if [ ! -d "$ANDROID_HOME/platforms/android-36" ] || [ ! -d "$ANDROID_HOME/build-tools/36.0.0" ]; then
-  [ -n "$SDKM" ] || fail "sdkmanager set nahi ho paya. $ANDROID_HOME/cmdline-tools folder delete karke dobara chalayein."
+  [ -n "$SDKM" ] || fail "sdkmanager chal nahi raha. $ANDROID_HOME/cmdline-tools/latest folder delete karke dobara chalayein."
   say "Android 36 SDK parts install ho rahe hain (~200 MB, ek baar)…"
   yes | "$SDKM" --sdk_root="$ANDROID_HOME" --licenses >/dev/null 2>&1 || true
   "$SDKM" --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
