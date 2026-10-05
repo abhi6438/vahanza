@@ -959,7 +959,7 @@
   "appearance.d.spacious": "खुला",
   "appearance.mode": "लाइट / डार्क",
   "appearance.modeSub": "जिन लोगों ने खुद नहीं चुना, उन्हें यही दिखेगा",
-  "appearance.reset": "बदलाव हटाएँ",
+  "appearance.reset": "डिफ़ॉल्ट (नीला)",
   "appearance.saveDraft": "ड्राफ़्ट सेव करें",
   "appearance.publish": "सबके लिए लागू करें",
   "appearance.backToBrand": "ब्रांड के अपने रंग पर वापस जाएँ",
@@ -1002,5 +1002,13 @@
   "appearance.pv.emptyTitle": "कोई नहीं मिला",
   "appearance.pv.emptyBody": "फ़िल्टर बदलकर देखें।",
   "appearance.pv.clear": "फ़िल्टर हटाएँ",
-  "appearance.pv.nav": "नीचे के टैब"
+  "appearance.pv.nav": "नीचे के टैब",
+  "appearance.original": "मूल रंग",
+  "appearance.originalTag": "मूल",
+  "appearance.default": "डिफ़ॉल्ट",
+  "appearance.yours": "आपके रंग",
+  "appearance.ownLive": "लाइव",
+  "appearance.ownDraft": "ड्राफ़्ट",
+  "appearance.ownNew": "नया",
+  "appearance.customHint": "कोई भी रंग चाहिए? ऊपर रंग के डिब्बे पर दबाएँ या #कोड लिखें — वो \"आपके रंग\" में दिखेगा।"
 }

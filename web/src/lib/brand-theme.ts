@@ -126,14 +126,29 @@ function mix(a: string, b: string, t: number): string {
 }
 
 // ---------------------------------------------------------------- presets
-export const PRESETS: { key: string; label: [string, string]; primary: string; accent: string; secondary: string | null }[] = [
-  { key: 'teal', label: ['टील', 'Teal'], primary: '#0D5C6C', accent: '#F5A623', secondary: '#0A4D5A' },
+export interface Preset { key: string; label: [string, string]; primary: string; accent: string; secondary: string | null }
+/** Ready-made themes for the Theme Builder. Blue is the suggested default ("Reset" picks it). The brand's
+ *  own colours (teal for Vahanza) are offered separately as "Original", so there is no duplicate here. */
+export const PRESETS: Preset[] = [
   { key: 'blue', label: ['नीला', 'Blue'], primary: '#1D4ED8', accent: '#F59E0B', secondary: null },
-  { key: 'indigo', label: ['इंडिगो', 'Indigo'], primary: '#4338CA', accent: '#F5A623', secondary: null },
-  { key: 'purple', label: ['बैंगनी', 'Purple'], primary: '#7E22CE', accent: '#F59E0B', secondary: null },
-  { key: 'orange', label: ['नारंगी', 'Orange'], primary: '#C2410C', accent: '#0F766E', secondary: null },
+  { key: 'sky', label: ['आसमानी', 'Sky'], primary: '#0369A1', accent: '#F59E0B', secondary: null },
+  { key: 'cyan', label: ['फ़िरोज़ी', 'Cyan'], primary: '#0E7490', accent: '#F97316', secondary: null },
+  { key: 'emerald', label: ['पन्ना', 'Emerald'], primary: '#047857', accent: '#F59E0B', secondary: null },
   { key: 'green', label: ['हरा', 'Green'], primary: '#15803D', accent: '#F59E0B', secondary: null },
+  { key: 'olive', label: ['मेहंदी', 'Olive'], primary: '#4D7C0F', accent: '#EA580C', secondary: null },
+  { key: 'indigo', label: ['इंडिगो', 'Indigo'], primary: '#4338CA', accent: '#F5A623', secondary: null },
+  { key: 'violet', label: ['जामुनी', 'Violet'], primary: '#6D28D9', accent: '#F59E0B', secondary: null },
+  { key: 'purple', label: ['बैंगनी', 'Purple'], primary: '#7E22CE', accent: '#F59E0B', secondary: null },
+  { key: 'pink', label: ['गुलाबी', 'Pink'], primary: '#BE185D', accent: '#F59E0B', secondary: null },
+  { key: 'red', label: ['लाल', 'Red'], primary: '#B91C1C', accent: '#F59E0B', secondary: null },
+  { key: 'maroon', label: ['मैरून', 'Maroon'], primary: '#881337', accent: '#F5A623', secondary: null },
+  { key: 'orange', label: ['नारंगी', 'Orange'], primary: '#C2410C', accent: '#0F766E', secondary: null },
+  { key: 'mustard', label: ['सरसों', 'Mustard'], primary: '#A16207', accent: '#0F766E', secondary: null },
+  { key: 'brown', label: ['भूरा', 'Brown'], primary: '#7C4A1E', accent: '#F59E0B', secondary: null },
+  { key: 'slate', label: ['स्लेटी', 'Slate'], primary: '#334155', accent: '#F59E0B', secondary: null },
+  { key: 'charcoal', label: ['काला', 'Charcoal'], primary: '#18181B', accent: '#F59E0B', secondary: null },
 ]
+export const SUGGESTED = PRESETS[0]
 
 export const DEFAULT_THEME: ThemeConfig = {
   primaryColor: '#0D5C6C', secondaryColor: '#0A4D5A', accentColor: '#F5A623',

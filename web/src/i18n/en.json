@@ -963,7 +963,7 @@
   "appearance.d.spacious": "Spacious",
   "appearance.mode": "Light / dark",
   "appearance.modeSub": "Shown to people who haven't chosen themselves",
-  "appearance.reset": "Reset",
+  "appearance.reset": "Default (blue)",
   "appearance.saveDraft": "Save draft",
   "appearance.publish": "Publish",
   "appearance.backToBrand": "Go back to the brand's own colours",
@@ -1006,5 +1006,13 @@
   "appearance.pv.emptyTitle": "Nothing found",
   "appearance.pv.emptyBody": "Try changing the filters.",
   "appearance.pv.clear": "Clear filters",
-  "appearance.pv.nav": "Bottom tabs"
+  "appearance.pv.nav": "Bottom tabs",
+  "appearance.original": "Original",
+  "appearance.originalTag": "Original",
+  "appearance.default": "Default",
+  "appearance.yours": "Your colours",
+  "appearance.ownLive": "Live",
+  "appearance.ownDraft": "Draft",
+  "appearance.ownNew": "New",
+  "appearance.customHint": "Need another colour? Tap the colour box above or type a #code — it shows up under \"Your colours\"."
 }

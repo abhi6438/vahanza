@@ -8,7 +8,7 @@ import { useToast } from '../../components/toast'
 import { Badge, Button, Chip, ConfirmDialog, EmptyState, ErrorState, Icon, Note, Segmented, Skeleton, Switch } from '../../components/ui'
 import { adminTheme, type ThemeState } from '../../lib/api'
 import { applyBrandTheme, brandDefault, paletteFor } from '../../lib/brand'
-import { contrast, isHex, normalise, PRESETS, toStyle, type ThemeConfig } from '../../lib/brand-theme'
+import { contrast, isHex, normalise, PRESETS, SUGGESTED, toStyle, type Preset, type ThemeConfig } from '../../lib/brand-theme'
 import { useIsDesktop } from '../../lib/layout'
 import { isDarkNow } from '../../lib/theme'
 import { ago } from '../../lib/time'
@@ -73,7 +73,7 @@ export default function AdminAppearance() {
 
   const actions = (
     <div className="flex flex-wrap items-center gap-2">
-      <Button variant="ghost" onClick={() => setCfg(published)} disabled={!unpublished || !!busy} icon={Icon.refresh}>{t('appearance.reset')}</Button>
+      <Button variant="ghost" onClick={() => setCfg(DEFAULT_PICK)} disabled={JSON.stringify(cfg) === JSON.stringify(DEFAULT_PICK) || !!busy} icon={Icon.refresh}>{t('appearance.reset')}</Button>
       <span className="flex-1" />
       <Button variant="outline" onClick={() => void run('draft')} loading={busy === 'draft'} disabled={!!busy || !dirty}>{t('appearance.saveDraft')}</Button>
       <Button variant="primary" onClick={() => void run('publish')} loading={busy === 'publish'} disabled={!!busy || !unpublished} icon={Icon.upload}>{t('appearance.publish')}</Button>
@@ -101,25 +101,7 @@ export default function AdminAppearance() {
                 <ColorField label={t('appearance.primary')} sub={t('appearance.primarySub')} value={cfg.primaryColor}
                   onChange={(v) => up({ primaryColor: v, preset: null })} big />
                 <ContrastNote cfg={cfg} />
-                <p className="mb-2 mt-5 text-sm font-semibold text-text-2">{t('appearance.presets')}</p>
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
-                  {[{ key: 'brand', label: [t('appearance.brandDefault'), t('appearance.brandDefault')] as [string, string], primary: brandDefault.primaryColor, accent: brandDefault.accentColor, secondary: brandDefault.secondaryColor }, ...PRESETS].map((p) => {
-                    const same = cfg.primaryColor === p.primary.toUpperCase() && cfg.accentColor === p.accent.toUpperCase()
-                    const on = same && (!cfg.preset || cfg.preset === p.key)
-                    return (
-                      <button key={p.key} type="button" aria-pressed={on}
-                        onClick={() => up({ primaryColor: p.primary.toUpperCase(), accentColor: p.accent.toUpperCase(), secondaryColor: p.secondary?.toUpperCase() || null, preset: p.key })}
-                        className={`press group flex flex-col items-start gap-2 rounded-md border p-2.5 text-left text-sm font-semibold ${on ? 'border-primary bg-primary-subtle shadow-[inset_0_0_0_1px_var(--c-brand)]' : 'border-border bg-surface hover:border-primary-border'}`}>
-                        <span className="flex w-full items-center">
-                          <span className="size-7 rounded-full ring-2 ring-surface" style={{ background: p.primary }} />
-                          <span className="-ml-2 size-5 rounded-full ring-2 ring-surface" style={{ background: p.accent }} />
-                          {on && <span className="ml-auto text-primary [&>svg]:size-icon-sm">{Icon.check}</span>}
-                        </span>
-                        <span className="truncate">{i18n.language === 'en' ? p.label[1] : p.label[0]}</span>
-                      </button>
-                    )
-                  })}
-                </div>
+                <ThemePicker cfg={cfg} state={state} onPick={(p) => up(p)} />
                 <Shades cfg={cfg} />
               </Panel>
 
@@ -172,6 +154,76 @@ export default function AdminAppearance() {
 }
 
 // ---------------------------------------------------------------- controls
+/** "Reset" = the suggested default look: blue, medium corners, comfortable size, follow the phone. */
+const DEFAULT_PICK: ThemeConfig = {
+  primaryColor: SUGGESTED.primary, secondaryColor: null, accentColor: SUGGESTED.accent,
+  mode: 'system', radius: 'medium', density: 'comfortable', preset: SUGGESTED.key,
+}
+
+const colorsOf = (c: { primaryColor: string; accentColor: string; secondaryColor: string | null }) =>
+  `${c.primaryColor}|${c.accentColor}|${c.secondaryColor || ''}`.toUpperCase()
+const presetColors = (p: Preset) => colorsOf({ primaryColor: p.primary, accentColor: p.accent, secondaryColor: p.secondary })
+
+/** Your own colours (live / draft / being made) first, then the original brand look and the presets. */
+function ThemePicker({ cfg, state, onPick }: { cfg: ThemeConfig; state: ThemeState; onPick: (p: Partial<ThemeConfig>) => void }) {
+  const { t, i18n } = useTranslation()
+  const name = (p: Preset) => (i18n.language === 'en' ? p.label[1] : p.label[0])
+  const original: Preset = { key: 'brand', label: [t('appearance.original'), t('appearance.original')], primary: brandDefault.primaryColor, accent: brandDefault.accentColor, secondary: brandDefault.secondaryColor }
+  const known = new Set([original, ...PRESETS].map(presetColors))
+  const now = colorsOf(cfg)
+
+  // the admin's own colours: what is live, the saved draft, and what is on screen now (if not a preset)
+  const own: { key: string; tag: string; c: ThemeConfig }[] = []
+  const seen = new Set<string>()
+  const addOwn = (key: string, tag: string, raw: unknown) => {
+    if (!raw) return
+    const c = normalise(raw)
+    const k = colorsOf(c)
+    if (known.has(k) || seen.has(k)) return
+    seen.add(k)
+    own.push({ key, tag, c })
+  }
+  addOwn('live', t('appearance.ownLive'), state.published)
+  addOwn('draft', t('appearance.ownDraft'), state.draft)
+  addOwn('now', t('appearance.ownNew'), cfg)
+
+  const card = (key: string, primary: string, accent: string, label: string, on: boolean, pick: () => void, tag?: string) => (
+    <button key={key} type="button" aria-pressed={on} onClick={pick} title={label}
+      className={`press relative flex min-w-0 flex-col items-start gap-1.5 rounded-md border p-2 text-left text-xs font-semibold ${on ? 'border-primary bg-primary-subtle shadow-[inset_0_0_0_1px_var(--c-brand)]' : 'border-border bg-surface hover:border-primary-border'}`}>
+      <span className="flex w-full items-center">
+        <span className="size-6 rounded-full ring-2 ring-surface" style={{ background: primary }} />
+        <span className="-ml-2 size-4 rounded-full ring-2 ring-surface" style={{ background: accent }} />
+        {on && <span className="ml-auto text-primary [&>svg]:size-3.5">{Icon.check}</span>}
+      </span>
+      <span className="w-full truncate text-sm">{label}</span>
+      {tag && <span className="absolute -top-2 right-1.5 rounded-full bg-primary px-1.5 text-[0.625rem] font-bold leading-4 text-on-primary">{tag}</span>}
+    </button>
+  )
+  const grid = 'grid grid-cols-3 gap-2 min-[400px]:grid-cols-4 sm:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5'
+  return (
+    <div className="mt-5 space-y-4">
+      {own.length > 0 && (
+        <div>
+          <p className="mb-2 text-sm font-semibold text-text-2">{t('appearance.yours')}</p>
+          <div className={grid}>
+            {own.map((o) => card(`own-${o.key}`, o.c.primaryColor, o.c.accentColor, o.c.primaryColor, colorsOf(o.c) === now,
+              () => onPick({ primaryColor: o.c.primaryColor, accentColor: o.c.accentColor, secondaryColor: o.c.secondaryColor, preset: null }), o.tag))}
+          </div>
+        </div>
+      )}
+      <div>
+        <p className="mb-2 text-sm font-semibold text-text-2">{t('appearance.presets')}</p>
+        <div className={grid}>
+          {[original, ...PRESETS].map((p) => card(p.key, p.primary, p.accent, name(p), presetColors(p) === now,
+            () => onPick({ primaryColor: p.primary.toUpperCase(), accentColor: p.accent.toUpperCase(), secondaryColor: p.secondary?.toUpperCase() || null, preset: p.key }),
+            p.key === SUGGESTED.key ? t('appearance.default') : p.key === 'brand' ? t('appearance.originalTag') : undefined))}
+        </div>
+        <p className="mt-2 text-xs text-text-3">{t('appearance.customHint')}</p>
+      </div>
+    </div>
+  )
+}
+
 function Panel({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
   return (
     <section className="rounded-lg border border-border bg-surface p-card shadow-sm lg:p-5">
