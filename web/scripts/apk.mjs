@@ -9,9 +9,10 @@
 // Output: ../apk/<brand>-<version>.apk
 import { execSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 
 const web = new URL('..', import.meta.url)
-const path = (p) => new URL(p, web).pathname
+const path = (p) => fileURLToPath(new URL(p, web))        // works with spaces in the folder name ("New project")
 const pkg = JSON.parse(readFileSync(path('package.json'), 'utf8'))
 const stateFile = path('apk-version.json')
 const state = existsSync(stateFile) ? JSON.parse(readFileSync(stateFile, 'utf8')) : { version: pkg.version, build: 0, code: 0 }

@@ -200,6 +200,8 @@ Tests: `cd api && pytest -q`
 
 ## 5. Android APK
 
+**One command** (Mac / Linux, from the project folder): `bash scripts/build-apk.sh` — finds Java 21 (Android Studio's own is fine) and the Android SDK, installs npm packages if needed, creates `web/android` the first time, builds the next version and shows the APK in Finder. Needs Node.js 20+ and Android Studio opened once.
+
 ```bash
 cd web
 npm run build
