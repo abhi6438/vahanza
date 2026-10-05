@@ -37,7 +37,7 @@ A white-label app for vehicle owners and drivers. One codebase serves the web/PW
 ## 1. Supabase setup (one time)
 
 1. Create a project in region **Mumbai (ap-south-1)**.
-2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql`).
+2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql` → `0009_trust.sql`).
 3. Auth → Providers → **Phone**: enable it. You can pick any SMS provider here because the hook below replaces it.
 4. Auth → Hooks → **Send SMS hook** → HTTPS:
    `https://<your-domain>/api/v1/hooks/send-sms`. Generate the secret and copy it into `SEND_SMS_HOOK_SECRET` (format `v1,whsec_...`).
@@ -122,6 +122,18 @@ Settings: `PUBLIC_APP_URL` (the address in invites, e.g. `https://vahanza.in`) a
 - **Admin dashboard**: "where new people came from" (share / friend's link / poster / invite / direct), shares, and the no-login jobs funnel.
 
 Settings: `CRON_SECRET` (any long random text). Vercel calls `/api/v1/cron/daily` every day at 09:00 IST (see `vercel.json`) for licence reminders and the Monday "profile views" alert; without the secret the job is refused. New packages: run `npm install` in `web/` (qrcode, @capacitor/share, @capacitor/filesystem) and `npx cap sync android` before an APK build.
+
+## Trust and coming back (Sprint 10)
+
+- **"काम मिल गया"**: when an owner marks a post filled, they pick whom they hired (drivers who showed interest or whose number they opened). Each driver confirms on their home screen. A confirmed job counts on both cards ("N काम किए"), turns the driver's availability off, and the rating afterwards carries "✓ worked together". The jobs page shows "इस महीने 23 ड्राइवरों को काम मिला".
+- **Verified badge by photo**: Profile → "वेरिफाइड बैज पाएँ" (`/verify`). Driver: licence photo + selfie; owner: shop board / GST / RC + selfie. Admin approves or rejects (with a reason) in the check queue. Both photos are deleted right after the decision.
+- **"जल्दी जवाब" badge**: owners who open interested drivers within a day (80%+, at least 3 in 30 days); refreshed daily.
+- **Weekly news (Mondays)**: drivers "N new jobs near you", owners "N drivers saw your post". Post views are counted when a driver opens a job's full details.
+- **Fresh driver list**: every 14 days a listed driver is asked "क्या अभी भी काम ढूंढ रहे हैं?"; drivers who haven't confirmed for 3 weeks move lower for owners. "No" turns availability off.
+- **Come back**: people who haven't opened the app for 7–30 days hear how many new jobs / drivers came up near them (once a week).
+- **Admin dashboard**: jobs confirmed, average rating, verified people and check time, and how many came back after 7 / 30 days.
+
+All reminders run in the same daily job (`/api/v1/cron/daily`). Migration `0009_trust.sql`.
 
 ## 2. MSG91
 

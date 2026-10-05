@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { contactOwner, removeInterest, showInterest, type Job } from '../lib/api'
+import { contactOwner, removeInterest, showInterest, work, type Job } from '../lib/api'
 import { placeName } from '../lib/catalog'
 import { track } from '../lib/track'
 import { JobCard } from './cards'
@@ -38,7 +38,8 @@ export function JobItem({ job, showStatus, onBlocked }: { job: Job; showStatus?:
   }
   return (
     <JobCard
-      data={{ title: owner, photo_url: job.owner_photo, verified: job.owner_verified, distance_km: job.distance_km, rating_avg: job.owner_rating_avg, rating_count: job.owner_rating_count, place: job.owner_district && job.owner_state ? placeName(`${job.owner_district}, ${job.owner_state}`, lang) : '', post: job }}
+      onOpen={() => void work.viewJob(job.id).catch(() => {})}
+      data={{ title: owner, photo_url: job.owner_photo, verified: job.owner_verified, distance_km: job.distance_km, rating_avg: job.owner_rating_avg, rating_count: job.owner_rating_count, jobsDone: job.owner_jobs_done, fastReply: job.owner_fast_reply, place: job.owner_district && job.owner_state ? placeName(`${job.owner_district}, ${job.owner_state}`, lang) : '', post: job }}
       menu={job.owner_id ? <CardMenu target={{ type: 'post', id: job.id }} personId={job.owner_id} name={owner} onBlocked={onBlocked} /> : undefined}
       actions={job.status !== 'live' ? (
         <p className="mt-3 rounded-md bg-surface-2 px-3 py-2.5 text-center text-sm font-medium text-text-2">{t('job.closed')}</p>

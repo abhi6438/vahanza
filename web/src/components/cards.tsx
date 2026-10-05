@@ -11,6 +11,7 @@ import type { DriverDetails, FleetGroup, Post } from '../lib/api'
 import { VehicleArt } from './form'
 import { Avatar } from './photo'
 import { Badge, Dialog, Icon } from './ui'
+import { FastReplyBadge, JobsDoneBadge } from './work'
 
 export function VerifiedBadge({ verified }: { verified: boolean }) {
   const { t } = useTranslation()
@@ -84,6 +85,8 @@ export interface DriverCardData {
   rating_count?: number | null
   /** brought friends: "Top" for a few days */
   top?: boolean
+  /** confirmed jobs through the app */
+  jobs_done?: number
   d: DriverDetails
 }
 
@@ -100,7 +103,7 @@ export function DriverCard({ data, self, actions, menu, full, onOpen }: { data: 
     <>
       <CardHead photo={data.photo_url} name={data.name || t('setup.yourName')} meta={meta} verified={data.verified} menu={menu}
         rating={<RatingBadge avg={data.rating_avg} count={data.rating_count} />}
-        extra={<>{data.top && <Badge tone="action" icon={Icon.sparkle}>{t('card.top')}</Badge>}{d.available_from && <Badge tone={now ? 'success' : 'neutral'} icon={now ? <span className="size-1.5 rounded-full bg-current" /> : undefined}>{t(`card.when.${d.available_from}`)}</Badge>}</>} />
+        extra={<>{data.top && <Badge tone="action" icon={Icon.sparkle}>{t('card.top')}</Badge>}<JobsDoneBadge n={data.jobs_done} />{d.available_from && <Badge tone={now ? 'success' : 'neutral'} icon={now ? <span className="size-1.5 rounded-full bg-current" /> : undefined}>{t(`card.when.${d.available_from}`)}</Badge>}</>} />
       {d.vehicles.length > 0 && (
         <div className="mt-3 flex items-center gap-2.5 rounded-md bg-surface-2 px-3 py-2">
           <span className="flex -space-x-2">{d.vehicles.slice(0, 3).map((v) => <VehicleArt key={v} kind={v} className="h-6 w-10" />)}</span>
@@ -166,6 +169,9 @@ export interface JobCardData {
   distance_km?: number | null
   rating_avg?: number | null
   rating_count?: number | null
+  /** owner: confirmed hires through the app, and the "replies fast" badge */
+  jobsDone?: number
+  fastReply?: boolean
   post: Post
 }
 
@@ -178,7 +184,7 @@ export function PostStatus({ status }: { status: string }) {
   return <Badge tone={STATUS_TONE[status] || 'neutral'}>{t(`post.status.${status}`)}</Badge>
 }
 
-export function JobCard({ data, status, actions, self, menu, full }: { data: JobCardData; status?: boolean; actions?: ReactNode; self?: boolean; menu?: ReactNode; full?: boolean }) {
+export function JobCard({ data, status, actions, self, menu, full, onOpen }: { data: JobCardData; status?: boolean; actions?: ReactNode; self?: boolean; menu?: ReactNode; full?: boolean; onOpen?: () => void }) {
   const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(false)
   const lang = i18n.language
@@ -200,7 +206,7 @@ export function JobCard({ data, status, actions, self, menu, full }: { data: Job
       ) : (
         <CardHead photo={data.photo_url} name={data.title} meta={meta} verified={data.verified} menu={menu}
           rating={!self ? <RatingBadge avg={data.rating_avg} count={data.rating_count} /> : undefined}
-          extra={status ? <PostStatus status={p.status} /> : undefined} />
+          extra={status ? <PostStatus status={p.status} /> : (data.jobsDone || data.fastReply) ? <><FastReplyBadge on={data.fastReply} /><JobsDoneBadge n={data.jobsDone} /></> : undefined} />
       )}
       <ul className="mt-3 flex flex-col gap-1.5">
         {groups.map((g) => (
@@ -226,7 +232,7 @@ export function JobCard({ data, status, actions, self, menu, full }: { data: Job
       {showAll && p.facilities.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">{p.facilities.map((f) => <Badge key={f} tone="success">✓ {label(FACILITIES, f, lang)}</Badge>)}</div>
       )}
-      {!showAll && <DetailsLink onClick={() => setOpen(true)} />}
+      {!showAll && <DetailsLink onClick={() => { setOpen(true); onOpen?.() }} />}
       {actions && <div className="mt-auto pt-1">{actions}</div>}
       {!showAll && (
         <Dialog open={open} onClose={() => setOpen(false)} title={t('card.details')} size="lg" footer={actions}>

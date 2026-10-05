@@ -151,7 +151,8 @@ def stats(days: int = Query(30, ge=7, le=180), ctx: dict = Depends(admin_ctx), d
         """
         select (select count(*) from public.posts where tenant_id = %(t)s and status = 'under_check') +
                (select count(*) from public.profiles where tenant_id = %(t)s and check_flags <> '[]'::jsonb and not blocked) +
-               (select count(*) from public.reports where tenant_id = %(t)s and status = 'open') as n
+               (select count(*) from public.reports where tenant_id = %(t)s and status = 'open') +
+               (select count(*) from public.verifications where tenant_id = %(t)s and status = 'pending') as n
         """,
         p,
     ).fetchone() or {}
@@ -188,8 +189,42 @@ def stats(days: int = Query(30, ge=7, le=180), ctx: dict = Depends(admin_ctx), d
         """,
         p,
     ).fetchone() or {}
+    # Sprint 10: trust numbers
+    trust = db.execute(
+        """
+        select
+          (select count(*) from public.hires where tenant_id = %(t)s and status = 'confirmed'
+             and answered_at > now() - make_interval(days => %(days)s)) as hires,
+          (select count(*) from public.hires where tenant_id = %(t)s and status = 'pending') as hires_waiting,
+          (select count(*) from public.hires where tenant_id = %(t)s and status = 'declined'
+             and answered_at > now() - make_interval(days => %(days)s)) as hires_declined,
+          (select coalesce(round(avg(stars)::numeric, 1), 0) from public.ratings where tenant_id = %(t)s
+             and created_at > now() - make_interval(days => %(days)s)) as rating_avg,
+          (select count(*) from public.ratings where tenant_id = %(t)s and created_at > now() - make_interval(days => %(days)s)) as ratings,
+          (select count(*) from public.ratings where tenant_id = %(t)s and worked and created_at > now() - make_interval(days => %(days)s)) as ratings_worked,
+          (select count(*) from public.verifications where tenant_id = %(t)s and status = 'pending') as verify_waiting,
+          (select coalesce(round((avg(extract(epoch from reviewed_at - submitted_at)) / 3600)::numeric, 1), 0)
+             from public.verifications where tenant_id = %(t)s and reviewed_at > now() - make_interval(days => %(days)s)) as verify_hours,
+          (select count(*) from public.profiles where tenant_id = %(t)s and verified and not is_test and role in ('driver', 'owner')) as verified
+        """,
+        p,
+    ).fetchone() or {}
+    retention = db.execute(
+        """
+        select
+          coalesce(round(100.0 * count(*) filter (where created_at between now() - interval '14 days' and now() - interval '7 days'
+                                                    and last_seen_at >= created_at + interval '7 days')
+                         / nullif(count(*) filter (where created_at between now() - interval '14 days' and now() - interval '7 days'), 0)), 0) as d7,
+          coalesce(round(100.0 * count(*) filter (where created_at between now() - interval '60 days' and now() - interval '30 days'
+                                                    and last_seen_at >= created_at + interval '30 days')
+                         / nullif(count(*) filter (where created_at between now() - interval '60 days' and now() - interval '30 days'), 0)), 0) as d30
+        from public.profiles where tenant_id = %(t)s and not is_test and role in ('driver', 'owner')
+        """,
+        p,
+    ).fetchone() or {}
     num = lambda r: {k: (float(v) if hasattr(v, "is_integer") and not isinstance(v, int) else v) for k, v in dict(r).items()}
     return {
+        "trust": num(trust) | {"d7": float(retention.get("d7") or 0), "d30": float(retention.get("d30") or 0)},
         "growth": {"sources": sources, "shares": num(shares), "public": num(public)},
         "days": days,
         "users": num(totals) | {"drivers_listed": listed.get("n", 0)},

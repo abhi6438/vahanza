@@ -16,6 +16,7 @@ import AdminUsers from './pages/admin/AdminUsers'
 import AdminImport from './pages/admin/AdminImport'
 import AdminPosters from './pages/admin/AdminPosters'
 import Invite from './pages/Invite'
+import Verify from './pages/Verify'
 import PublicJobs from './pages/PublicJobs'
 import { inviteCode, takeNext } from './lib/share'
 import Login from './pages/Login'
@@ -121,6 +122,7 @@ export default function App() {
       <Route path="/interests" element={<MyInterests />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/invite" element={<Invite />} />
+      <Route path="/verify" element={<Verify />} />
       <Route path="/jobs" element={<Navigate to="/home" replace />} />
       <Route path="/jobs/:code" element={<PublicJobs />} />
       <Route path="*" element={<Navigate to="/home" replace />} />

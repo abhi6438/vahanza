@@ -71,6 +71,17 @@ export default function AdminDashboard() {
             </Card>
           </div>
 
+          {s.trust && (
+            <Card title={t('admin.c.trust')} sub={t('admin.c.trustSub', { n: s.days })}>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <Mini label={t('admin.t.hires')} value={nf(s.trust.hires)} sub={t('admin.t.hiresSub', { w: nf(s.trust.hires_waiting), d: nf(s.trust.hires_declined) })} />
+                <Mini label={t('admin.t.rating')} value={s.trust.ratings ? `${s.trust.rating_avg} ★` : '—'} sub={t('admin.t.ratingSub', { n: nf(s.trust.ratings), w: nf(s.trust.ratings_worked) })} />
+                <Mini label={t('admin.t.verify')} value={nf(s.trust.verified)} sub={t('admin.t.verifySub', { n: nf(s.trust.verify_waiting), h: s.trust.verify_hours })} />
+                <Mini label={t('admin.t.back')} value={`${s.trust.d7}% · ${s.trust.d30}%`} sub={t('admin.t.backSub')} />
+              </div>
+            </Card>
+          )}
+
           {s.growth && (
             <div className="grid gap-4 md:grid-cols-2">
               <Card title={t('admin.c.sources')} sub={t('admin.c.sourcesSub', { n: s.days })}>
@@ -238,6 +249,16 @@ function CityTable({ rows }: { rows: AdminStats['cities'] }) {
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+function Mini({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <div className="rounded-md bg-surface-2 p-3">
+      <p className="text-sm text-text-2">{label}</p>
+      <p className="mt-0.5 font-display text-2xl font-semibold">{value}</p>
+      <p className="text-xs text-text-2">{sub}</p>
     </div>
   )
 }

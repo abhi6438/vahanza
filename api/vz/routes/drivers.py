@@ -47,7 +47,7 @@ def list_drivers(
     rows = db.execute(
         """
         select p.id, p.name, p.photo_url, p.district, p.state, p.verified, p.last_seen_at, p.rating_avg, p.rating_count,
-               (coalesce(p.boost_until, now()) > now()) as top,
+               (coalesce(p.boost_until, now()) > now()) as top, p.jobs_done,
                case when p.location is not null and %(loc)s::extensions.geography is not null
                     then round((extensions.st_distance(p.location, %(loc)s::extensions.geography) / 1000)::numeric)::int end
                  as distance_km,
@@ -67,6 +67,8 @@ def list_drivers(
           (coalesce(p.boost_until, now()) > now() and (lower(p.district) = lower(%(district)s)
              or (p.location is not null and %(loc)s::extensions.geography is not null
                  and extensions.st_dwithin(p.location, %(loc)s::extensions.geography, 150000)))) desc,
+          -- drivers who have not said "still looking" for 3 weeks go lower (keeps the list fresh)
+          (coalesce(d.looking_checked_at, d.updated_at, p.created_at) > now() - interval '21 days') desc,
           case when %(loc)s::extensions.geography is null then
             case when lower(p.district) = lower(%(district)s) then 0 else 1 end end,
           p.location operator(extensions.<->) %(loc)s::extensions.geography nulls last,
@@ -135,8 +137,8 @@ def set_availability(body: AvailabilityBody, user: AuthUser = Depends(current_us
     if me["role"] != "driver":
         raise HTTPException(403, "Only drivers have availability")
     db.execute(
-        "insert into public.driver_details (profile_id, tenant_id, is_available) values (%s, %s, %s) "
-        "on conflict (profile_id) do update set is_available = excluded.is_available",
+        "insert into public.driver_details (profile_id, tenant_id, is_available, looking_checked_at) values (%s, %s, %s, now()) "
+        "on conflict (profile_id) do update set is_available = excluded.is_available, looking_checked_at = now()",
         (user.id, tenant, body.is_available),
     )
     return {"is_available": body.is_available}

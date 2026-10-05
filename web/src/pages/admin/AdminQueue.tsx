@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { admin, type QueuePost, type QueueProfile, type QueueReport } from '../../lib/api'
+import { admin, photoSrc, type QueuePost, type QueueProfile, type QueueReport, type VerifyItem, type VerifyReason } from '../../lib/api'
 import { placeName, rupees } from '../../lib/catalog'
 import { track, trackScreen } from '../../lib/track'
 import { AdminLayout, ago } from './AdminLayout'
@@ -8,14 +8,15 @@ import { AdminLayout, ago } from './AdminLayout'
 /** Only what needs a human: posts under check, profiles flagged by automatic checks, open reports. */
 export default function AdminQueue() {
   const { t } = useTranslation()
-  const [data, setData] = useState<{ posts: QueuePost[]; profiles: QueueProfile[]; reports: QueueReport[] } | null>(null)
+  const [data, setData] = useState<{ posts: QueuePost[]; profiles: QueueProfile[]; reports: QueueReport[]; verifications: VerifyItem[] } | null>(null)
   const [error, setError] = useState(false)
   const load = useCallback(() => {
     setError(false)
-    admin.queue().then(setData).catch(() => setError(true))
+    Promise.all([admin.queue(), admin.verifications().catch(() => ({ items: [] as VerifyItem[] }))])
+      .then(([q, v]) => setData({ ...q, verifications: v.items })).catch(() => setError(true))
   }, [])
   useEffect(() => { trackScreen('admin_queue'); load() }, [load])
-  const total = data ? data.posts.length + data.profiles.length + data.reports.length : undefined
+  const total = data ? data.posts.length + data.profiles.length + data.reports.length + data.verifications.length : undefined
 
   return (
     <AdminLayout queue={total}>
@@ -25,6 +26,11 @@ export default function AdminQueue() {
       {data && total === 0 && <p className="rounded-lg border border-dashed border-border bg-surface p-6 text-center font-semibold">{t('admin.q.empty')}</p>}
       {data && (
         <div className="flex flex-col gap-6">
+          {data.verifications.length > 0 && (
+            <Section title={t('admin.q.verify', { n: data.verifications.length })}>
+              {data.verifications.map((v) => <VerifyRow key={v.id} v={v} onDone={load} />)}
+            </Section>
+          )}
           {data.posts.length > 0 && (
             <Section title={t('admin.q.posts', { n: data.posts.length })}>
               {data.posts.map((p) => <PostRow key={p.id} p={p} onDone={load} />)}
@@ -145,6 +151,58 @@ function ReportRow({ r, onDone }: { r: QueueReport; onDone: () => void }) {
         {r.target_type === 'post' && <button type="button" disabled={busy} className={btn} onClick={() => void act('close_post')}>{t('admin.q.closePost')}</button>}
         <button type="button" disabled={busy} className={`${btn} text-error`} onClick={() => void act('block_target')}>{t('admin.block')}</button>
       </div>
+    </div>
+  )
+}
+
+const REASONS: VerifyReason[] = ['blurry', 'mismatch', 'wrong_doc', 'expired', 'other']
+
+/** Document + selfie side by side; approve gives the Verified badge, reject needs a reason. Photos are deleted after. */
+function VerifyRow({ v, onDone }: { v: VerifyItem; onDone: () => void }) {
+  const { t, i18n } = useTranslation()
+  const [busy, setBusy] = useState(false)
+  const [rejecting, setRejecting] = useState(false)
+  async function act(action: 'approve' | 'reject', reason?: VerifyReason) {
+    setBusy(true)
+    try { await admin.reviewVerification(v.id, action, reason); track('admin_verify', { action, reason }); onDone() } finally { setBusy(false) }
+  }
+  const pic = (url: string | null, label: string) => {
+    const src = photoSrc(url)
+    return src
+      ? <a href={src} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-border bg-surface-2"><img src={src} alt={label} className="h-40 w-full object-contain" /><span className="block px-2 py-1 text-xs text-text-2">{label}</span></a>
+      : <div className="grid h-40 place-items-center rounded-md border border-dashed border-border text-sm text-text-2">{label}</div>
+  }
+  return (
+    <div className="rounded-lg border border-border bg-surface p-4">
+      <div className="flex justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate font-bold">{v.name}{v.business_name ? ` · ${v.business_name}` : ''}</p>
+          <p className="truncate text-sm text-text-2">{t(`role.${v.role}`)} · {phoneText(v.phone)} · {v.district ? placeName(`${v.district}, ${v.state}`, i18n.language) : '—'}</p>
+        </div>
+        <span className="shrink-0 text-sm text-text-2">{ago(v.submitted_at, i18n.language)}</span>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {pic(v.doc_url, t(v.kind === 'driver_licence' ? 'verify.docDriver' : 'verify.docOwner'))}
+        {pic(v.selfie_url, t('verify.selfie'))}
+      </div>
+      {rejecting ? (
+        <div className="mt-3">
+          <p className="mb-2 text-sm font-semibold">{t('admin.v.why')}</p>
+          <div className="flex flex-wrap gap-2">
+            {REASONS.map((r) => (
+              <button key={r} type="button" disabled={busy} onClick={() => void act('reject', r)}
+                className="min-h-10 rounded-full border border-border px-3 text-sm font-medium hover:border-error hover:text-error disabled:opacity-50">{t(`verify.reason.${r}`)}</button>
+            ))}
+            <button type="button" onClick={() => setRejecting(false)} className="min-h-10 px-2 text-sm text-text-2 underline">{t('cancel')}</button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 flex gap-2">
+          <button type="button" disabled={busy} onClick={() => void act('approve')} className="min-h-11 flex-1 rounded-md bg-success font-bold text-on-success disabled:opacity-50">{t('admin.v.approve')}</button>
+          <button type="button" disabled={busy} onClick={() => setRejecting(true)} className="min-h-11 flex-1 rounded-md border border-border font-bold text-error disabled:opacity-50">{t('admin.reject')}</button>
+        </div>
+      )}
+      <p className="mt-2 text-xs text-text-2">{t('admin.v.deleted')}</p>
     </div>
   )
 }

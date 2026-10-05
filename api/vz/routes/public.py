@@ -16,7 +16,8 @@ router = APIRouter(prefix="/public", tags=["public"])
 _PUBLIC_DROP = ("check_flags", "owner_id")
 _OWNER_COLS = """
     p.share_code, o.district as owner_district, o.state as owner_state, o.verified as owner_verified,
-    o.rating_avg as owner_rating_avg, o.rating_count as owner_rating_count
+    o.rating_avg as owner_rating_avg, o.rating_count as owner_rating_count,
+    o.jobs_done as owner_jobs_done, o.fast_reply as owner_fast_reply
 """
 _VISIBLE = "p.tenant_id = %(tenant)s and not o.blocked and not o.is_test"
 # a job "is in" a district when one of its base cities is there, or the owner lives there
@@ -79,7 +80,16 @@ def public_stats(district: Optional[str] = Query(None, max_length=60), db=Depend
         """,
         {"tenant": tenant, "district": d},
     ).fetchone() or {}
-    return {k: int(row.get(k) or 0) for k in ("posts", "drivers", "posts_here", "drivers_here")} | {"district": d or None}
+    # "this month 23 drivers got work through the app" (confirmed by the driver)
+    hired = db.execute(
+        """select count(*) as hired,
+                  count(*) filter (where %(district)s <> '' and lower(o.district) = lower(%(district)s)) as hired_here
+           from public.hires h join public.profiles o on o.id = h.owner_id
+           where h.tenant_id = %(tenant)s and h.status = 'confirmed' and h.answered_at > now() - interval '30 days' and not o.is_test""",
+        {"tenant": tenant, "district": d},
+    ).fetchone() or {}
+    keys = ("posts", "drivers", "posts_here", "drivers_here")
+    return {k: int(row.get(k) or 0) for k in keys} | {k: int(hired.get(k) or 0) for k in ("hired", "hired_here")} | {"district": d or None}
 
 
 @router.get("/jobs/{code}")

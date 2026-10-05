@@ -23,7 +23,11 @@ IN_TOUCH_SQL = """
                         or e.props->>'post_id' in (select id::text from public.posts where owner_id = %(a)s::uuid)))))
     or exists (select 1 from public.interests i join public.posts p on p.id = i.post_id
                 where (i.driver_id = %(a)s::uuid and p.owner_id = %(b)s::uuid) or (i.driver_id = %(b)s::uuid and p.owner_id = %(a)s::uuid))
+    or exists (select 1 from public.hires h where h.status = 'confirmed'
+                and ((h.driver_id = %(a)s::uuid and h.owner_id = %(b)s::uuid) or (h.driver_id = %(b)s::uuid and h.owner_id = %(a)s::uuid)))
 """
+WORKED_SQL = """exists (select 1 from public.hires h where h.status = 'confirmed'
+                and ((h.driver_id = %(a)s::uuid and h.owner_id = %(b)s::uuid) or (h.driver_id = %(b)s::uuid and h.owner_id = %(a)s::uuid)))"""
 
 # Used by list queries elsewhere: hide people blocked in either direction.
 NOT_BLOCKED = """not exists (select 1 from public.blocks bl
@@ -147,13 +151,13 @@ def rate(body: RatingIn, user: AuthUser = Depends(current_user), db=Depends(get_
     allowed = DRIVER_TAGS if other["role"] == "driver" else OWNER_TAGS
     if not set(body.tags) <= allowed:
         raise HTTPException(422, {"code": "bad_tag"})
-    touch = db.execute(f"select ({IN_TOUCH_SQL}) as ok", {"a": user.id, "b": body.ratee_id}).fetchone()
+    touch = db.execute(f"select ({IN_TOUCH_SQL}) as ok, ({WORKED_SQL}) as worked", {"a": user.id, "b": body.ratee_id}).fetchone()
     if not touch or not touch["ok"]:
         raise HTTPException(403, {"code": "not_in_touch"})
     db.execute(
-        """insert into public.ratings (rater_id, ratee_id, tenant_id, stars, tags) values (%s, %s, %s, %s, %s)
-           on conflict (rater_id, ratee_id) do update set stars = excluded.stars, tags = excluded.tags""",
-        (user.id, body.ratee_id, tenant, body.stars, body.tags),
+        """insert into public.ratings (rater_id, ratee_id, tenant_id, stars, tags, worked) values (%s, %s, %s, %s, %s, %s)
+           on conflict (rater_id, ratee_id) do update set stars = excluded.stars, tags = excluded.tags, worked = excluded.worked""",
+        (user.id, body.ratee_id, tenant, body.stars, body.tags, bool(touch.get("worked"))),
     )
     return {"rated": True}
 
@@ -176,14 +180,19 @@ def to_rate(user: AuthUser = Depends(current_user), db=Depends(get_db), tenant: 
           union all
           select p.owner_id, i.created_at from public.interests i join public.posts p on p.id = i.post_id
            where i.driver_id = %(me)s::uuid and i.status = 'seen'
+          union all
+          select case when h.driver_id = %(me)s::uuid then h.owner_id else h.driver_id end, h.answered_at - interval '3 hours'
+            from public.hires h where h.status = 'confirmed' and (h.driver_id = %(me)s::uuid or h.owner_id = %(me)s::uuid)
         )
-        select o.id, o.name, o.business_name, o.role, o.photo_url, max(t.ts) as last_contact
+        select o.id, o.name, o.business_name, o.role, o.photo_url, max(t.ts) as last_contact,
+               exists (select 1 from public.hires h where h.status = 'confirmed'
+                       and ((h.driver_id = %(me)s::uuid and h.owner_id = o.id) or (h.owner_id = %(me)s::uuid and h.driver_id = o.id))) as worked
         from touched t join public.profiles o on o.id = t.other
         where t.ts between now() - interval '30 days' and now() - interval '3 hours'
           and o.tenant_id = %(t)s and not o.blocked and o.role <> %(role)s
           and not exists (select 1 from public.ratings r where r.rater_id = %(me)s::uuid and r.ratee_id = o.id)
           and {NOT_BLOCKED.format(me='%(me)s', other='o.id')}
-        group by o.id order by max(t.ts) desc limit 3
+        group by o.id order by 7 desc, max(t.ts) desc limit 3
         """,
         {"me": user.id, "t": tenant, "role": me["role"]},
     ).fetchall() or []

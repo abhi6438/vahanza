@@ -183,7 +183,9 @@ def my_posts(user: AuthUser = Depends(current_user), db=Depends(get_db), tenant:
         f"""
         select {POST_SELECT},
           (select count(*) from public.interests i where i.post_id = p.id) as interested,
-          (select count(*) from public.interests i where i.post_id = p.id and i.status = 'sent') as new_interested
+          (select count(*) from public.interests i where i.post_id = p.id and i.status = 'sent') as new_interested,
+          (select count(distinct v.viewer_id) from public.post_views v where v.post_id = p.id) as views,
+          (select count(*) from public.hires h where h.post_id = p.id and h.status = 'confirmed') as hired
         from public.posts p
         where p.owner_id = %s and p.status <> 'closed'
         order by p.created_at desc
@@ -227,7 +229,7 @@ def post_interests(post_id: str, user: AuthUser = Depends(current_user), db=Depe
     rows = db.execute(
         """
         select i.id as interest_id, i.status as interest_status, i.created_at as interested_at,
-               p.id, p.name, p.photo_url, p.district, p.state, p.verified, p.rating_avg, p.rating_count,
+               p.id, p.name, p.photo_url, p.district, p.state, p.verified, p.rating_avg, p.rating_count, p.jobs_done,
                d.vehicles, d.max_wheels, d.licence_type, d.experience_years, d.savings_wanted,
                d.savings_negotiable, d.pay_prefs, d.work_type, d.area, d.languages, d.available_from
         from public.interests i
@@ -241,7 +243,7 @@ def post_interests(post_id: str, user: AuthUser = Depends(current_user), db=Depe
         (post_id, user.id, user.id),
     ).fetchall() or []
     seen = db.execute(
-        "update public.interests set status = 'seen' where post_id = %s and status = 'sent' returning driver_id", (post_id,)
+        "update public.interests set status = 'seen', seen_at = now() where post_id = %s and status = 'sent' returning driver_id", (post_id,)
     ).fetchall() or []
     owner = me.get("business_name") or me.get("name") or ""
     for r in seen:
@@ -281,6 +283,7 @@ def list_jobs(
           o.id as owner_id, o.name as owner_name, o.business_name, o.photo_url as owner_photo,
           o.district as owner_district, o.state as owner_state, o.verified as owner_verified,
           o.rating_avg as owner_rating_avg, o.rating_count as owner_rating_count,
+          o.jobs_done as owner_jobs_done, o.fast_reply as owner_fast_reply,
           case when o.location is not null and %(loc)s::extensions.geography is not null
                then round((extensions.st_distance(o.location, %(loc)s::extensions.geography) / 1000)::numeric)::int end
             as distance_km,
@@ -388,7 +391,8 @@ def my_interests(user: AuthUser = Depends(current_user), db=Depends(get_db), ten
         select {POST_SELECT},
           i.status as interest_status, i.created_at as interested_at,
           o.id as owner_id, o.name as owner_name, o.photo_url as owner_photo, o.rating_avg as owner_rating_avg, o.rating_count as owner_rating_count, o.business_name, o.district as owner_district, o.state as owner_state,
-          o.verified as owner_verified, null::int as distance_km, true as interested
+          o.verified as owner_verified, o.jobs_done as owner_jobs_done, o.fast_reply as owner_fast_reply,
+          null::int as distance_km, true as interested
         from public.interests i
         join public.posts p on p.id = i.post_id
         join public.profiles o on o.id = p.owner_id

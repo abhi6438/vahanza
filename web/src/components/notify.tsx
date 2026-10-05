@@ -80,6 +80,11 @@ export function notifText(n: Notif, t: (k: string, o?: Record<string, unknown>) 
   const d = n.data || {}
   const vehicles = (d.vehicles_raw || []).map((v) => pick(VEHICLES.find((x) => x.key === v)?.label, lang) || v).join(', ')
   const o = { owner: d.owner || '', driver: d.driver || '', vehicles, n: d.n ?? '', savings: d.savings || '', days: d.days ?? '', name: d.name || '' }
+  // the verification result reads differently when it was not accepted
+  if (n.kind === 'verify_result') {
+    const key = d.ok ? 'notif.verify_result.ok' : 'notif.verify_result.no'
+    return { title: t(`${key}.title`), body: t(`${key}.body`, { reason: d.reason ? t(`verify.reason.${d.reason}`) : '' }) }
+  }
   return { title: t(`notif.${n.kind}.title`, o), body: t(`notif.${n.kind}.body`, o) }
 }
 
@@ -92,6 +97,9 @@ export function notifLink(n: Notif) {
     case 'profile_views': return '/home'
     case 'licence_expiry': return '/setup?step=licence'
     case 'referral_joined': return '/invite'
+    case 'hire_confirm': case 'weekly_jobs': case 'come_back': case 'still_looking': return '/home'
+    case 'hire_done': case 'post_views': return '/posts'
+    case 'verify_result': return '/verify'
     default: return '/posts'
   }
 }

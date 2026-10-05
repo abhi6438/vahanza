@@ -4,7 +4,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
-from .routes import admin, drivers, events, geo, growth, hooks, imports, me, notifications, photo, posts, public, share, trust
+from .routes import admin, drivers, events, geo, growth, hooks, imports, me, notifications, photo, posts, public, share, trust, verify, work
 
 logging.basicConfig(level=logging.INFO)
 API_VERSION = "1.0.0"
@@ -43,5 +43,7 @@ v1.include_router(notifications.router)
 v1.include_router(imports.router)
 v1.include_router(public.router)
 v1.include_router(growth.router)
+v1.include_router(work.router)
+v1.include_router(verify.router)
 app.include_router(v1)
 app.include_router(share.router)   # /j, /r, /q short links (WhatsApp previews, posters)

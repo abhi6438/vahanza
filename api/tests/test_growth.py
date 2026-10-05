@@ -39,7 +39,7 @@ def test_public_jobs_unknown_vehicle(client):
 def test_public_stats(client, db):
     db.respond("count(*) as posts", {"posts": 4, "drivers": 9, "posts_here": 2, "drivers_here": 5})
     r = client.get("/api/v1/public/stats?district=Rewa")
-    assert r.json() == {"posts": 4, "drivers": 9, "posts_here": 2, "drivers_here": 5, "district": "Rewa"}
+    assert r.json() == {"posts": 4, "drivers": 9, "posts_here": 2, "drivers_here": 5, "hired": 0, "hired_here": 0, "district": "Rewa"}
 
 
 def test_public_job_by_code(client, db):
@@ -152,7 +152,7 @@ def test_my_growth_makes_code_once(client, db):
     db.respond("select ref_code from public.profiles", {"ref_code": "K7P2QX"})
     db.respond("select p.boost_until", {"boost_until": None, "joined": 2, "completed": 1, "views_week": 3, "views_total": 9})
     r = client.get("/api/v1/me/growth", headers=H)
-    assert r.json() == {"ref_code": "K7P2QX", "joined": 2, "completed": 1, "boost_until": None, "boost_days": 7, "views_week": 3, "views_total": 9}
+    assert r.json() == {"ref_code": "K7P2QX", "joined": 2, "completed": 1, "boost_until": None, "boost_days": 7, "views_week": 3, "views_total": 9, "looking_due": False}
 
 
 # ---------------- daily job

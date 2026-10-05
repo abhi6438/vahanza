@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { DriverCard, JobCard, PostStatus } from '../components/cards'
 import { ShareJobButton } from '../components/growth'
+import { HireDialog } from '../components/work'
 import { VehicleArt } from '../components/form'
 import { DriverContact } from '../components/home'
 import { PushAsk } from '../components/notify'
@@ -122,6 +123,7 @@ function StatusActions({ post, onChange }: { post: MyPost; onChange: () => void 
   const toast = useToast()
   const [busy, setBusy] = useState<Status | ''>('')
   const [confirmClose, setConfirmClose] = useState(false)
+  const [hire, setHire] = useState(false)
   async function status(s: Status) {
     setBusy(s)
     try {
@@ -143,9 +145,17 @@ function StatusActions({ post, onChange }: { post: MyPost; onChange: () => void 
       <div className="mt-3 flex flex-wrap gap-2">
         {post.status === 'live' && <Button variant="outline" size="sm" loading={busy === 'paused'} onClick={() => void status('paused')}>{t('post.pause')}</Button>}
         {(post.status === 'paused' || post.status === 'filled') && <Button variant="outline" size="sm" loading={busy === 'live'} onClick={() => void status('live')}>{t('post.resume')}</Button>}
-        {post.status !== 'filled' && post.status !== 'under_check' && <Button variant="outline" size="sm" icon={Icon.check} loading={busy === 'filled'} onClick={() => void status('filled')}>{t('post.filled')}</Button>}
+        {post.status !== 'filled' && post.status !== 'under_check' && <Button variant="outline" size="sm" icon={Icon.check} onClick={() => setHire(true)}>{t('post.filled')}</Button>}
+        {post.status === 'filled' && <Button variant="outline" size="sm" icon={Icon.users} onClick={() => setHire(true)}>{t('work.whoHiredShort')}</Button>}
         <Button variant="danger" size="sm" onClick={() => setConfirmClose(true)}>{t('post.close')}</Button>
       </div>
+      <HireDialog postId={post.id} open={hire} onClose={() => setHire(false)} onDone={onChange} />
+      {(!!post.views || !!post.hired) && (
+        <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-text-2">
+          {!!post.views && <span className="inline-flex items-center gap-1">{Icon.eye}{t('work.postViews', { n: post.views })}</span>}
+          {!!post.hired && <span className="inline-flex items-center gap-1 font-medium text-success">{Icon.check}{t('work.hiredN', { n: post.hired })}</span>}
+        </p>
+      )}
       <ConfirmDialog open={confirmClose} danger title={t('post.closeQ')} body={t('post.closeBody')} confirmLabel={t('post.close')}
         busy={busy === 'closed'} onCancel={() => setConfirmClose(false)} onConfirm={() => void status('closed')} />
     </>
@@ -172,7 +182,7 @@ function InterestedList({ drivers, setDrivers, error, retry }: { drivers: Intere
     <CardGrid>
       {drivers.map((d) => (
         <DriverCard key={d.id} onOpen={() => void recordView(d.id).catch(() => {})}
-          data={{ name: d.name || '', photo_url: d.photo_url, verified: d.verified, rating_avg: d.rating_avg, rating_count: d.rating_count, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
+          data={{ name: d.name || '', photo_url: d.photo_url, verified: d.verified, rating_avg: d.rating_avg, rating_count: d.rating_count, jobs_done: d.jobs_done, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
           menu={<CardMenu target={{ type: 'profile', id: d.id }} personId={d.id} name={d.name || ''} onBlocked={() => setDrivers((cur) => cur?.filter((x) => x.id !== d.id) || null)} />}
           actions={<DriverContact driverId={d.id} name={(d.name || '').split(' ')[0]} />} />
       ))}

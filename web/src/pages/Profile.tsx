@@ -46,7 +46,12 @@ export default function Profile() {
         <VerifiedBadge verified={profile.verified} />
         <RatingBadge />
       </div>
-      {!profile.verified && <p className="mt-3 text-sm text-text-2">{t('profile.verifySoon')}</p>}
+      {!profile.verified && (
+        <Link to="/verify" onClick={() => track('verify_open', { from: 'profile' })}
+          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-md bg-success-soft px-3 font-semibold text-success hover:brightness-95">
+          {Icon.shield}{t('verify.getBadge')}{Icon.chevron}
+        </Link>
+      )}
       <ButtonLink to="/setup?edit" variant="outline" block className="mt-4">{t('profile.edit')}</ButtonLink>
     </Card>
   )

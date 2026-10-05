@@ -96,8 +96,11 @@ def my_growth(db, user_id: str) -> dict:
           (select count(*) from public.profiles r where r.referred_by = p.id) as joined,
           (select count(*) from public.profiles r where r.referred_by = p.id and r.setup_done) as completed,
           (select count(*) from public.profile_views v where v.driver_id = p.id and v.day > current_date - 7) as views_week,
-          (select count(*) from public.profile_views v where v.driver_id = p.id) as views_total
-        from public.profiles p where p.id = %s
+          (select count(*) from public.profile_views v where v.driver_id = p.id) as views_total,
+          -- driver listed but has not said "still looking" for 14 days
+          (p.role = 'driver' and coalesce(d.is_available, false)
+             and coalesce(d.looking_checked_at, d.updated_at, p.created_at) < now() - interval '14 days') as looking_due
+        from public.profiles p left join public.driver_details d on d.profile_id = p.id where p.id = %s
         """,
         (user_id,),
     ).fetchone() or {}
@@ -110,6 +113,7 @@ def my_growth(db, user_id: str) -> dict:
         "boost_days": BOOST_DAYS,
         "views_week": int(row.get("views_week") or 0),
         "views_total": int(row.get("views_total") or 0),
+        "looking_due": bool(row.get("looking_due")),
     }
 
 
@@ -152,8 +156,127 @@ def weekly_views(db) -> int:
     return len(rows)
 
 
+# ---------------------------------------------------------------- Sprint 10: trust + coming back
+_NEAR_POST = """(exists (select 1 from unnest(p.base_cities) c where lower(split_part(c, ',', 1)) = lower(d.district))
+                  or (d.location is not null and o.location is not null and extensions.st_dwithin(d.location, o.location, 150000)))"""
+
+
+def weekly_jobs(db) -> int:
+    """Mondays, drivers: 'N new jobs near you this week' (only when N > 0, respects the new-job switch)."""
+    rows = db.execute(
+        f"""
+        insert into public.notifications (tenant_id, user_id, kind, data)
+        select d.tenant_id, d.id, 'weekly_jobs', jsonb_build_object('n', count(*))
+        from public.profiles d
+        join public.posts p on p.tenant_id = d.tenant_id and p.status = 'live' and p.created_at > now() - interval '7 days'
+        join public.profiles o on o.id = p.owner_id and not o.blocked and o.is_test = d.is_test
+        where d.role = 'driver' and d.setup_done and not d.blocked
+          and coalesce((d.notify_prefs->>'new_post')::boolean, true) and {_NEAR_POST}
+          and not exists (select 1 from public.notifications n where n.user_id = d.id and n.kind = 'weekly_jobs'
+                          and n.created_at > now() - interval '6 days')
+        group by d.tenant_id, d.id
+        returning user_id, kind, data
+        """
+    ).fetchall() or []
+    notify._push_for(db, [dict(r) for r in rows])
+    return len(rows)
+
+
+def weekly_post_views(db) -> int:
+    """Mondays, owners: 'N drivers looked at your post this week'."""
+    rows = db.execute(
+        """
+        insert into public.notifications (tenant_id, user_id, kind, data)
+        select o.tenant_id, o.id, 'post_views', jsonb_build_object('n', count(distinct v.viewer_id))
+        from public.post_views v join public.posts p on p.id = v.post_id join public.profiles o on o.id = p.owner_id
+        where v.day > current_date - 7 and not o.blocked
+          and not exists (select 1 from public.notifications n where n.user_id = o.id and n.kind = 'post_views'
+                          and n.created_at > now() - interval '6 days')
+        group by o.tenant_id, o.id
+        returning user_id, kind, data
+        """
+    ).fetchall() or []
+    notify._push_for(db, [dict(r) for r in rows])
+    return len(rows)
+
+
+def come_back(db) -> int:
+    """Not opened for 7–30 days: drivers hear about new jobs near them, owners about new drivers in their city
+    (counted since their last visit). At most once a week."""
+    rows = db.execute(
+        f"""
+        with quiet as (
+          select d.* from public.profiles d
+          where d.role in ('driver', 'owner') and d.setup_done and not d.blocked
+            and d.last_seen_at between now() - interval '30 days' and now() - interval '7 days'
+            and not exists (select 1 from public.notifications n where n.user_id = d.id and n.kind = 'come_back'
+                            and n.created_at > now() - interval '7 days')
+        ), counts as (
+          select d.tenant_id, d.id, (
+            case when d.role = 'driver' then
+              (select count(*) from public.posts p join public.profiles o on o.id = p.owner_id
+                where p.tenant_id = d.tenant_id and p.status = 'live' and p.created_at > d.last_seen_at
+                  and not o.blocked and o.is_test = d.is_test and {_NEAR_POST})
+            else
+              (select count(*) from public.profiles x join public.driver_details xd on xd.profile_id = x.id
+                where x.tenant_id = d.tenant_id and x.role = 'driver' and x.setup_done and not x.blocked
+                  and x.is_test = d.is_test and xd.is_available and x.created_at > d.last_seen_at
+                  and lower(x.district) = lower(d.district))
+            end) as n
+          from quiet d
+        )
+        insert into public.notifications (tenant_id, user_id, kind, data)
+        select tenant_id, id, 'come_back', jsonb_build_object('n', n) from counts where n > 0
+        returning user_id, kind, data
+        """
+    ).fetchall() or []
+    notify._push_for(db, [dict(r) for r in rows])
+    return len(rows)
+
+
+def still_looking(db) -> int:
+    """Listed drivers who have not confirmed for 14 days: 'still looking for work?' (every 14 days at most)."""
+    rows = db.execute(
+        """
+        insert into public.notifications (tenant_id, user_id, kind, data)
+        select p.tenant_id, p.id, 'still_looking', '{}'::jsonb
+        from public.profiles p join public.driver_details d on d.profile_id = p.id
+        where p.role = 'driver' and p.setup_done and not p.blocked and d.is_available
+          and coalesce(d.looking_checked_at, d.updated_at, p.created_at) < now() - interval '14 days'
+          and not exists (select 1 from public.notifications n where n.user_id = p.id and n.kind = 'still_looking'
+                          and n.created_at > now() - interval '14 days')
+        returning user_id, kind, data
+        """
+    ).fetchall() or []
+    notify._push_for(db, [dict(r) for r in rows])
+    return len(rows)
+
+
+def refresh_fast_reply(db) -> int:
+    """'Replies fast' badge: in the last 30 days at least 3 interested drivers, and 80%+ of them opened within a day."""
+    db.execute(
+        """
+        with s as (
+          select p.owner_id, count(*) as n,
+                 count(*) filter (where i.seen_at is not null and i.seen_at - i.created_at <= interval '24 hours') as fast
+          from public.interests i join public.posts p on p.id = i.post_id
+          where i.created_at between now() - interval '30 days' and now() - interval '1 day'
+          group by p.owner_id
+        )
+        update public.profiles o set fast_reply = coalesce((select s.n >= 3 and s.fast >= 0.8 * s.n from s where s.owner_id = o.id), false)
+        where o.role = 'owner' and o.fast_reply is distinct from coalesce((select s.n >= 3 and s.fast >= 0.8 * s.n from s where s.owner_id = o.id), false)
+        """
+    )
+    return 1
+
+
 def daily(db, today: date) -> dict:
     out = {"licence": notify.safe(db, licence_reminders, today) or 0}
+    out["still_looking"] = notify.safe(db, still_looking) or 0
+    out["come_back"] = notify.safe(db, come_back) or 0
+    notify.safe(db, refresh_fast_reply)
     if today.weekday() == 0:   # Monday
         out["views"] = notify.safe(db, weekly_views) or 0
+        out["weekly_jobs"] = notify.safe(db, weekly_jobs) or 0
+        out["post_views"] = notify.safe(db, weekly_post_views) or 0
     return out

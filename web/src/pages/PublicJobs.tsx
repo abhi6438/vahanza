@@ -102,7 +102,7 @@ function PublicJobCard({ job, onContact, full }: { job: PublicJob; onContact: ()
   )
   return (
     <JobCard full={full}
-      data={{ title: job.owner_verified ? t('pub.ownerVerified') : t('pub.owner'), verified: job.owner_verified, place, rating_avg: job.owner_rating_avg, rating_count: job.owner_rating_count, post: { ...job, check_flags: [] } }}
+      data={{ title: job.owner_verified ? t('pub.ownerVerified') : t('pub.owner'), verified: job.owner_verified, place, rating_avg: job.owner_rating_avg, rating_count: job.owner_rating_count, jobsDone: job.owner_jobs_done, fastReply: job.owner_fast_reply, post: { ...job, check_flags: [] } }}
       actions={actions} />
   )
 }
@@ -167,6 +167,11 @@ function JobList() {
         <h1 className="font-display text-[1.75rem] font-bold leading-tight md:text-3xl">{title}</h1>
         <p className="mt-1 text-text-2">{t('pub.sub')}</p>
         {city && stats && !here && stats.drivers > 0 && <p className="mt-1 text-sm text-text-2">{t('pub.noneInCity', { city: cityName })}</p>}
+        {stats && (stats.hired || 0) > 0 && (
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success">
+            {Icon.check}{city && (stats.hired_here || 0) > 0 ? t('pub.hiredIn', { n: stats.hired_here, city: cityName }) : t('pub.hiredAll', { n: stats.hired })}
+          </p>
+        )}
       </section>
       <div role="group" aria-label={t('home.filter')} className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 md:-mx-6 md:px-6 lg:mx-0 lg:flex-wrap lg:px-0">
         <Chip selected={!!city} onClick={() => setPickOpen(true)} icon={Icon.pin}>{cityName || t('pub.pickCity')} <span className="text-[0.8em]">{Icon.down}</span></Chip>

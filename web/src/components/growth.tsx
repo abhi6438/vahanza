@@ -8,6 +8,7 @@ import { label, placeName, rupees, VEHICLES } from '../lib/catalog'
 import { canShareSheet, jobLink, refLink, shareImage, shareOther, shareWhatsApp } from '../lib/share'
 import { track } from '../lib/track'
 import { useToast } from './toast'
+import { LookingCard } from './work'
 import { Button, Card, Dialog, Icon, Skeleton } from './ui'
 
 /** "Rewa: 3 drivers wanted for Truck · ₹18,000/month savings. See and call directly: <link>" */
@@ -74,6 +75,8 @@ export function GrowthCard() {
   if (!g) return <Skeleton className="h-36" />
   const isDriver = profile?.role === 'driver'
   return (
+    <>
+    {isDriver && <LookingCard due={!!g.looking_due} />}
     <Card>
       {isDriver && (
         <div className="flex items-center gap-3">
@@ -98,6 +101,7 @@ export function GrowthCard() {
       </div>
       {isDriver && <DigitalCardDialog open={card} onClose={() => setCard(false)} code={g.ref_code} />}
     </Card>
+    </>
   )
 }
 

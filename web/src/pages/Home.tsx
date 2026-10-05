@@ -10,6 +10,7 @@ import { useToast } from '../components/toast'
 import { Badge, Button, ButtonLink, Card, CardSkeletons, EmptyState, ErrorState, Icon, SectionTitle, Switch } from '../components/ui'
 import { listDrivers, listJobs, recordView, setAvailability, type DriverListItem, type Job } from '../lib/api'
 import { GrowthCard } from '../components/growth'
+import { PendingHires } from '../components/work'
 import { useAuth } from '../lib/auth'
 import { placeName } from '../lib/catalog'
 import { driverCompletion, ownerCompletion } from '../lib/completion'
@@ -125,7 +126,7 @@ function OwnerHome() {
           {list.items === null && !list.error && <CardSkeletons count={desktop ? 4 : 2} />}
           {list.items?.map((d) => (
             <DriverCard key={d.id} onOpen={() => void recordView(d.id).catch(() => {})}
-              data={{ name: d.name || '', photo_url: d.photo_url, verified: d.verified, distance_km: d.distance_km, rating_avg: d.rating_avg, rating_count: d.rating_count, top: d.top, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
+              data={{ name: d.name || '', photo_url: d.photo_url, verified: d.verified, distance_km: d.distance_km, rating_avg: d.rating_avg, rating_count: d.rating_count, top: d.top, jobs_done: d.jobs_done, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
               menu={<CardMenu target={{ type: 'profile', id: d.id }} personId={d.id} name={d.name || ''} onBlocked={() => list.setItems((cur) => cur?.filter((x) => x.id !== d.id) || null)} />}
               actions={<DriverContact driverId={d.id} name={(d.name || '').split(' ')[0]} />} />
           ))}
@@ -250,10 +251,11 @@ function DriverHome() {
         </>
       }>
       <WithRail main={main}
-        mobileTop={<>{hidden}<RatePrompt /><GrowthCard /></>}
+        mobileTop={<>{hidden}<PendingHires /><RatePrompt /><GrowthCard /></>}
         rail={
           <>
             <AvailabilitySwitch />
+            <PendingHires />
             <RatePrompt />
             <GrowthCard />
             {done.missing.length > 0 && <CompleteCard role="driver" percent={done.percent} missing={done.missing} listable={done.listable} compact />}

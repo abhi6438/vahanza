@@ -32,9 +32,25 @@ TEXT = {
                        "en": ("Renew your licence", "Your driving licence expires in {days} days. Renew it in time.")},
     "referral_joined": {"hi": ("आपके दोस्त जुड़ गए", "{name} ने प्रोफ़ाइल पूरी की। अब {days} दिन आप लिस्ट में सबसे ऊपर दिखेंगे।"),
                         "en": ("Your friend joined", "{name} finished their profile. You show at the top of lists for {days} days.")},
+    "hire_confirm": {"hi": ("क्या आपको काम मिला?", "{owner} ने बताया कि आपको काम पर रखा है। ऐप में हाँ / ना बताएँ।"),
+                     "en": ("Did you get the job?", "{owner} says they hired you. Confirm yes / no in the app.")},
+    "hire_done": {"hi": ("ड्राइवर ने काम पक्का किया", "{driver} ने बताया कि उन्हें आपके यहाँ काम मिला। उन्हें रेटिंग दें।"),
+                  "en": ("Driver confirmed the job", "{driver} confirmed working for you. Give them a rating.")},
+    "verify_result": {"hi": ("वेरिफिकेशन का नतीजा", "आपकी फ़ोटो की जाँच हो गई। नतीजा देखने के लिए खोलें।"),
+                      "en": ("Verification result", "Your photos were checked. Open to see the result.")},
+    "weekly_jobs": {"hi": ("इस हफ़्ते नए काम", "आपके शहर में इस हफ़्ते {n} नए काम आए हैं। देखें और कॉल करें।"),
+                    "en": ("New jobs this week", "{n} new jobs came up near you this week. Have a look.")},
+    "post_views": {"hi": ("आपकी पोस्ट देखी गई", "इस हफ़्ते {n} ड्राइवरों ने आपकी पोस्ट देखी।"),
+                   "en": ("Your post was seen", "{n} drivers looked at your post this week.")},
+    "come_back": {"hi": ("आपके लिए नया", "आपके जाने के बाद पास में {n} नए आए हैं। एक बार देख लें।"),
+                  "en": ("New for you", "{n} new near you since your last visit. Take a look.")},
+    "still_looking": {"hi": ("क्या अभी भी काम ढूंढ रहे हैं?", "एक टैप में बताएँ, ताकि मालिकों को सही लोग दिखें।"),
+                      "en": ("Still looking for work?", "Tell us in one tap, so owners see the right people.")},
 }
 URL = {"new_post": "/home", "new_interest": "/posts", "interest_seen": "/interests", "post_live": "/posts", "post_rejected": "/posts",
-       "profile_views": "/home", "licence_expiry": "/setup?step=licence", "referral_joined": "/invite"}
+       "profile_views": "/home", "licence_expiry": "/setup?step=licence", "referral_joined": "/invite",
+       "hire_confirm": "/home", "hire_done": "/posts", "verify_result": "/verify", "weekly_jobs": "/home",
+       "post_views": "/posts", "come_back": "/home", "still_looking": "/home"}
 VEHICLE_HI = {"truck": "ट्रक", "trailer": "ट्रेलर", "bus": "बस", "car": "कार", "jcb": "जेसीबी", "tractor": "ट्रैक्टर", "auto": "ऑटो", "pickup": "पिकअप"}
 
 

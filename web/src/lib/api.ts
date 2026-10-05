@@ -146,6 +146,8 @@ export interface DriverListItem extends DriverDetails {
   rating_count: number
   /** brought friends: shown first for a few days */
   top?: boolean
+  /** confirmed jobs through the app */
+  jobs_done?: number
 }
 export const listDrivers = (q: { vehicle?: string | null; verified?: boolean; offset?: number }) => {
   const p = new URLSearchParams()
@@ -181,7 +183,7 @@ export interface Post {
   /** short code for the public / WhatsApp link (/j/<code>) */
   share_code?: string
 }
-export interface MyPost extends Post { interested: number; new_interested: number }
+export interface MyPost extends Post { interested: number; new_interested: number; views?: number; hired?: number }
 export interface Job extends Post {
   owner_id?: string
   owner_name: string | null
@@ -192,6 +194,8 @@ export interface Job extends Post {
   owner_verified: boolean
   owner_rating_avg?: number | null
   owner_rating_count?: number
+  owner_jobs_done?: number
+  owner_fast_reply?: boolean
   distance_km: number | null
   interested: boolean
   interest_status?: 'sent' | 'seen' | 'not_suitable'
@@ -235,10 +239,12 @@ export interface PublicJob extends Omit<Post, 'check_flags'> {
   owner_verified: boolean
   owner_rating_avg: number | null
   owner_rating_count: number
+  owner_jobs_done?: number
+  owner_fast_reply?: boolean
   /** only on the single-job answer: still taking drivers */
   open?: boolean
 }
-export interface PublicStats { posts: number; drivers: number; posts_here: number; drivers_here: number; district: string | null }
+export interface PublicStats { posts: number; drivers: number; posts_here: number; drivers_here: number; hired?: number; hired_here?: number; district: string | null }
 export const pub = {
   jobs: (q: { district?: string | null; vehicle?: string | null; offset?: number }) => {
     const p = new URLSearchParams()
@@ -252,9 +258,34 @@ export const pub = {
   invite: (code: string) => api<{ role: 'driver' | 'owner'; name: string | null; phone: string }>(`/public/invite/${encodeURIComponent(code)}`, { auth: false }),
   ref: (code: string) => api<{ name: string | null; photo_url: string | null; role: string | null }>(`/public/ref/${encodeURIComponent(code)}`, { auth: false }),
 }
-export interface Growth { ref_code: string; joined: number; completed: number; boost_until: string | null; boost_days: number; views_week: number; views_total: number }
+export interface Growth { ref_code: string; joined: number; completed: number; boost_until: string | null; boost_days: number; views_week: number; views_total: number; looking_due?: boolean }
 export const myGrowth = () => api<Growth>('/me/growth')
 export const recordView = (driverId: string) => api<void>(`/drivers/${driverId}/view`, { method: 'POST' })
+
+// ---- Sprint 10: "got the job", job views, still looking, verification ----
+export interface HireCandidate { id: string; name: string | null; photo_url: string | null; district: string | null; state: string | null; interested: boolean; hire_status: 'pending' | 'confirmed' | 'declined' | null }
+export interface Hire { id: number; status: 'pending' | 'confirmed' | 'declined'; created_at: string; post_id: string | null; other_id: string; other_name: string | null; other_business: string | null; other_photo: string | null }
+export const work = {
+  candidates: (postId: string) => api<{ items: HireCandidate[] }>(`/posts/${postId}/hire-candidates`),
+  markHired: (postId: string, driver_ids: string[]) => api<{ asked: number }>(`/posts/${postId}/hires`, { method: 'POST', json: { driver_ids } }),
+  mine: () => api<{ items: Hire[] }>('/me/hires'),
+  answer: (id: number, confirm: boolean) => api<{ status: string; available: boolean }>(`/hires/${id}/answer`, { method: 'POST', json: { confirm } }),
+  viewJob: (postId: string) => api<void>(`/jobs/${postId}/view`, { method: 'POST' }),
+  looking: (still: boolean) => api<{ is_available: boolean }>('/me/looking', { method: 'POST', json: { still } }),
+}
+export type VerifyReason = 'blurry' | 'mismatch' | 'wrong_doc' | 'expired' | 'other'
+export interface Verification {
+  verified: boolean
+  status: 'none' | 'draft' | 'pending' | 'approved' | 'rejected'
+  id?: number; kind?: 'driver_licence' | 'owner_business'; reason?: VerifyReason | null
+  doc_url?: string | null; selfie_url?: string | null; submitted_at?: string | null; reviewed_at?: string | null
+}
+export interface VerifyItem { id: number; kind: 'driver_licence' | 'owner_business'; status: string; reason: VerifyReason | null; doc_url: string | null; selfie_url: string | null; submitted_at: string | null; profile_id: string; name: string | null; business_name: string | null; role: 'driver' | 'owner'; phone: string | null; photo_url: string | null; district: string | null; state: string | null }
+export const verification = {
+  mine: () => api<Verification>('/me/verification'),
+  put: (part: 'doc' | 'selfie', jpeg: Blob) => api<Verification>(`/me/verification/${part}`, { method: 'PUT', body: jpeg, headers: { 'Content-Type': jpeg.type || 'image/jpeg' } }),
+  submit: () => api<Verification>('/me/verification/submit', { method: 'POST' }),
+}
 
 // ---- admin ----
 export interface AdminStats {
@@ -270,6 +301,10 @@ export interface AdminStats {
   time: { avg_minutes: number; sessions: number }
   cities: { district: string; state: string; drivers: number; owners: number }[]
   queue: number
+  trust?: {
+    hires: number; hires_waiting: number; hires_declined: number; rating_avg: number; ratings: number; ratings_worked: number
+    verify_waiting: number; verify_hours: number; verified: number; d7: number; d30: number
+  }
   growth?: {
     sources: { via: string; drivers: number; owners: number }[]
     shares: { jobs: number; cards: number; invites: number }
@@ -317,6 +352,9 @@ export const admin = {
   inviteSms: (body: { ids?: number[]; role?: string | null; import_id?: number | null }) => api<{ sent: number }>('/admin/prospects/invite-sms', { method: 'POST', json: body }),
   inviteWhatsapp: (id: number) => api<{ url: string; text: string }>(`/admin/prospects/${id}/whatsapp`, { method: 'POST', json: { app_url: window.location.origin } }),
   posters: () => api<{ items: Poster[] }>('/admin/posters'),
+  verifications: () => api<{ items: VerifyItem[] }>('/admin/verifications'),
+  reviewVerification: (id: number, action: 'approve' | 'reject', reason?: VerifyReason) =>
+    api<{ status: string }>(`/admin/verifications/${id}/review`, { method: 'POST', json: { action, reason: reason || null } }),
   newPoster: (body: { place: string; district?: string | null; state?: string | null }) => api<Poster>('/admin/posters', { method: 'POST', json: body }),
   optOut: (id: number, opted_out: boolean) => api<{ opted_out: boolean }>(`/admin/prospects/${id}`, { method: 'PATCH', json: { opted_out } }),
 }
@@ -349,16 +387,17 @@ export const blockPerson = (id: string) => api<{ blocked: boolean }>(`/blocks/${
 export const unblockPerson = (id: string) => api<void>(`/blocks/${id}`, { method: 'DELETE' })
 export interface BlockedPerson { id: string; name: string | null; business_name: string | null; role: string; photo_url: string | null; created_at: string }
 export const myBlocks = () => api<{ items: BlockedPerson[] }>('/me/blocks')
-export interface ToRate { id: string; name: string | null; business_name: string | null; role: 'driver' | 'owner'; photo_url: string | null; last_contact: string }
+export interface ToRate { id: string; name: string | null; business_name: string | null; role: 'driver' | 'owner'; photo_url: string | null; last_contact: string; worked?: boolean }
 export const toRate = () => api<{ items: ToRate[] }>('/me/to-rate')
 export const ratePerson = (ratee_id: string, stars: number, tags: string[]) => api<{ rated: boolean }>('/ratings', { method: 'POST', json: { ratee_id, stars, tags } })
 
 // ---------------------------------------------------------------- notifications (Sprint 6)
 export type NotifKind = 'new_post' | 'new_interest' | 'interest_seen' | 'post_live' | 'post_rejected' | 'profile_views' | 'licence_expiry' | 'referral_joined'
+  | 'hire_confirm' | 'hire_done' | 'verify_result' | 'weekly_jobs' | 'post_views' | 'come_back' | 'still_looking'
 export interface Notif {
   id: number
   kind: NotifKind
-  data: { post_id?: string; owner?: string; driver?: string; driver_id?: string; vehicles_raw?: string[]; n?: number; savings?: string; days?: number; date?: string; name?: string }
+  data: { post_id?: string; owner?: string; driver?: string; driver_id?: string; vehicles_raw?: string[]; n?: number; savings?: string; days?: number; date?: string; name?: string; ok?: boolean; reason?: string; hire_id?: number }
   read_at: string | null
   created_at: string
 }
