@@ -1,6 +1,7 @@
 import { brand } from './brand'
 import { supabase } from './supabase'
 import { toParams, type DriverQuery, type JobQuery } from './search'
+import type { ThemeConfig } from './brand-theme'
 
 const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api/v1'
 
@@ -404,4 +405,15 @@ export const notifications = {
   unsubscribe: (endpoint: string) => api<void>('/push/unsubscribe', { method: 'POST', json: { endpoint } }),
   prefs: () => api<NotifyPrefs>('/me/notify-prefs'),
   setPrefs: (p: Partial<NotifyPrefs>) => api<NotifyPrefs>('/me/notify-prefs', { method: 'PATCH', json: p }),
+}
+
+// ---- runtime brand theme (Admin → Settings → Appearance) ----
+export interface ThemeState { draft: ThemeConfig | null; published: ThemeConfig | null; version: number; published_at: string | null; draft_at: string | null }
+export const getPublishedTheme = () => api<{ theme: ThemeConfig | null; version: number }>('/theme', { auth: false })
+export const adminTheme = {
+  get: () => api<ThemeState>('/admin/theme'),
+  saveDraft: (theme: ThemeConfig) => api<ThemeState>('/admin/theme/draft', { method: 'PUT', json: theme }),
+  publish: (theme: ThemeConfig) => api<ThemeState>('/admin/theme/publish', { method: 'POST', json: theme }),
+  /** back to the brand's own colours (brands/<id>.json) */
+  reset: () => api<ThemeState>('/admin/theme/published', { method: 'DELETE' }),
 }

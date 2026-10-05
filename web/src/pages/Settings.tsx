@@ -4,7 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { PushAsk } from '../components/notify'
 import { AppShell } from '../components/shell'
 import { useToast } from '../components/toast'
-import { Button, ConfirmDialog, Icon, Segmented, Switch } from '../components/ui'
+import { Button, ButtonLink, ConfirmDialog, Icon, Segmented, Switch } from '../components/ui'
 import { notifications, type NotifyPrefs } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { brand } from '../lib/brand'
@@ -107,14 +107,23 @@ function LanguageSection() {
 
 function AppearanceSection() {
   const { t } = useTranslation()
+  const { profile } = useAuth()
   const [theme, setTheme] = useState<ThemePref>('system')
   useEffect(() => { void loadTheme().then(setTheme) }, [])
+  const admin = profile?.role === 'admin' || profile?.role === 'super_admin'
   return (
-    <SettingRow label={t('settings.theme')} sub={t('settings.themeSub')}>
-      <Segmented label={t('settings.theme')} value={theme}
-        onChange={(p) => { setTheme(p); void saveTheme(p); track('theme_set', { theme: p }) }}
-        options={(['system', 'light', 'dark'] as ThemePref[]).map((p) => ({ key: p, label: t(`settings.${p}`) }))} />
-    </SettingRow>
+    <>
+      <SettingRow label={t('settings.theme')} sub={t('settings.themeSub')}>
+        <Segmented label={t('settings.theme')} value={theme}
+          onChange={(p) => { setTheme(p); void saveTheme(p); track('theme_set', { theme: p }) }}
+          options={(['system', 'light', 'dark'] as ThemePref[]).map((p) => ({ key: p, label: t(`settings.${p}`) }))} />
+      </SettingRow>
+      {admin && (
+        <SettingRow label={t('appearance.rowTitle')} sub={t('appearance.rowSub')}>
+          <ButtonLink to="/admin/appearance" variant="secondary" icon={Icon.palette}>{t('appearance.open')}</ButtonLink>
+        </SettingRow>
+      )}
+    </>
   )
 }
 

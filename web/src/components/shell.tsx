@@ -47,7 +47,7 @@ export function BrandMark({ size = 36 }: { size?: number }) {
     <span className="grid shrink-0 place-items-center rounded-[30%] shadow-[0_2px_6px_-2px_rgb(0_0_0/0.3),inset_0_1px_0_rgb(255_255_255/0.45)]"
       style={{ width: size, height: size, background: 'linear-gradient(160deg, color-mix(in srgb, var(--c-accent) 85%, #fff 15%), var(--c-accent))' }} aria-hidden>
       <svg viewBox="0 0 32 32" width={size * 0.66} height={size * 0.66}>
-        <path d="M5 6l11 21L27 6" fill="none" stroke="#0A4D5A" strokeWidth="6.2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M5 6l11 21L27 6" fill="none" stroke="var(--c-header)" strokeWidth="6.2" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M5 6l11 21L27 6" fill="none" stroke="#fff" strokeWidth="1.3" strokeDasharray="2.4 2.6" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
       </svg>
     </span>

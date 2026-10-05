@@ -37,7 +37,7 @@ A white-label app for vehicle owners and drivers. One codebase serves the web/PW
 ## 1. Supabase setup (one time)
 
 1. Create a project in region **Mumbai (ap-south-1)**.
-2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql` → `0009_trust.sql` → `0010_mpin.sql` → `0011_search.sql`).
+2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql` → `0009_trust.sql` → `0010_mpin.sql` → `0011_search.sql` → `0012_theme.sql`).
 3. Auth → Providers → **Phone**: enable it. You can pick any SMS provider here because the hook below replaces it.
 4. Auth → Hooks → **Send SMS hook** → HTTPS:
    `https://<your-domain>/api/v1/hooks/send-sms`. Generate the secret and copy it into `SEND_SMS_HOOK_SECRET` (format `v1,whsec_...`).
@@ -166,6 +166,17 @@ The same bar sits on the owner's driver list, the driver's job list and the no-l
 - What is on shows as removable chips with "सब हटाएँ". The vehicle row stays. Filters are remembered on the device per list; the search text is not.
 - The API answers with `total` (all matches), which drives "N मिले" and the live button. A typed city with no distance chosen = within 50 km. The public city chip still only puts that city first and hides nothing.
 - Go-live: run `0011_search.sql` (adds `pg_trgm` and indexes; safe to run again).
+
+## Brand theme at runtime (Admin → Settings → Appearance)
+
+An admin can change the brand colours without editing code or making a new build: **Settings → रूप-रंग → थीम बिल्डर खोलें** (`/admin/appearance`).
+
+- **What is stored** (in `tenants.theme_draft` / `theme_published`): only `primaryColor`, `secondaryColor` (null = made from primary), `accentColor`, `mode` (light / dark / system — the default for people who haven't chosen), `radius` (sharp / medium / rounded) and `density` (compact / comfortable / spacious). There is no per-component colour, and the API refuses extra keys.
+- **How colours are made** (`web/src/lib/brand-theme.ts`): OKLCH maths derive primary hover / active / light / subtle / border / foreground, focus ring, header, accent soft / ink, and brand-tinted neutrals (page, cards, lines, text) separately for light and dark. Dark mode is not an inversion: a lifted, calmer primary on deep surfaces of the same hue, and lighter hover states. Text on the primary is white or dark, whichever has the higher WCAG contrast. A colour too pale for white backgrounds is darkened just enough. The builder shows the contrast ratio.
+- **Where they go**: everything is CSS variables (`--c-*` → Tailwind names like `bg-primary`, `text-text-2`, `border-border`, plus semantic aliases `--color-primary-hover`, `--color-secondary`, `--color-surface-elevated`, `--color-text-muted`, `--color-focus` …). Buttons, chips, filters, inputs, links, tabs, bottom nav, sidebar, icons, badges, switches, cards, empty states, alerts, dialogs, toasts, illustrations, charts, the Digital Card image and printed QR posters all follow it.
+- **Flow**: change → live preview (real components, light and dark, with the chosen corners / density) → **Save draft** → **Publish**. Every app reads `GET /api/v1/theme` on start and when it comes back to the front (at most every 5 minutes), and keeps the last theme on the device so there is no colour flash. "ब्रांड के अपने रंग पर वापस जाएँ" removes the published theme (back to `brands/<id>.json`). Every save / publish / reset goes into the admin audit trail.
+- Without a published theme the app looks exactly as before (the brand JSON colours).
+- Go-live: run `0012_theme.sql`. The PWA install colour in `vite.config.ts` stays the brand JSON one (it only affects the "Add to home screen" splash).
 
 ## 2. MSG91
 

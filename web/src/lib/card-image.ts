@@ -1,7 +1,7 @@
 import QRCode from 'qrcode'
 import type { DriverDetails } from './api'
 import { photoSrc } from './api'
-import { brand } from './brand'
+import { brand, printColors } from './brand'
 import { label, LICENCES, pick, VEHICLES, WHEN } from './catalog'
 
 /**
@@ -21,7 +21,6 @@ export interface CardInput {
 
 const W = 1080
 const H = 1920
-const C = brand.colors.light
 const FONT = '"Mukta", "Noto Sans Devanagari", system-ui, sans-serif'
 const DISPLAY = '"Anek Latin Variable", "Anek Devanagari Variable", "Mukta", system-ui, sans-serif'
 
@@ -59,6 +58,7 @@ function fitText(ctx: CanvasRenderingContext2D, text: string, max: number, size:
 const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?'
 
 export async function drawDriverCard(c: CardInput): Promise<Blob> {
+  const C = printColors()          // live brand theme (Admin → Appearance)
   const hi = c.lang !== 'en'
   const tx = (h: string, e: string) => (hi ? h : e)
   await document.fonts?.ready
@@ -150,7 +150,7 @@ export async function drawDriverCard(c: CardInput): Promise<Blob> {
     const badge = tx('✓ वेरिफाइड ड्राइवर', '✓ Verified driver')
     ctx.font = `700 36px ${FONT}`
     const bw = ctx.measureText(badge).width + 56
-    ctx.fillStyle = '#E3F4EA'
+    ctx.fillStyle = C.successSoft
     roundRect(ctx, cx - bw / 2, y - 44, bw, 64, 32)
     ctx.fill()
     ctx.fillStyle = C.call

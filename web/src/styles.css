@@ -39,7 +39,7 @@
   --color-primary-soft: var(--c-brand-soft);
   --color-on-primary: var(--c-on-primary);
   --color-action: var(--c-accent);
-  --color-on-action: #2a1c00;
+  --color-on-action: var(--c-on-action);
   --color-surface: var(--c-card);
   --color-surface-2: var(--c-surface-2);
   --color-border: var(--c-line);
@@ -58,8 +58,26 @@
   --color-surface-3: var(--c-surface-3);
   --color-border-strong: var(--c-line-strong);
   --color-text-3: var(--c-text-3);
-  --color-on-header: #ffffff;
+  --color-on-header: var(--c-on-header);
   --color-action-soft: var(--c-accent-soft);
+
+  /* runtime brand theme (Admin → Appearance): the semantic names. All of them come from three colours
+     (primary, secondary, accent) — lib/brand-theme.ts derives every shade for light and dark. */
+  --color-primary-hover: var(--c-primary-hover);
+  --color-primary-active: var(--c-primary-active);
+  --color-primary-light: var(--c-brand-soft);
+  --color-primary-subtle: var(--c-primary-subtle);
+  --color-primary-border: var(--c-primary-border);
+  --color-primary-foreground: var(--c-on-primary);
+  --color-secondary: var(--c-header);
+  --color-secondary-foreground: var(--c-on-header);
+  --color-background: var(--c-bg);
+  --color-surface-elevated: var(--c-surface-3);
+  --color-text-primary: var(--c-ink);
+  --color-text-secondary: var(--c-muted);
+  --color-text-muted: var(--c-text-3);
+  --color-border-subtle: var(--c-line-subtle);
+  --color-focus: var(--c-focus);
 
   /* elevation: e1 resting card · e2 raised / hover · e3 floating (dialogs, menus, bottom nav) */
   --shadow-xs: var(--e0);
@@ -113,8 +131,8 @@
   --radius-sm: var(--radius-s);
   --radius-md: var(--radius-m);
   --radius-lg: var(--radius-l);
-  --radius-xl: 1.5rem;
-  --radius-2xl: 1.75rem;
+  --radius-xl: calc(1.5rem * var(--rk));
+  --radius-2xl: calc(1.75rem * var(--rk));
 
   /* two elevation levels only */
   --shadow-sm: 0 1px 2px rgb(16 40 45 / 0.06), 0 1px 1px rgb(16 40 45 / 0.04);
@@ -139,10 +157,10 @@
   --fs-2xl: clamp(1.3125rem, 1.2rem + 0.5vw, 1.5rem);            /* 21–24 page titles */
   --fs-3xl: clamp(1.5rem, 1.35rem + 0.7vw, 1.75rem);             /* 24–28 hero titles */
 
-  --control-height-sm: 2.25rem;   /* 36  secondary / tertiary actions */
-  --control-height-md: 2.75rem;   /* 44  default buttons, inputs, icon buttons (touch minimum) */
-  --control-height-lg: 3rem;      /* 48  the one main action on a screen */
-  --chip-height: 2.25rem;         /* 36  filters: compact, rows scroll sideways instead of growing */
+  --ch-sm: 2.25rem;   /* 36  secondary / tertiary actions */
+  --ch-md: 2.75rem;   /* 44  default buttons, inputs, icon buttons (touch minimum) */
+  --ch-lg: 3rem;      /* 48  the one main action on a screen */
+  --chip-h: 2.25rem;         /* 36  filters: compact, rows scroll sideways instead of growing */
 
   --icon-size-sm: 1rem;
   --icon-size-md: 1.25rem;
@@ -155,22 +173,22 @@
   --spacing-lg: 1rem;
   --spacing-xl: 1.5rem;
 
-  --card-padding: 0.875rem;
-  --grid-gap: 0.75rem;
+  --card-p: 0.875rem;
+  --grid-g: 0.75rem;
   --section-gap: 1.25rem;
   --page-gutter: 1rem;
   --header-height: 3.5rem;
   --bottom-nav-height: 3.75rem;
   --sidebar-width: 15rem;
 
-  --radius-s: 0.5rem;
-  --radius-m: 0.75rem;
-  --radius-l: 1.125rem;   /* cards */
+  --r-s: 0.5rem;
+  --r-m: 0.75rem;
+  --r-l: 1.125rem;   /* cards */
 }
 @media (min-width: 768px) {
   :root {
-    --card-padding: 1rem;
-    --grid-gap: 1rem;
+    --card-p: 1rem;
+    --grid-g: 1rem;
     --section-gap: 1.5rem;
     --page-gutter: 1.5rem;
   }
@@ -184,81 +202,166 @@
     --fs-xl: 1.1875rem;                                          /* 19 */
     --fs-2xl: clamp(1.3125rem, 1.1rem + 0.35vw, 1.5rem);
     --fs-3xl: clamp(1.5rem, 1.25rem + 0.45vw, 1.75rem);
-    --control-height-sm: 2rem;    /* 32 */
-    --control-height-md: 2.375rem; /* 38 */
-    --control-height-lg: 2.75rem; /* 44 */
-    --chip-height: 2rem;          /* 32 */
+    --ch-sm: 2rem;    /* 32 */
+    --ch-md: 2.375rem; /* 38 */
+    --ch-lg: 2.75rem; /* 44 */
+    --chip-h: 2rem;          /* 32 */
     --icon-size-md: 1.125rem;
     --avatar-size: 2.5rem;
-    --card-padding: 1rem;
+    --card-p: 1rem;
     --header-height: 4rem;
     --page-gutter: 1.5rem;
-    --radius-m: 0.625rem;
-    --radius-l: 1rem;
+    --r-m: 0.625rem;
+    --r-l: 1rem;
   }
   /* Devanagari needs a touch more size than Latin at the same px to stay readable */
   :root:not([data-native]):lang(hi) { --fs-sm: 0.84375rem; --fs-md: 0.96875rem; }
 }
 @media (min-width: 1440px) {
   :root:not([data-native]) {
-    --grid-gap: 1.25rem;
+    --grid-g: 1.25rem;
     --section-gap: 1.75rem;
     --page-gutter: 2rem;
     --sidebar-width: 16rem;
   }
 }
 
-/* derived colours, light */
-:root {
-  --c-surface-3: #ffffff;                                              /* floating: dialogs, menus */
-  --c-line-strong: color-mix(in srgb, var(--c-line) 70%, var(--c-ink) 12%);
-  --c-text-3: color-mix(in srgb, var(--c-muted) 75%, var(--c-bg));
+/* UI density + corner style (Admin → Appearance): the sizes above are the base, these scale them.
+   .theme-scope re-computes them so the Theme Builder preview can show another density / radius. */
+:root { --density: 1; --rk: 1; }
+[data-density="compact"] { --density: 0.9; }
+[data-density="spacious"] { --density: 1.1; }
+[data-radius="sharp"] { --rk: 0.35; }
+[data-radius="rounded"] { --rk: 1.6; }
+:root, .theme-scope {
+  --control-height-sm: calc(var(--ch-sm) * var(--density));
+  --control-height-md: calc(var(--ch-md) * var(--density));
+  --control-height-lg: calc(var(--ch-lg) * var(--density));
+  --chip-height: calc(var(--chip-h) * var(--density));
+  --card-padding: calc(var(--card-p) * var(--density));
+  --grid-gap: calc(var(--grid-g) * var(--density));
+  --radius-s: calc(var(--r-s) * var(--rk));
+  --radius-m: calc(var(--r-m) * var(--rk));
+  --radius-l: calc(var(--r-l) * var(--rk));
+}
+
+/* Colours: every --c-* value (brand, surfaces, text, borders, status, hover / soft shades) is written at
+   runtime by lib/brand-theme.ts — from the published Admin theme, or the brand JSON by default.
+   Only shadows live here (they depend on light / dark, not on the brand). */
+:root, .theme-scope {
   --e0: 0 1px 0 rgb(15 35 40 / 0.04);
   --e1: 0 1px 2px rgb(15 35 40 / 0.05), 0 1px 1px rgb(15 35 40 / 0.03);
   --e2: 0 1px 2px rgb(15 35 40 / 0.04), 0 6px 18px -6px rgb(15 35 40 / 0.14);
   --e3: 0 2px 6px rgb(15 35 40 / 0.06), 0 24px 48px -16px rgb(15 35 40 / 0.28);
   --glow-action: 0 6px 16px -6px color-mix(in srgb, var(--c-accent) 70%, transparent);
-  --c-on-primary: #ffffff;
-  --c-on-success: #ffffff;
-  --c-on-error: #ffffff;
-  --c-surface-2: color-mix(in srgb, var(--c-bg) 70%, var(--c-card));
-  --c-success-soft: color-mix(in srgb, var(--c-call) 12%, var(--c-card));
-  --c-error-soft: color-mix(in srgb, var(--c-danger) 10%, var(--c-card));
 }
-/* dark: the lighter brand/green/red need dark text on top for contrast */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --c-surface-3: color-mix(in srgb, var(--c-card) 88%, #ffffff 6%);
-    --c-line-strong: color-mix(in srgb, var(--c-line) 75%, #ffffff 10%);
-    --c-text-3: color-mix(in srgb, var(--c-muted) 70%, var(--c-bg));
-    --e0: 0 1px 0 rgb(0 0 0 / 0.2);
-    --e1: 0 1px 2px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.03);
-    --e2: 0 8px 22px -8px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.04);
-    --e3: 0 24px 56px -12px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.05);
-    --glow-action: 0 6px 18px -6px color-mix(in srgb, var(--c-accent) 45%, transparent);
-    --c-on-primary: #04191e;
-    --c-on-success: #04170c;
-    --c-on-error: #1f0604;
-    --c-surface-2: color-mix(in srgb, var(--c-bg) 55%, var(--c-card));
-    --c-success-soft: color-mix(in srgb, var(--c-call) 18%, var(--c-card));
-    --c-error-soft: color-mix(in srgb, var(--c-danger) 16%, var(--c-card));
-  }
-}
-:root[data-theme="dark"] {
-  --c-surface-3: color-mix(in srgb, var(--c-card) 88%, #ffffff 6%);
-  --c-line-strong: color-mix(in srgb, var(--c-line) 75%, #ffffff 10%);
-  --c-text-3: color-mix(in srgb, var(--c-muted) 70%, var(--c-bg));
   --e0: 0 1px 0 rgb(0 0 0 / 0.2);
   --e1: 0 1px 2px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.03);
   --e2: 0 8px 22px -8px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.04);
   --e3: 0 24px 56px -12px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.05);
   --glow-action: 0 6px 18px -6px color-mix(in srgb, var(--c-accent) 45%, transparent);
-  --c-on-primary: #04191e;
-  --c-on-success: #04170c;
-  --c-on-error: #1f0604;
-  --c-surface-2: color-mix(in srgb, var(--c-bg) 55%, var(--c-card));
-  --c-success-soft: color-mix(in srgb, var(--c-call) 18%, var(--c-card));
-  --c-error-soft: color-mix(in srgb, var(--c-danger) 16%, var(--c-card));
+  }
+}
+:root[data-theme="dark"], .theme-scope[data-theme="dark"] {
+  --e0: 0 1px 0 rgb(0 0 0 / 0.2);
+  --e1: 0 1px 2px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.03);
+  --e2: 0 8px 22px -8px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.04);
+  --e3: 0 24px 56px -12px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.05);
+  --glow-action: 0 6px 18px -6px color-mix(in srgb, var(--c-accent) 45%, transparent);
+}
+
+
+/* A box with its own palette (the Theme Builder's live preview): Tailwind's tokens are resolved on :root,
+   so they are declared again here to pick up the --c-* values set on the box. */
+.theme-scope {
+  --color-brand: var(--c-brand);
+  --color-brand-dark: var(--c-brand-dark);
+  --color-brand-soft: var(--c-brand-soft);
+  --color-header: var(--c-header);
+  --color-accent: var(--c-accent);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-accent-ink: var(--c-accent-ink);
+  --color-call: var(--c-call);
+  --color-ink: var(--c-ink);
+  --color-muted: var(--c-muted);
+  --color-line: var(--c-line);
+  --color-bg: var(--c-bg);
+  --color-card: var(--c-card);
+  --color-danger: var(--c-danger);
+  --color-primary: var(--c-brand);
+  --color-primary-soft: var(--c-brand-soft);
+  --color-on-primary: var(--c-on-primary);
+  --color-action: var(--c-accent);
+  --color-on-action: var(--c-on-action);
+  --color-surface: var(--c-card);
+  --color-surface-2: var(--c-surface-2);
+  --color-border: var(--c-line);
+  --color-text: var(--c-ink);
+  --color-text-2: var(--c-muted);
+  --color-success: var(--c-call);
+  --color-success-soft: var(--c-success-soft);
+  --color-on-success: var(--c-on-success);
+  --color-warning: var(--c-accent-ink);
+  --color-warning-soft: var(--c-accent-soft);
+  --color-error: var(--c-danger);
+  --color-error-soft: var(--c-error-soft);
+  --color-on-error: var(--c-on-error);
+  --color-header-to: var(--c-header-alt);
+  --color-surface-3: var(--c-surface-3);
+  --color-border-strong: var(--c-line-strong);
+  --color-text-3: var(--c-text-3);
+  --color-on-header: var(--c-on-header);
+  --color-action-soft: var(--c-accent-soft);
+  --color-primary-hover: var(--c-primary-hover);
+  --color-primary-active: var(--c-primary-active);
+  --color-primary-light: var(--c-brand-soft);
+  --color-primary-subtle: var(--c-primary-subtle);
+  --color-primary-border: var(--c-primary-border);
+  --color-primary-foreground: var(--c-on-primary);
+  --color-secondary: var(--c-header);
+  --color-secondary-foreground: var(--c-on-header);
+  --color-background: var(--c-bg);
+  --color-surface-elevated: var(--c-surface-3);
+  --color-text-primary: var(--c-ink);
+  --color-text-secondary: var(--c-muted);
+  --color-text-muted: var(--c-text-3);
+  --color-border-subtle: var(--c-line-subtle);
+  --color-focus: var(--c-focus);
+  --shadow-xs: var(--e0);
+  --shadow-sm: var(--e1);
+  --shadow-md: var(--e2);
+  --shadow-lg: var(--e3);
+  --shadow-xl: var(--e3);
+  --text-xs: var(--fs-xs);
+  --text-sm: var(--fs-sm);
+  --text-base: var(--fs-md);
+  --text-lg: var(--fs-lg);
+  --text-xl: var(--fs-xl);
+  --text-2xl: var(--fs-2xl);
+  --text-3xl: var(--fs-3xl);
+  --spacing-ctl-sm: var(--control-height-sm);
+  --spacing-ctl-md: var(--control-height-md);
+  --spacing-ctl-lg: var(--control-height-lg);
+  --spacing-chip: var(--chip-height);
+  --spacing-card: var(--card-padding);
+  --spacing-grid: var(--grid-gap);
+  --spacing-section: var(--section-gap);
+  --spacing-header: var(--header-height);
+  --spacing-nav: var(--bottom-nav-height);
+  --spacing-sidebar: var(--sidebar-width);
+  --spacing-icon-sm: var(--icon-size-sm);
+  --spacing-icon-md: var(--icon-size-md);
+  --spacing-icon-lg: var(--icon-size-lg);
+  --spacing-avatar: var(--avatar-size);
+  --radius-sm: var(--radius-s);
+  --radius-md: var(--radius-m);
+  --radius-lg: var(--radius-l);
+  --radius-xl: calc(1.5rem * var(--rk));
+  --radius-2xl: calc(1.75rem * var(--rk));
+  color: var(--c-ink);
+  background-color: var(--c-bg);
 }
 
 /*
@@ -296,7 +399,7 @@ h1, h2, h3 { text-wrap: balance; }
 /* keyboard focus ring; in a layer so a control that draws its own focus style (outline-none + ring) wins */
 @layer base {
   :where(button, a, input, select, textarea, [tabindex]):focus-visible {
-    outline: 3px solid var(--c-accent);
+    outline: 3px solid var(--c-focus);
     outline-offset: 2px;
   }
 }
@@ -346,7 +449,8 @@ h1, h2, h3 { text-wrap: balance; }
     background: linear-gradient(180deg, color-mix(in srgb, var(--c-brand) 86%, #fff 14%) 0%, var(--c-brand) 100%);
     box-shadow: 0 1px 2px rgb(0 0 0 / 0.14), inset 0 1px 0 rgb(255 255 255 / 0.16);
   }
-  .btn-primary:hover:not(:disabled) { filter: brightness(1.07); }
+  .btn-primary:hover:not(:disabled) { background: linear-gradient(180deg, color-mix(in srgb, var(--c-primary-hover) 88%, #fff 12%) 0%, var(--c-primary-hover) 100%); }
+  .btn-primary:active:not(:disabled) { background: var(--c-primary-active); }
   .btn-success {
     background: linear-gradient(180deg, color-mix(in srgb, var(--c-call) 86%, #fff 14%) 0%, var(--c-call) 100%);
     box-shadow: 0 1px 2px rgb(0 0 0 / 0.14), inset 0 1px 0 rgb(255 255 255 / 0.18);
@@ -391,7 +495,7 @@ h1, h2, h3 { text-wrap: balance; }
 }
 
 /* ---------------------------------------------------------------- illustration palette (assets/illustrations.tsx) */
-:root {
+:root, .theme-scope {
   --ill-blob: color-mix(in srgb, var(--c-brand-soft) 85%, var(--c-card));
   --ill-teal: var(--c-brand);
   --ill-teal-deep: color-mix(in srgb, var(--c-brand) 70%, #021015);
@@ -417,7 +521,7 @@ h1, h2, h3 { text-wrap: balance; }
     --ill-shadow: rgb(0 0 0 / 0.35);
   }
 }
-:root[data-theme="dark"] {
+:root[data-theme="dark"], .theme-scope[data-theme="dark"] {
   --ill-blob: color-mix(in srgb, var(--c-brand-soft) 70%, var(--c-card));
   --ill-teal-deep: color-mix(in srgb, var(--c-brand) 55%, #021015);
   --ill-teal-mid: color-mix(in srgb, var(--c-brand) 75%, #ffffff);
@@ -438,4 +542,4 @@ h1, h2, h3 { text-wrap: balance; }
 :root[data-native] body { overscroll-behavior-y: none; }
 
 /* admin charts: drivers = brand teal, owners = saffron (same pairing as the illustrations) */
-:root { --chart-1: var(--c-brand); --chart-2: var(--c-accent); --chart-grid: var(--c-line); }
+:root, .theme-scope { --chart-1: var(--c-brand); --chart-2: var(--c-accent); --chart-grid: var(--c-line); }

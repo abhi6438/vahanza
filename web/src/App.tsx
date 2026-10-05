@@ -20,6 +20,7 @@ import AdminQueue from './pages/admin/AdminQueue'
 import AdminUsers from './pages/admin/AdminUsers'
 import AdminImport from './pages/admin/AdminImport'
 import AdminPosters from './pages/admin/AdminPosters'
+import AdminAppearance from './pages/admin/AdminAppearance'
 import Invite from './pages/Invite'
 import Verify from './pages/Verify'
 import PublicJobs from './pages/PublicJobs'
@@ -147,6 +148,7 @@ function AppRoutes() {
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/import" element={<AdminImport />} />
         <Route path="/admin/posters" element={<AdminPosters />} />
+        <Route path="/admin/appearance" element={<AdminAppearance />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/pin" element={<PinSetup />} />
         <Route path="/otp" element={<Otp />} />

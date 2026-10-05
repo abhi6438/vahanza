@@ -100,12 +100,13 @@ export const Icon = {
 }
 
 // ---------------------------------------------------------------- buttons
-type Variant = 'action' | 'primary' | 'outline' | 'ghost' | 'danger' | 'success' | 'whatsapp'
+type Variant = 'action' | 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success' | 'whatsapp'
 type Size = 'sm' | 'md' | 'lg'
 const VARIANT: Record<Variant, string> = {
   action: 'btn-action text-on-action',
   primary: 'btn-primary text-on-primary',
-  outline: 'border border-border bg-surface text-text shadow-xs hover:border-border-strong hover:bg-surface-2',
+  secondary: 'border border-primary-border/60 bg-primary-soft text-primary hover:border-primary-border hover:bg-primary-light active:bg-primary-subtle',
+  outline: 'border border-border bg-surface text-text shadow-xs hover:border-primary-border hover:bg-primary-subtle',
   ghost: 'text-primary hover:bg-primary-soft',
   danger: 'border border-border bg-surface text-error shadow-xs hover:border-error/40 hover:bg-error-soft',
   success: 'btn-success text-on-success',
@@ -386,7 +387,7 @@ export function Switch({ checked, onChange, label, sub, disabled }: { checked: b
         <span className="block font-medium">{label}</span>
         {sub && <span className="block text-sm text-text-2">{sub}</span>}
       </span>
-      <span aria-hidden className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ${checked ? 'bg-success' : 'bg-border-strong'}`}>
+      <span aria-hidden className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ${checked ? 'bg-primary' : 'bg-border-strong'}`}>
         <span className={`absolute top-0.5 size-6 rounded-full bg-white shadow-[0_1px_3px_rgb(0_0_0/0.25)] transition-[left] duration-300 ease-[var(--ease-spring)] ${checked ? 'left-[22px]' : 'left-0.5'}`} />
       </span>
     </button>
