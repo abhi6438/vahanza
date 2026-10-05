@@ -8,7 +8,7 @@ import { useToast } from '../../components/toast'
 import { Badge, Button, Chip, ConfirmDialog, EmptyState, ErrorState, Icon, Note, Segmented, Skeleton, Switch } from '../../components/ui'
 import { adminTheme, type ThemeState } from '../../lib/api'
 import { applyBrandTheme, brandDefault, paletteFor } from '../../lib/brand'
-import { contrast, isHex, PRESETS, toStyle, type ThemeConfig } from '../../lib/brand-theme'
+import { contrast, isHex, normalise, PRESETS, toStyle, type ThemeConfig } from '../../lib/brand-theme'
 import { useIsDesktop } from '../../lib/layout'
 import { isDarkNow } from '../../lib/theme'
 import { ago } from '../../lib/time'
@@ -34,19 +34,21 @@ export default function AdminAppearance() {
 
   const load = () => {
     setError(false)
-    adminTheme.get().then((s) => { setState(s); setCfg({ ...brandDefault, ...(s.draft || s.published || brandDefault) }) }).catch(() => setError(true))
+    adminTheme.get().then((s) => { setState(s); setCfg(s.draft ? normalise(s.draft) : s.published ? normalise(s.published) : brandDefault) }).catch(() => setError(true))
   }
   useEffect(() => { trackScreen('admin_appearance'); load() }, [])
 
-  const published = state?.published ? { ...brandDefault, ...state.published } : brandDefault
-  const dirty = JSON.stringify(cfg) !== JSON.stringify(state?.draft ? { ...brandDefault, ...state.draft } : published)
+  const published = state?.published ? normalise(state.published) : brandDefault
+  const dirty = JSON.stringify(cfg) !== JSON.stringify(state?.draft ? normalise(state.draft) : published)
   const unpublished = JSON.stringify(cfg) !== JSON.stringify(published)
   const up = (patch: Partial<ThemeConfig>) => setCfg((c) => ({ ...c, ...patch }))
 
   async function run(kind: 'draft' | 'publish' | 'reset') {
     setBusy(kind)
     try {
-      const s = kind === 'draft' ? await adminTheme.saveDraft(cfg) : kind === 'publish' ? await adminTheme.publish(cfg) : await adminTheme.reset()
+      // the header colour goes along for the install manifest (the server has no colour maths)
+      const body = { ...cfg, headerColor: paletteFor(cfg).light.header }
+      const s = kind === 'draft' ? await adminTheme.saveDraft(body) : kind === 'publish' ? await adminTheme.publish(body) : await adminTheme.reset()
       setState(s)
       if (kind === 'reset') setCfg(brandDefault)
       if (kind !== 'draft') {

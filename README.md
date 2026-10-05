@@ -176,7 +176,9 @@ An admin can change the brand colours without editing code or making a new build
 - **Where they go**: everything is CSS variables (`--c-*` → Tailwind names like `bg-primary`, `text-text-2`, `border-border`, plus semantic aliases `--color-primary-hover`, `--color-secondary`, `--color-surface-elevated`, `--color-text-muted`, `--color-focus` …). Buttons, chips, filters, inputs, links, tabs, bottom nav, sidebar, icons, badges, switches, cards, empty states, alerts, dialogs, toasts, illustrations, charts, the Digital Card image and printed QR posters all follow it.
 - **Flow**: change → live preview (real components, light and dark, with the chosen corners / density) → **Save draft** → **Publish**. Every app reads `GET /api/v1/theme` on start and when it comes back to the front (at most every 5 minutes), and keeps the last theme on the device so there is no colour flash. "ब्रांड के अपने रंग पर वापस जाएँ" removes the published theme (back to `brands/<id>.json`). Every save / publish / reset goes into the admin audit trail.
 - Without a published theme the app looks exactly as before (the brand JSON colours).
-- Go-live: run `0012_theme.sql`. The PWA install colour in `vite.config.ts` stays the brand JSON one (it only affects the "Add to home screen" splash).
+- **Install colours**: the web manifest is served by the API (`/app.webmanifest`), so the "Add to home screen" splash and title-bar colour follow the published theme too (phones re-read it from time to time).
+- **APK**: the app's own splash follows the theme (it uses the colours saved on the phone). The very first Android start screen is neutral light / dark on purpose (`web/native/android/res`, copied in by `npm run apk`), because Android draws it before the app can read anything. The launcher icon is the only thing fixed inside the APK — Android doesn't let an app repaint its home-screen icon.
+- Go-live: run `0012_theme.sql`.
 
 ## 2. MSG91
 

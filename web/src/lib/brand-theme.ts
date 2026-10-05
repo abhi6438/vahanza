@@ -19,6 +19,8 @@ export interface ThemeConfig {
   radius: 'sharp' | 'medium' | 'rounded'
   density: 'compact' | 'comfortable' | 'spacious'
   preset?: string | null
+  /** sent along on save: the derived light header colour (install manifest); not an admin setting */
+  headerColor?: string
 }
 export type Palette = Record<string, string>
 export interface Generated { light: Palette; dark: Palette }

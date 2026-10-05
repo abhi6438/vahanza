@@ -9,10 +9,16 @@ per-component colour setting. Draft = being edited by an admin; published = what
   PUT    /admin/theme/draft        save a draft
   POST   /admin/theme/publish      publish (also becomes the draft)
   DELETE /admin/theme/published    back to the brand's own colours (brands/<id>.json)
+  GET    /manifest.webmanifest     web app manifest with the live colours ("Add to home screen")
 """
+import json
+import os
+from functools import lru_cache
+
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi.responses import JSONResponse
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -20,6 +26,8 @@ from ..deps import get_db, tenant_id
 from .admin import _audit, admin_ctx
 
 router = APIRouter(tags=["theme"])
+# served at the site root too (/app.webmanifest, see vercel.json): a manifest must be on the same origin
+root = APIRouter(tags=["theme"])
 HEX = r"^#[0-9a-fA-F]{6}$"
 
 
@@ -32,10 +40,13 @@ class Theme(BaseModel):
     radius: Literal["sharp", "medium", "rounded"] = "medium"
     density: Literal["compact", "comfortable", "spacious"] = "comfortable"
     preset: Optional[str] = Field(None, max_length=20, pattern=r"^[a-z0-9-]*$")
+    # made by the app from the colours above (not an admin setting): the install splash / browser bar
+    # colour in the web app manifest, which the server builds without the colour maths
+    headerColor: Optional[str] = Field(None, pattern=HEX)
 
     def clean(self) -> dict:
         d = self.model_dump()
-        for k in ("primaryColor", "secondaryColor", "accentColor"):
+        for k in ("primaryColor", "secondaryColor", "accentColor", "headerColor"):
             if d[k]:
                 d[k] = d[k].upper()
         return d
@@ -96,3 +107,38 @@ def reset(ctx: dict = Depends(admin_ctx), db=Depends(get_db)):
     )
     _audit(db, ctx, "theme_reset", "theme", ctx["id"], None)
     return _state(db, ctx["tenant"])
+
+
+# ---------------------------------------------------------------- web app manifest
+@lru_cache
+def _brand(tenant: str) -> dict:
+    for base in (os.path.join(os.path.dirname(__file__), "..", "..", ".."), os.getcwd()):
+        path = os.path.join(base, "brands", f"{tenant}.json")
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as f:
+                return json.load(f)
+    return {}
+
+
+@router.get("/manifest.webmanifest")
+@root.get("/app.webmanifest")
+def manifest(db=Depends(get_db), tenant: str = Depends(tenant_id)):
+    """The install manifest, built per request so "Add to home screen" (splash + title bar colour) follows
+    the published theme. Phones re-read it now and then; no new build needed."""
+    b = _brand(tenant)
+    light = (b.get("colors") or {}).get("light") or {}
+    row = db.execute("select name, theme_published from public.tenants where id = %s", (tenant,)).fetchone() or {}
+    t = row.get("theme_published") or {}
+    header = t.get("headerColor") or t.get("secondaryColor") or light.get("header") or "#0A4D5A"
+    name = b.get("name") or row.get("name") or "App"
+    body = {
+        "name": name, "short_name": name, "description": b.get("taglineEn") or "", "lang": "hi",
+        "start_url": "/", "scope": "/", "display": "standalone",
+        "theme_color": header, "background_color": header,
+        "icons": [
+            {"src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+            {"src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+            {"src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+        ],
+    }
+    return JSONResponse(body, media_type="application/manifest+json", headers={"Cache-Control": "public, max-age=300"})

@@ -8,7 +8,7 @@
 // so a phone always accepts the new APK as an update.
 // Output: ../apk/<brand>-<version>.apk
 import { execSync } from 'node:child_process'
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 const web = new URL('..', import.meta.url)
@@ -41,6 +41,16 @@ for (const perm of ['android.permission.USE_BIOMETRIC']) {     // Sprint 11: fin
   if (!manifest.includes(perm)) manifest = manifest.replace('</manifest>', `    <uses-permission android:name="${perm}" />\n</manifest>`)
 }
 writeFileSync(manifestFile, manifest)
+// App icon + start screen from native/android/res (web/android is not in git, so copy on every build).
+// The start screen is neutral (light / dark): it shows for a moment before the app's own splash, which
+// follows the brand colours published in Admin → Appearance. The launcher icon is fixed in the APK.
+cpSync(path('native/android/res'), path('android/app/src/main/res'), { recursive: true })
+const stylesFile = path('android/app/src/main/res/values/styles.xml')
+let styles = readFileSync(stylesFile, 'utf8')
+if (!styles.includes('windowSplashScreenBackground')) {
+  styles = styles.replace(/(<style name="AppTheme\.NoActionBarLaunch"[^>]*>)/, '$1\n        <item name="windowSplashScreenBackground">@color/vz_splash_bg</item>')
+  writeFileSync(stylesFile, styles)
+}
 run('npx cap sync android')
 run(process.platform === 'win32' ? 'gradlew.bat assembleDebug' : './gradlew assembleDebug', path('android'))
 

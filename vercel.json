@@ -9,12 +9,16 @@
   "functions": {
     "api/index.py": {
       "maxDuration": 30,
-      "includeFiles": "shared/**"
+      "includeFiles": "{shared,brands}/**"
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/app.webmanifest",
       "destination": "/api/index"
     },
     {

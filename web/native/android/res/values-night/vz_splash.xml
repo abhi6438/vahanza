@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Neutral start screen: shown for a moment before the app's own (brand-coloured) splash.
+     Neutral on purpose, so it fits whatever brand colour an admin publishes. -->
+<resources>
+    <color name="vz_splash_bg">#0D1214</color>
+</resources>

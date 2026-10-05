@@ -55,3 +55,18 @@ def test_reset(client, db):
     db.respond("select theme_draft", STATE)
     assert client.delete("/api/v1/admin/theme/published", headers=H).status_code == 200
     assert any("theme_published = null" in c[0] for c in db.calls)
+
+
+def test_manifest_follows_published_theme(client, db):
+    db.respond("select name, theme_published", {"name": "Vahanza", "theme_published": dict(GOOD, headerColor="#2C457D")})
+    r = client.get("/app.webmanifest")
+    assert r.status_code == 200 and r.headers["content-type"].startswith("application/manifest+json")
+    m = r.json()
+    assert m["theme_color"] == "#2C457D" and m["background_color"] == "#2C457D" and m["name"] == "Vahanza"
+    assert m["icons"][0]["src"] == "/icons/icon-192.png"
+
+
+def test_manifest_default_brand_colours(client, db):
+    db.respond("select name, theme_published", {"name": "Vahanza", "theme_published": None})
+    m = client.get("/api/v1/manifest.webmanifest").json()
+    assert m["theme_color"] == "#0A4D5A"          # brands/vahanza.json header
