@@ -210,6 +210,15 @@ All sizes come from CSS variables in `web/src/styles.css`, so fixing a size once
 - Density: phone (touch-friendly) → tablet (≥768, more room) → computer (≥1024, smaller text and controls, web only; the APK keeps phone sizes via `data-native`) → large screens (≥1440 / ≥1600) get wider content and more columns, never bigger buttons.
 - Use the shared pieces (`Button size="sm|md|lg"`, `Chip`, `Card`, `TextField`, `AppShell`, `CardGrid`) instead of writing heights by hand.
 
+## Look and feel (premium design system)
+
+- **Fonts** (bundled, work offline in the APK): Anek (Latin + Devanagari) for headings, Mukta for text.
+- **Colours**: brand JSON (`brands/<id>.json`) gives teal, saffron, surfaces and text for light and dark; `styles.css` derives raised surfaces, borders, three shadow levels (`shadow-sm/md/lg`) and the illustration palette (`--ill-*`).
+- **Icons**: one family, [Lucide](https://lucide.dev) (`lucide-react`), used through `Icon.<name>` in `components/ui.tsx`. WhatsApp is the only brand mark drawn by hand.
+- **Illustrations**: `web/src/assets/illustrations.tsx` (discover, driver, fleet, mechanic, verify, bell, search, offline, success, community, lock, hero road) and redrawn vehicles in `assets/vehicles.ts`. All colours are CSS variables, so they follow dark mode and a white-label brand. Dev only: `/dev/gallery` shows every picture and primitive.
+- **Motion**: `press` (tap scale), `card-lift` (hover), `anim-rise / anim-sheet / anim-pop / anim-check`, `live-dot` (available now), sliding bottom-nav pill. All switched off for "reduce motion".
+- **Surfaces**: `surface-hero` (teal header / hero panels with soft light and route lines), `glass` (sticky bars), `icon-tile`.
+
 ## 6. New brand (white label)
 
 1. Copy `brands/vahanza.json` → `brands/<client>.json` and change name, colours, appId, support and grievance details.

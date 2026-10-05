@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { DriverArt, FleetArt } from '../assets/illustrations'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { DriverCard, JobCard, PostStatus } from '../components/cards'
 import { ShareJobButton } from '../components/growth'
@@ -52,7 +53,7 @@ export default function MyPosts() {
     </>
   )
   const empty = (
-    <EmptyState icon={Icon.list} title={t('post.noneTitle')} body={t('post.noneBody')} action={newBtn('md')} />
+    <EmptyState art={<FleetArt />} title={t('post.noneTitle')} body={t('post.noneBody')} action={newBtn('md')} />
   )
 
   return (
@@ -177,7 +178,7 @@ function InterestedList({ drivers, setDrivers, error, retry }: { drivers: Intere
   const lang = i18n.language
   if (error) return <ErrorState onRetry={retry} />
   if (drivers === null) return <CardGrid><CardSkeletons count={2} /></CardGrid>
-  if (!drivers.length) return <EmptyState compact icon={Icon.users} title={t('post.noInterestTitle')} body={t('post.noInterest')} />
+  if (!drivers.length) return <EmptyState compact art={<DriverArt />} title={t('post.noInterestTitle')} body={t('post.noInterest')} />
   return (
     <CardGrid>
       {drivers.map((d) => (

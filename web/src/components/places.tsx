@@ -142,7 +142,7 @@ export function PlaceField({ value, onChange }: { value: PlaceValue | null; onCh
       <div className="flex min-h-ctl-lg items-center gap-2.5 rounded-lg border-2 border-brand bg-brand-soft px-3.5 py-2.5">
         <span className="text-brand">{pinIcon}</span>
         <span className="flex-1 font-semibold">{placeText(value, i18n.language)}</span>
-        <button type="button" className="font-bold text-brand" onClick={() => { onChange(null); setPin(''); lastPin.current = ''; setChooseCity(false) }}>
+        <button type="button" className="font-semibold text-brand" onClick={() => { onChange(null); setPin(''); lastPin.current = ''; setChooseCity(false) }}>
           {t('change')}
         </button>
       </div>
@@ -152,7 +152,7 @@ export function PlaceField({ value, onChange }: { value: PlaceValue | null; onCh
   return (
     <div className="flex flex-col gap-3">
       <button type="button" onClick={useGps} disabled={busy !== ''}
-        className="flex min-h-ctl-lg items-center justify-center gap-2 rounded-lg border-2 border-brand bg-surface px-4 text-base font-bold text-brand disabled:opacity-60">
+        className="flex min-h-ctl-lg items-center justify-center gap-2 rounded-lg border-2 border-brand bg-surface px-4 text-base font-semibold text-brand disabled:opacity-60">
         {pinIcon}
         {busy === 'gps' ? t('place.finding') : t('place.gps')}
       </button>
@@ -181,7 +181,7 @@ export function PlaceField({ value, onChange }: { value: PlaceValue | null; onCh
           }}
         />
       ) : (
-        <button type="button" className="self-start font-bold text-brand underline" onClick={() => setChooseCity(true)}>{t('place.pickCity')}</button>
+        <button type="button" className="self-start font-semibold text-brand underline" onClick={() => setChooseCity(true)}>{t('place.pickCity')}</button>
       )}
     </div>
   )

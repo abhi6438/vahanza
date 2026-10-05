@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { DriverCard, JobCard } from '../components/cards'
-import { TruckArt, WheelArt, WrenchArt } from '../components/role-art'
+import { DriverArt, FleetArt, HeroRoadArt, MechanicArt, DiscoverArt, SearchArt } from '../assets/illustrations'
 import { VehicleArt } from '../components/form'
 import { ShareJobButton } from '../components/growth'
 import { JobItem } from '../components/jobs'
@@ -42,14 +42,14 @@ function PublicFrame({ children }: { children: ReactNode }) {
   const nav = useNavigate()
   return (
     <div className="min-h-full">
-      <header className="sticky top-0 z-30 bg-header text-white" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <header className="surface-hero sticky top-0 z-30 shadow-md" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="mx-auto flex h-header max-w-6xl items-center gap-2 px-4 md:px-6">
           <Link to="/start" className="flex min-w-0 flex-1 items-center gap-2.5">
             <BrandMark size={34} />
-            <span className="truncate font-display text-xl font-bold">{brand.name}</span>
+            <span className="truncate font-display text-xl font-semibold tracking-[-0.01em]">{brand.name}</span>
           </Link>
           <button type="button" onClick={() => void setLang(lang === 'hi' ? 'en' : 'hi')} aria-label={t('settings.language')}
-            className="min-h-ctl-md rounded-md px-2.5 text-sm font-semibold text-white hover:bg-white/15">{lang === 'hi' ? 'English' : 'हिंदी'}</button>
+            className="press inline-flex min-h-ctl-sm items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-white/90 ring-1 ring-inset ring-white/20 hover:bg-white/12 [&>svg]:size-icon-sm">{Icon.globe}{lang === 'hi' ? 'English' : 'हिंदी'}</button>
           <ThemeToggle tone="onDark" />
           <Button variant="action" size="sm" onClick={() => { track('public_login_tap'); nav('/login') }}>{t('pub.login')}</Button>
         </div>
@@ -147,41 +147,41 @@ function Chooser() {
     pub.driverStats().then((s) => setDrivers(s.drivers)).catch(() => {})
   }, [])
   const go = (s: Seeking) => { setSeeking(s); track('seeking_set', { seeking: s }); nav(seekPath(s)) }
-  const card = 'flex w-full items-center gap-4 rounded-lg border border-border bg-surface p-card text-left lg:flex-col lg:items-start lg:gap-3 shadow-sm transition-colors hover:border-primary hover:bg-primary-soft/40'
+  const choices: { key: Seeking; art: ReactNode; title: string; sub: string; foot: ReactNode }[] = [
+    { key: 'job', art: <DriverArt />, title: t('pub.wantWork'), sub: t('pub.wantWorkSub'),
+      foot: jobs ? <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-success"><span className="live-dot" />{t('pub.wantedAll', { n: jobs })}</span> : null },
+    { key: 'driver', art: <FleetArt />, title: t('pub.wantDriver'), sub: t('pub.wantDriverSub'),
+      foot: drivers ? <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-success"><span className="live-dot" />{t('pub.driversReady', { n: drivers })}</span> : null },
+    { key: 'mechanic', art: <MechanicArt />, title: t('pub.wantMechanic'), sub: t('pub.wantMechanicSub'),
+      foot: <span className="inline-flex rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-ink">{t('soon')}</span> },
+  ]
   return (
     <PublicFrame>
       <ReferralWelcome />
-      <div className="mx-auto max-w-xl lg:max-w-4xl">
-        <h1 className="font-display text-3xl font-bold leading-tight">{t('pub.startTitle')}</h1>
-        <p className="mt-1 text-text-2">{t('pub.startSub')}</p>
-        <div className="mt-5 grid gap-3 lg:grid-cols-3 lg:gap-grid">
-          <button type="button" className={card} onClick={() => go('job')}>
-            <span className="grid h-[72px] w-[92px] shrink-0 place-items-center rounded-md bg-brand-soft"><WheelArt /></span>
-            <span className="min-w-0 flex-1">
-              <strong className="block text-xl leading-snug">{t('pub.wantWork')}</strong>
-              <span className="block text-sm text-text-2">{t('pub.wantWorkSub')}</span>
-              {!!jobs && <span className="mt-1 block text-sm font-semibold text-success">{t('pub.wantedAll', { n: jobs })}</span>}
-            </span>
-            <span className="text-text-2 lg:hidden">{Icon.chevron}</span>
-          </button>
-          <button type="button" className={card} onClick={() => go('driver')}>
-            <span className="grid h-[72px] w-[92px] shrink-0 place-items-center rounded-md bg-accent-soft"><TruckArt /></span>
-            <span className="min-w-0 flex-1">
-              <strong className="block text-xl leading-snug">{t('pub.wantDriver')}</strong>
-              <span className="block text-sm text-text-2">{t('pub.wantDriverSub')}</span>
-              {!!drivers && <span className="mt-1 block text-sm font-semibold text-success">{t('pub.driversReady', { n: drivers })}</span>}
-            </span>
-            <span className="text-text-2 lg:hidden">{Icon.chevron}</span>
-          </button>
-          <button type="button" className={card} onClick={() => go('mechanic')}>
-            <span className="grid h-[72px] w-[92px] shrink-0 place-items-center rounded-md bg-surface-2 text-text-2"><WrenchArt /></span>
-            <span className="min-w-0 flex-1">
-              <strong className="block text-xl leading-snug">{t('pub.wantMechanic')}</strong>
-              <span className="block text-sm text-text-2">{t('pub.wantMechanicSub')}</span>
-              <span className="mt-1 inline-block rounded-full bg-accent-soft px-2 text-xs font-bold text-accent-ink">{t('soon')}</span>
-            </span>
-            <span className="text-text-2 lg:hidden">{Icon.chevron}</span>
-          </button>
+      <div className="mx-auto max-w-xl lg:max-w-5xl">
+        <section className="surface-hero anim-rise overflow-hidden rounded-2xl px-5 py-6 shadow-md lg:grid lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-6 lg:px-10 lg:py-8">
+          <div>
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-xs font-semibold text-white/90 ring-1 ring-inset ring-white/15">
+              <span className="text-action [&>svg]:size-3.5">{Icon.verified}</span>{t('auth.point.free')}
+            </p>
+            <h1 className="mt-3 font-display text-3xl font-semibold leading-tight tracking-[-0.015em] lg:text-[2.25rem]">{t('pub.startTitle')}</h1>
+            <p className="mt-1.5 max-w-md text-white/80">{t('pub.startSub')}</p>
+          </div>
+          <div className="mt-4 hidden max-w-sm justify-self-end sm:block lg:mt-0 lg:w-full"><HeroRoadArt /></div>
+        </section>
+        <div className="mt-5 grid gap-3 lg:mt-6 lg:grid-cols-3 lg:gap-grid">
+          {choices.map((c, i) => (
+            <button key={c.key} type="button" onClick={() => go(c.key)} style={{ animationDelay: `${60 + i * 50}ms` }}
+              className="card-lift press anim-rise group flex w-full items-center gap-4 rounded-xl border border-border bg-surface p-3 pr-4 text-left shadow-sm lg:flex-col lg:items-stretch lg:gap-0 lg:p-0">
+              <span className="w-24 shrink-0 lg:w-auto lg:rounded-t-xl lg:bg-surface-2 lg:px-10 lg:pt-4">{c.art}</span>
+              <span className="min-w-0 flex-1 lg:p-5 lg:pt-4">
+                <strong className="block font-display text-lg font-semibold leading-snug tracking-[-0.005em] lg:text-xl">{c.title}</strong>
+                <span className="mt-0.5 block text-sm text-text-2">{c.sub}</span>
+                {c.foot && <span className="mt-2 block">{c.foot}</span>}
+              </span>
+              <span className="icon-tile size-9 rounded-full bg-primary-soft text-primary transition-transform group-hover:translate-x-0.5 lg:hidden">{Icon.chevron}</span>
+            </button>
+          ))}
         </div>
       </div>
     </PublicFrame>
@@ -198,11 +198,11 @@ function SeekSwitch({ value }: { value: Seeking }) {
     { key: 'mechanic', label: t('pub.tabMechanic'), icon: Icon.wrench },
   ]
   return (
-    <div role="tablist" aria-label={t('pub.startTitle')} className="mb-5 grid grid-cols-3 gap-1 rounded-lg border border-border bg-surface p-1 shadow-sm">
+    <div role="tablist" aria-label={t('pub.startTitle')} className="mb-5 grid grid-cols-3 gap-1 rounded-xl bg-surface-2 p-1 ring-1 ring-inset ring-border lg:max-w-xl">
       {opts.map((o) => (
         <button key={o.key} type="button" role="tab" aria-selected={value === o.key}
           onClick={() => { if (o.key !== value) { setSeeking(o.key); track('seeking_set', { seeking: o.key, from: 'tabs' }); nav(seekPath(o.key)) } }}
-          className="flex min-h-ctl-lg flex-col items-center justify-center gap-0.5 rounded-md px-1 text-center text-xs font-semibold leading-tight text-text-2 aria-selected:bg-primary aria-selected:text-on-primary sm:flex-row sm:gap-2 sm:text-sm">
+          className="press flex min-h-ctl-lg flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-center text-xs font-semibold leading-tight text-text-2 hover:text-text aria-selected:bg-surface-3 aria-selected:text-primary aria-selected:shadow-md sm:flex-row sm:gap-2 sm:text-sm">
           <span className="text-[length:var(--icon-size-md)]">{o.icon}</span>{o.label}
         </button>
       ))}
@@ -250,7 +250,7 @@ function DriverList() {
     <PublicFrame>
       <SeekSwitch value="driver" />
       <section className="mb-5">
-        <h1 className="font-display text-3xl font-bold leading-tight">{title}</h1>
+        <h1 className="font-display text-3xl font-semibold leading-tight">{title}</h1>
         <p className="mt-1 text-text-2">{t('pub.driversSub')}</p>
       </section>
       <div role="group" aria-label={t('home.filter')} className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 md:-mx-6 md:px-6 lg:mx-0 lg:flex-wrap lg:px-0">
@@ -263,7 +263,7 @@ function DriverList() {
       </div>
       {error && <ErrorState onRetry={() => setTick((n) => n + 1)} />}
       {items?.length === 0 && (
-        <EmptyState icon={Icon.users} title={t('pub.driversEmptyTitle')} body={t('pub.driversEmptyBody')}
+        <EmptyState art={<DriverArt />} title={t('pub.driversEmptyTitle')} body={t('pub.driversEmptyBody')}
           action={<Button variant="action" onClick={() => askLogin('empty')}>{t('pub.postFree')}</Button>} />
       )}
       <CardGrid>
@@ -275,10 +275,10 @@ function DriverList() {
         ))}
       </CardGrid>
       {more && <Button variant="outline" block className="mt-4" loading={loadingMore} onClick={() => void loadMore()}>{t('home.more')}</Button>}
-      <section className="mt-8 rounded-lg border border-border bg-surface p-4 shadow-sm">
+      <section className="mt-8 rounded-lg border border-border bg-surface p-card shadow-sm">
         <p className="font-semibold">{t('pub.howTitle')}</p>
         <ol className="mt-2 space-y-1.5 text-text-2">
-          {[1, 2, 3].map((n) => <li key={n} className="flex gap-2"><span className="font-bold text-primary">{n}.</span>{t(`pub.ownerHow${n}`)}</li>)}
+          {[1, 2, 3].map((n) => <li key={n} className="flex gap-2"><span className="font-semibold text-primary">{n}.</span>{t(`pub.ownerHow${n}`)}</li>)}
         </ol>
       </section>
       <CityDialog open={pickOpen} onClose={() => setPickOpen(false)} onPick={(c) => { setCity(c); saveCity(c); setPickOpen(false); track('public_city_set') }} />
@@ -294,12 +294,13 @@ function MechanicSoon() {
   return (
     <PublicFrame>
       <SeekSwitch value="mechanic" />
-      <div className="mx-auto max-w-xl rounded-lg border border-border bg-surface p-5 text-center shadow-sm">
-        <span className="mx-auto grid size-14 place-items-center rounded-full bg-accent-soft text-accent-ink"><WrenchArt /></span>
-        <h1 className="mt-3 font-display text-2xl font-bold">{t('pub.mechTitle')}</h1>
+      <div className="anim-rise mx-auto max-w-xl rounded-xl border border-border bg-surface p-5 text-center shadow-sm">
+        <div className="mx-auto w-44">{<MechanicArt />}</div>
+        <span className="mt-1 inline-flex rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-ink">{t('soon')}</span>
+        <h1 className="mt-2 font-display text-2xl font-semibold tracking-[-0.01em]">{t('pub.mechTitle')}</h1>
         <p className="mt-1 text-text-2">{t('pub.mechSub')}</p>
         <ul className="mx-auto mt-4 max-w-sm space-y-2 text-left">
-          {[1, 2, 3].map((n) => <li key={n} className="flex gap-2"><span className="text-success">{Icon.check}</span>{t(`pub.mech${n}`)}</li>)}
+          {[1, 2, 3].map((n) => <li key={n} className="flex items-start gap-2.5"><span className="icon-tile mt-0.5 size-6 rounded-full bg-success-soft text-success [&>svg]:size-3.5">{Icon.check}</span>{t(`pub.mech${n}`)}</li>)}
         </ul>
         <div className="mt-5 grid gap-2 sm:grid-cols-2">
           <Button variant="outline" icon={Icon.briefcase} onClick={() => { setSeeking('job'); nav('/jobs') }}>{t('pub.wantWork')}</Button>
@@ -353,7 +354,7 @@ function JobList() {
       <ReferralWelcome />
       <SeekSwitch value="job" />
       <section className="mb-5">
-        <h1 className="font-display text-3xl font-bold leading-tight">{title}</h1>
+        <h1 className="font-display text-3xl font-semibold leading-tight">{title}</h1>
         <p className="mt-1 text-text-2">{t('pub.sub')}</p>
         {city && stats && !here && stats.drivers > 0 && <p className="mt-1 text-sm text-text-2">{t('pub.noneInCity', { city: cityName })}</p>}
         {stats && (stats.hired || 0) > 0 && (
@@ -372,7 +373,7 @@ function JobList() {
       </div>
       {error && <ErrorState onRetry={() => setTick((n) => n + 1)} />}
       {items?.length === 0 && (
-        <EmptyState icon={Icon.briefcase} title={t('pub.emptyTitle')} body={t('pub.emptyBody')}
+        <EmptyState art={<DiscoverArt />} title={t('pub.emptyTitle')} body={t('pub.emptyBody')}
           action={<Button variant="action" onClick={() => askLogin(undefined, 'empty')}>{t('pub.joinFree')}</Button>} />
       )}
       <CardGrid>
@@ -382,13 +383,13 @@ function JobList() {
       {more && <Button variant="outline" block className="mt-4" loading={loadingMore} onClick={() => void loadMore()}>{t('home.moreJobs')}</Button>}
 
       <section className="mt-8 grid gap-3 md:grid-cols-2">
-        <div className="rounded-lg border border-border bg-surface p-4 shadow-sm">
+        <div className="rounded-lg border border-border bg-surface p-card shadow-sm">
           <p className="font-semibold">{t('pub.howTitle')}</p>
           <ol className="mt-2 space-y-1.5 text-text-2">
-            {[1, 2, 3].map((n) => <li key={n} className="flex gap-2"><span className="font-bold text-primary">{n}.</span>{t(`pub.how${n}`)}</li>)}
+            {[1, 2, 3].map((n) => <li key={n} className="flex gap-2"><span className="font-semibold text-primary">{n}.</span>{t(`pub.how${n}`)}</li>)}
           </ol>
         </div>
-        <div className="flex flex-col rounded-lg border border-border bg-surface p-4 shadow-sm">
+        <div className="flex flex-col rounded-lg border border-border bg-surface p-card shadow-sm">
           <p className="font-semibold">{t('pub.ownerTitle')}</p>
           <p className="mt-1 flex-1 text-text-2">{t('pub.ownerSub')}</p>
           <Button variant="primary" className="mt-3 self-start" icon={Icon.users} onClick={() => { setSeeking('driver'); nav('/drivers') }}>{t('pub.ownerCta')}</Button>
@@ -417,7 +418,7 @@ function OneJob({ code }: { code: string }) {
     <div className="mx-auto max-w-xl">
       {!signedIn && <ReferralWelcome />}
       {error === 'net' && <ErrorState onRetry={() => window.location.reload()} />}
-      {error === 'missing' && <EmptyState icon={Icon.search} title={t('pub.missingTitle')} body={t('pub.missingBody')} />}
+      {error === 'missing' && <EmptyState art={<SearchArt />} title={t('pub.missingTitle')} body={t('pub.missingBody')} />}
       {!job && !error && <CardSkeletons count={1} height="h-80" />}
       {job && job.open === false && <div className="mb-3"><Note tone="warn">{t('pub.filled')}</Note></div>}
       {job && (signedIn && profile?.role === 'driver' && job.open !== false
@@ -425,7 +426,7 @@ function OneJob({ code }: { code: string }) {
         : signedIn
           ? <JobCard data={{ title: t('pub.owner'), verified: job.owner_verified, place: '', post: { ...job, check_flags: [] } }} actions={<ShareJobButton post={job} from="shared" />} />
           : job.open !== false
-            ? <div className="rounded-lg border border-border bg-surface p-4 shadow-sm"><PublicJobCard job={job} full onContact={() => askLogin(code, 'shared')} /></div>
+            ? <div className="rounded-lg border border-border bg-surface p-card shadow-sm"><PublicJobCard job={job} full onContact={() => askLogin(code, 'shared')} /></div>
             : null)}
       <Link to={signedIn ? '/home' : '/jobs'} className="mt-5 flex min-h-ctl-md items-center justify-center gap-1 font-semibold text-primary hover:underline">
         {t('pub.moreJobs')} {Icon.chevron}

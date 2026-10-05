@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { SuccessArt } from '../assets/illustrations'
 import { useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/auth-layout'
 import { PinDots, PinPad } from '../components/pinpad'
 import { useToast } from '../components/toast'
-import { Button, ErrorState, H, Icon, Skeleton, Sub } from '../components/ui'
+import { Button, ErrorState, H, Skeleton, Sub } from '../components/ui'
 import { ApiError } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { bioAvailable, clearPinAsk, clearPinSkipped, getPinAsk, pinApi, saveLocalPin, setLockEnabled, setPinSkipped, tooSimple, type MyPin } from '../lib/pin'
@@ -120,7 +121,7 @@ export default function PinSetup() {
       {!mine && !loadError && <Skeleton className="h-80" />}
       {mine && step === 'done' && (
         <div className="text-center">
-          <span className="mx-auto grid size-14 place-items-center rounded-full bg-success-soft text-[1.75rem] text-success">{Icon.shield}</span>
+          <div className="mx-auto w-40"><SuccessArt /></div>
           <H>{mine.has_pin ? t('pin.doneChanged') : t('pin.doneTitle')}</H>
           <Sub>{isNative ? t(bio ? 'pin.doneBodyBio' : 'pin.doneBodyApp') : t('pin.doneBodyWeb')}</Sub>
           <Button variant="primary" size="lg" block onClick={finish}>{t('continue')}</Button>

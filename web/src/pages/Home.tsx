@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { DiscoverArt, DriverArt, SearchArt } from '../assets/illustrations'
 import { Link } from 'react-router-dom'
 import { DriverCard } from '../components/cards'
 import { DriverContact, usePlaceName, VehicleFilter } from '../components/home'
@@ -46,7 +47,12 @@ function TestBadge() {
 function CityLine({ city, onDark }: { city: string; onDark?: boolean }) {
   const { t } = useTranslation()
   if (!city) return <Link to="/setup?edit" className={onDark ? 'text-white/90 underline' : 'text-primary underline'}>{t('home.setPlace')}</Link>
-  return <span className={`inline-flex items-center gap-1 ${onDark ? 'text-white/85' : ''}`}>{Icon.pin}{city}</span>
+  // a location pill: where the lists are centred
+  return (
+    <Link to="/setup?edit" className={`press inline-flex max-w-full items-center gap-1.5 rounded-full py-1 pl-2 pr-3 text-sm font-medium [&>svg]:size-icon-sm ${onDark ? 'bg-white/12 text-white ring-1 ring-inset ring-white/15 hover:bg-white/18' : 'bg-surface-2 text-text ring-1 ring-inset ring-border hover:ring-border-strong'}`}>
+      <span className={onDark ? 'text-action' : 'text-primary'}>{Icon.pin}</span><span className="truncate">{city}</span><span className="opacity-60 [&>svg]:size-3.5">{Icon.down}</span>
+    </Link>
+  )
 }
 
 /** Generic paged list loader used by both homes. */
@@ -81,11 +87,11 @@ function SafetyTips() {
   const { t } = useTranslation()
   return (
     <Card>
-      <p className="flex items-center gap-2 font-semibold"><span className="text-success">{Icon.shield}</span>{t('safety.title')}</p>
-      <ul className="mt-2 space-y-1.5 text-sm text-text-2">
-        <li>• {t('safety.noAdvance')}</li>
-        <li>• {t('safety.talkFirst')}</li>
-        <li>• {t('safety.report')}</li>
+      <p className="flex items-center gap-2.5 font-display font-semibold"><span className="icon-tile size-8 bg-success-soft text-success [&>svg]:size-icon-sm">{Icon.shield}</span>{t('safety.title')}</p>
+      <ul className="mt-3 space-y-2 text-sm text-text-2">
+        {(['noAdvance', 'talkFirst', 'report'] as const).map((k) => (
+          <li key={k} className="flex gap-2"><span className="mt-0.5 shrink-0 text-success [&>svg]:size-icon-sm">{Icon.check}</span>{t(`safety.${k}`)}</li>
+        ))}
       </ul>
     </Card>
   )
@@ -118,9 +124,9 @@ function OwnerHome() {
       <div className="mt-4">
         {list.error && <ErrorState onRetry={list.retry} />}
         {list.items?.length === 0 && (filtered
-          ? <EmptyState icon={Icon.search} title={t('home.emptyFilterTitle')} body={t('home.noDriversFilter')}
+          ? <EmptyState art={<SearchArt />} title={t('home.emptyFilterTitle')} body={t('home.noDriversFilter')}
               action={<Button variant="outline" onClick={() => { setVehicle(null); setVerified(false) }}>{t('home.clearFilter')}</Button>} />
-          : <EmptyState icon={Icon.users} title={t('home.emptyDriversTitle')} body={t('home.emptyDriversBody')}
+          : <EmptyState art={<DriverArt />} title={t('home.emptyDriversTitle')} body={t('home.emptyDriversBody')}
               action={<ButtonLink to={postTo} onClick={onPost} variant="action" icon={Icon.plus}>{t('home.post')}</ButtonLink>} />)}
         <CardGrid>
           {list.items === null && !list.error && <CardSkeletons count={desktop ? 4 : 2} />}
@@ -142,7 +148,7 @@ function OwnerHome() {
       hero={
         <>
           <HeroBar title={greeting} badge={<TestBadge />} />
-          <p className="-mt-1 mb-3 text-sm"><CityLine city={city} onDark /></p>
+          <p className="-mt-1 mb-4"><CityLine city={city} onDark /></p>
           <ButtonLink to={postTo} onClick={onPost} variant="action" size="lg" block icon={Icon.plus}>{t('home.post')}</ButtonLink>
         </>
       }>
@@ -192,8 +198,8 @@ function AvailabilitySwitch({ onDark }: { onDark?: boolean }) {
   }
   const sw = <Switch checked={available} disabled={busy} onChange={(v) => void toggle(v)}
     label={available ? t('home.available') : t('home.notAvailable')} sub={available ? t('home.availableSub') : t('home.notAvailableSub')} />
-  if (onDark) return <div className="rounded-md bg-white/12 px-3 text-white [&_.text-text-2]:text-white/80">{sw}</div>
-  return <Card className={available ? 'border-success/40' : ''}>{sw}</Card>
+  if (onDark) return <div className="rounded-lg bg-white/10 px-3.5 text-white ring-1 ring-inset ring-white/15 backdrop-blur-sm [&_.text-text-2]:text-white/75">{sw}</div>
+  return <Card className={available ? 'border-success/40 bg-[linear-gradient(135deg,var(--c-success-soft),var(--c-card)_70%)]' : ''}>{sw}</Card>
 }
 
 function DriverHome() {
@@ -214,8 +220,8 @@ function DriverHome() {
 
   const hidden = blocker && (
     <Link to={`/setup?step=${blocker.step}`} onClick={() => track('hidden_banner_tap')}
-      className="flex items-center gap-3 rounded-lg border border-action/50 bg-warning-soft px-4 py-3 font-medium text-warning">
-      <span className="text-[length:var(--icon-size-md)]">{Icon.alert}</span>
+      className="press flex items-center gap-3 rounded-lg border border-action/40 bg-warning-soft px-3 py-2.5 font-medium text-warning shadow-sm">
+      <span className="icon-tile size-9 bg-action text-on-action [&>svg]:size-icon-md">{Icon.alert}</span>
       <span className="flex-1">{t('home.hiddenBanner')}</span>
       {Icon.chevron}
     </Link>
@@ -230,9 +236,9 @@ function DriverHome() {
       <div className="mt-4">
         {list.error && <ErrorState onRetry={list.retry} />}
         {list.items?.length === 0 && (filtered
-          ? <EmptyState icon={Icon.search} title={t('home.emptyFilterTitle')} body={t('home.noJobsFilter')}
+          ? <EmptyState art={<SearchArt />} title={t('home.emptyFilterTitle')} body={t('home.noJobsFilter')}
               action={<Button variant="outline" onClick={() => { setVehicle(null); setVerified(false) }}>{t('home.clearFilter')}</Button>} />
-          : <EmptyState icon={Icon.briefcase} title={t('home.emptyJobsTitle')} body={t('home.emptyJobsBody')}
+          : <EmptyState art={<DiscoverArt />} title={t('home.emptyJobsTitle')} body={t('home.emptyJobsBody')}
               action={<ButtonLink to="/profile" variant="outline">{t('home.improveProfile')}</ButtonLink>} />)}
         <CardGrid>
           {list.items === null && !list.error && <CardSkeletons count={desktop ? 4 : 2} height="h-64" />}
@@ -247,7 +253,7 @@ function DriverHome() {
       hero={
         <>
           <HeroBar title={greeting} badge={<TestBadge />} />
-          <p className="-mt-1 mb-3 text-sm"><CityLine city={city} onDark /></p>
+          <p className="-mt-1 mb-3"><CityLine city={city} onDark /></p>
           <AvailabilitySwitch onDark />
         </>
       }>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { SuccessArt, VerifyArt } from '../assets/illustrations'
 import { shrinkImage } from '../components/photo'
 import { AppShell } from '../components/shell'
 import { useToast } from '../components/toast'
@@ -64,14 +65,14 @@ export default function Verify() {
         {!v && !error && <Skeleton className="h-64" />}
         {v?.verified && (
           <Card className="text-center">
-            <span className="mx-auto grid size-14 place-items-center rounded-full bg-success-soft text-[1.75rem] text-success">{Icon.shield}</span>
+            <div className="mx-auto w-40"><SuccessArt /></div>
             <p className="mt-3 text-xl font-semibold">{t('verify.doneTitle')}</p>
             <p className="mt-1 text-text-2">{t('verify.doneBody')}</p>
           </Card>
         )}
         {v && !v.verified && v.status === 'pending' && (
           <Card className="text-center">
-            <span className="mx-auto grid size-14 place-items-center rounded-full bg-warning-soft text-[1.75rem] text-warning">{Icon.shield}</span>
+            <div className="mx-auto w-40"><VerifyArt /></div>
             <p className="mt-3 text-xl font-semibold">{t('verify.pendingTitle')}</p>
             <p className="mt-1 text-text-2">{t('verify.pendingBody')}</p>
           </Card>
@@ -79,13 +80,16 @@ export default function Verify() {
         {editable && (
           <>
             {v.status === 'rejected' && <Note tone="error">{t('verify.rejected', { reason: v.reason ? t(`verify.reason.${v.reason}`) : '' })}</Note>}
-            <Card>
-              <p className="font-semibold">{t('verify.why')}</p>
+            <Card className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="mx-auto w-36 shrink-0 sm:order-last sm:w-32"><VerifyArt /></div>
+              <div className="min-w-0 flex-1">
+              <p className="font-display font-semibold">{t('verify.why')}</p>
               <ul className="mt-2 space-y-1.5 text-sm text-text-2">
                 <li className="flex gap-2"><span className="text-success">{Icon.check}</span>{t(isDriver ? 'verify.whyDriver' : 'verify.whyOwner')}</li>
                 <li className="flex gap-2"><span className="text-success">{Icon.check}</span>{t('verify.whyBadge')}</li>
                 <li className="flex gap-2"><span className="text-success">{Icon.shield}</span>{t('verify.privacy')}</li>
               </ul>
+              </div>
             </Card>
             <PhotoStep n={1} title={t(isDriver ? 'verify.docDriver' : 'verify.docOwner')} sub={t(isDriver ? 'verify.docDriverSub' : 'verify.docOwnerSub')}
               url={draft?.doc_url} busy={busy === 'doc'} capture="environment" onFile={(f) => void upload('doc', f)} />
@@ -108,7 +112,7 @@ function PhotoStep({ n, title, sub, url, busy, capture, onFile }: { n: number; t
   return (
     <Card>
       <div className="flex items-start gap-3">
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary-soft font-bold text-primary">{n}</span>
+        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary font-semibold text-on-primary shadow-sm">{n}</span>
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{title}</p>
           <p className="text-sm text-text-2">{sub}</p>

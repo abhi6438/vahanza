@@ -174,7 +174,7 @@ export function RatePrompt() {
         <Avatar url={p.photo_url} name={nameShown} size={44} />
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{t('trust.howWas', { name: nameShown })}</p>
-          <p className="text-sm text-text-2">{p.worked ? <span className="font-medium text-success">✓ {t('work.workedTogether')}</span> : t('trust.rateSub')}</p>
+          <p className="text-sm text-text-2">{p.worked ? <span className="inline-flex items-center gap-1 font-medium text-success [&>svg]:size-icon-sm">{Icon.handshake}{t('work.workedTogether')}</span> : t('trust.rateSub')}</p>
         </div>
       </div>
       <div className="mt-2 flex items-center justify-between" role="radiogroup" aria-label={t('trust.stars')}>

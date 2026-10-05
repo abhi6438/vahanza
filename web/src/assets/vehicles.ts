@@ -1,11 +1,72 @@
-// Vehicle pictures (same art as the clickable demo). Static strings, rendered as SVG markup.
+// Vehicle pictures in the Vahanza illustration style (see illustrations.tsx): flat, rounded, brand teal + saffron.
+// Colours are CSS variables (--ill-*), so they follow light / dark mode and a white-label brand.
+// Static strings rendered inline as SVG markup (VehicleArt in components/form.tsx). Grid: 80 × 50.
+const S = 'fill="var(--ill-sun)"'
+const SD = 'fill="var(--ill-sun-deep)"'
+const T = 'fill="var(--ill-teal)"'
+const TD = 'fill="var(--ill-teal-deep)"'
+const TM = 'fill="var(--ill-teal-mid)"'
+const P = 'fill="var(--ill-paper)"'
+const wheel = (cx: number, cy = 41, r = 5.2) =>
+  `<circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--ill-ink)"/><circle cx="${cx}" cy="${cy}" r="${(r * 0.38).toFixed(1)}" fill="var(--ill-line)"/>`
+const shadow = (x = 6, w = 68) => `<rect x="${x}" y="45" width="${w}" height="2.6" rx="1.3" fill="var(--ill-shadow)"/>`
+const svg = (body: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 50">${body}</svg>`
+
 export const VEHICLE_SVG: Record<string, string> = {
-  truck: "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 80 50\"><rect x=\"4\" y=\"12\" width=\"46\" height=\"24\" rx=\"3\" fill=\"#E8742A\"/><rect x=\"4\" y=\"30\" width=\"46\" height=\"4\" fill=\"#0E6B4E\"/><path d=\"M50 18h14l10 10v8H50z\" fill=\"#2F5DA8\"/><path d=\"M54 21h9l6 7H54z\" fill=\"#CFE3F7\"/><circle cx=\"16\" cy=\"40\" r=\"5\" fill=\"#2B2F2C\"/><circle cx=\"16\" cy=\"40\" r=\"2\" fill=\"#D9DDD9\"/><circle cx=\"36\" cy=\"40\" r=\"5\" fill=\"#2B2F2C\"/><circle cx=\"36\" cy=\"40\" r=\"2\" fill=\"#D9DDD9\"/><circle cx=\"64\" cy=\"40\" r=\"5\" fill=\"#2B2F2C\"/><circle cx=\"64\" cy=\"40\" r=\"2\" fill=\"#D9DDD9\"/></svg>",
-  bus: "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 80 50\"><rect x=\"4\" y=\"10\" width=\"72\" height=\"28\" rx=\"6\" fill=\"#14936B\"/><rect x=\"10\" y=\"15\" width=\"10\" height=\"9\" rx=\"1.5\" fill=\"#D8F0E6\"/><rect x=\"24\" y=\"15\" width=\"10\" height=\"9\" rx=\"1.5\" fill=\"#D8F0E6\"/><rect x=\"38\" y=\"15\" width=\"10\" height=\"9\" rx=\"1.5\" fill=\"#D8F0E6\"/><rect x=\"52\" y=\"15\" width=\"10\" height=\"9\" rx=\"1.5\" fill=\"#D8F0E6\"/><rect x=\"66\" y=\"15\" width=\"7\" height=\"14\" rx=\"1.5\" fill=\"#D8F0E6\"/><rect x=\"4\" y=\"30\" width=\"72\" height=\"3\" fill=\"#F4B400\"/><circle cx=\"18\" cy=\"40\" r=\"5\" fill=\"#2B2F2C\"/><circle cx=\"18\" cy=\"40\" r=\"2\" fill=\"#D9DDD9\"/><circle cx=\"62\" cy=\"40\" r=\"5\" fill=\"#2B2F2C\"/><circle cx=\"62\" cy=\"40\" r=\"2\" fill=\"#D9DDD9\"/></svg>",
-  car: "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 80 50\"><path d=\"M8 34v-7l8-2 8-9h26l10 9 10 2v7z\" fill=\"#D33B32\"/><path d=\"M27 18h10v8H20zM41 18h8l8 8H41z\" fill=\"#CFE3F7\"/><circle cx=\"22\" cy=\"36\" r=\"6\" fill=\"#2B2F2C\"/><circle cx=\"22\" cy=\"36\" r=\"2.4000000000000004\" fill=\"#D9DDD9\"/><circle cx=\"58\" cy=\"36\" r=\"6\" fill=\"#2B2F2C\"/><circle cx=\"58\" cy=\"36\" r=\"2.4000000000000004\" fill=\"#D9DDD9\"/></svg>",
-  jcb: "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 80 50\"><rect x=\"22\" y=\"22\" width=\"34\" height=\"14\" rx=\"2\" fill=\"#F4B400\"/><rect x=\"30\" y=\"8\" width=\"16\" height=\"16\" rx=\"2\" fill=\"#F4B400\"/><rect x=\"33\" y=\"11\" width=\"10\" height=\"9\" fill=\"#CFE3F7\"/><path d=\"M56 24l12-12 4 3-11 12z\" fill=\"#D59C00\"/><path d=\"M68 12l8 14h-9z\" fill=\"#5B5F5C\"/><path d=\"M22 30L8 36l2 4 14-4z\" fill=\"#D59C00\"/><circle cx=\"30\" cy=\"40\" r=\"7\" fill=\"#2B2F2C\"/><circle cx=\"30\" cy=\"40\" r=\"2.8000000000000003\" fill=\"#D9DDD9\"/><circle cx=\"50\" cy=\"40\" r=\"7\" fill=\"#2B2F2C\"/><circle cx=\"50\" cy=\"40\" r=\"2.8000000000000003\" fill=\"#D9DDD9\"/></svg>",
-  tractor: "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 80 50\"><rect x=\"30\" y=\"20\" width=\"30\" height=\"14\" rx=\"2\" fill=\"#1F8A4C\"/><rect x=\"18\" y=\"10\" width=\"16\" height=\"22\" rx=\"2\" fill=\"#1F8A4C\"/><rect x=\"21\" y=\"13\" width=\"10\" height=\"9\" fill=\"#CFE3F7\"/><rect x=\"52\" y=\"12\" width=\"3\" height=\"9\" fill=\"#444\"/><circle cx=\"26\" cy=\"36\" r=\"11\" fill=\"#2B2F2C\"/><circle cx=\"26\" cy=\"36\" r=\"4.4\" fill=\"#D9DDD9\"/><circle cx=\"60\" cy=\"39\" r=\"7\" fill=\"#2B2F2C\"/><circle cx=\"60\" cy=\"39\" r=\"2.8000000000000003\" fill=\"#D9DDD9\"/></svg>",
-  auto: "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 80 50\"><path d=\"M16 36V20c0-6 6-10 14-10h16c8 0 14 6 16 14v12z\" fill=\"#F4B400\"/><path d=\"M16 22h46v4H16z\" fill=\"#0E6B4E\"/><path d=\"M34 14h10v8H34zM48 14c5 1 8 4 10 8H48z\" fill=\"#CFE3F7\"/><circle cx=\"22\" cy=\"39\" r=\"6\" fill=\"#2B2F2C\"/><circle cx=\"22\" cy=\"39\" r=\"2.4000000000000004\" fill=\"#D9DDD9\"/><circle cx=\"56\" cy=\"39\" r=\"6\" fill=\"#2B2F2C\"/><circle cx=\"56\" cy=\"39\" r=\"2.4000000000000004\" fill=\"#D9DDD9\"/></svg>",
-  trailer: "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 80 50\"><rect x=\"2\" y=\"12\" width=\"54\" height=\"14\" rx=\"2\" fill=\"#C0392B\"/><rect x=\"2\" y=\"26\" width=\"56\" height=\"6\" fill=\"#7A4A22\"/><path d=\"M58 18h10l9 9v7H58z\" fill=\"#2F5DA8\"/><path d=\"M61 21h6l6 6H61z\" fill=\"#CFE3F7\"/><circle cx=\"9\" cy=\"37\" r=\"4.5\" fill=\"#2B2F2C\"/><circle cx=\"9\" cy=\"37\" r=\"1.8\" fill=\"#D9DDD9\"/><circle cx=\"19\" cy=\"37\" r=\"4.5\" fill=\"#2B2F2C\"/><circle cx=\"19\" cy=\"37\" r=\"1.8\" fill=\"#D9DDD9\"/><circle cx=\"38\" cy=\"37\" r=\"4.5\" fill=\"#2B2F2C\"/><circle cx=\"38\" cy=\"37\" r=\"1.8\" fill=\"#D9DDD9\"/><circle cx=\"48\" cy=\"37\" r=\"4.5\" fill=\"#2B2F2C\"/><circle cx=\"48\" cy=\"37\" r=\"1.8\" fill=\"#D9DDD9\"/><circle cx=\"70\" cy=\"37\" r=\"4.5\" fill=\"#2B2F2C\"/><circle cx=\"70\" cy=\"37\" r=\"1.8\" fill=\"#D9DDD9\"/></svg>",
-  pickup: "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 80 50\"><rect x=\"6\" y=\"22\" width=\"36\" height=\"12\" rx=\"2\" fill=\"#6B7BD1\"/><path d=\"M42 14h16l12 10v10H42z\" fill=\"#4E5DB8\"/><path d=\"M46 17h10l8 7H46z\" fill=\"#CFE3F7\"/><circle cx=\"18\" cy=\"38\" r=\"6\" fill=\"#2B2F2C\"/><circle cx=\"18\" cy=\"38\" r=\"2.4000000000000004\" fill=\"#D9DDD9\"/><circle cx=\"58\" cy=\"38\" r=\"6\" fill=\"#2B2F2C\"/><circle cx=\"58\" cy=\"38\" r=\"2.4000000000000004\" fill=\"#D9DDD9\"/></svg>",
+  truck: svg(
+    shadow() +
+      `<rect x="5" y="11" width="45" height="26" rx="3.5" ${S}/><rect x="5" y="31" width="45" height="3.5" ${SD}/>` +
+      `<path d="M50 17h13.5a3 3 0 0 1 2.3 1.1l7.2 9V37H50z" ${T}/><path d="M53.5 20.5h9l5.5 6.5H53.5z" ${P} opacity=".92"/>` +
+      `<rect x="50" y="33" width="23" height="4" ${TD}/>` + wheel(16) + wheel(37) + wheel(64),
+  ),
+  trailer: svg(
+    shadow(2, 76) +
+      `<rect x="2" y="12" width="53" height="24" rx="3" ${S}/><rect x="2" y="30" width="53" height="3.5" ${SD}/>` +
+      `<rect x="55" y="31" width="4" height="3" ${TD}/>` +
+      `<path d="M59 17h10a3 3 0 0 1 2.3 1.1l6.2 8V37H59z" ${T}/><path d="M62 20h7l4.6 6H62z" ${P} opacity=".92"/>` +
+      wheel(11, 41, 4.6) + wheel(22, 41, 4.6) + wheel(44, 41, 4.6) + wheel(70, 41, 4.6),
+  ),
+  pickup: svg(
+    shadow() +
+      `<path d="M6 27h30v10H6z" ${T}/><rect x="8" y="22" width="24" height="6" rx="1.5" ${S}/>` +
+      `<path d="M36 18h17a3 3 0 0 1 2.4 1.2L62 27h8a3 3 0 0 1 3 3v7H36z" ${T}/>` +
+      `<path d="M40 21h12.5l5 6H40z" ${P} opacity=".92"/><rect x="6" y="33" width="67" height="4" ${TD}/>` +
+      `<rect x="70" y="29" width="3" height="3" rx="1" ${S}/>` + wheel(18) + wheel(60),
+  ),
+  bus: svg(
+    shadow(3, 74) +
+      `<rect x="3" y="9" width="72" height="29" rx="6" ${T}/>` +
+      `<rect x="8" y="14" width="10" height="9" rx="2" ${P} opacity=".9"/><rect x="21" y="14" width="10" height="9" rx="2" ${P} opacity=".9"/>` +
+      `<rect x="34" y="14" width="10" height="9" rx="2" ${P} opacity=".9"/><rect x="47" y="14" width="10" height="9" rx="2" ${P} opacity=".9"/>` +
+      `<rect x="61" y="14" width="10" height="16" rx="2" ${P} opacity=".9"/>` +
+      `<rect x="3" y="27" width="56" height="3.5" ${S}/><rect x="3" y="33" width="72" height="5" rx="2" ${TD}/>` +
+      wheel(17) + wheel(60),
+  ),
+  car: svg(
+    shadow(8, 64) +
+      `<path d="M8 30c0-3 2-5 5-5.5l8-1.5 7-7c1.6-1.6 3.6-2.5 6-2.5h12c2.3 0 4.4 1 6 2.6L58 23l9 1.8c3 .6 5 2.8 5 5.6V37H8z" ${T}/>` +
+      `<path d="M27 23l5.5-5.5c1-1 2.2-1.5 3.6-1.5H42v7z" ${P} opacity=".92"/><path d="M45 16h1.8c1.4 0 2.6.6 3.6 1.6L55.5 23H45z" ${P} opacity=".92"/>` +
+      `<rect x="8" y="32" width="64" height="5" rx="2" ${TD}/><rect x="66" y="27" width="5" height="3" rx="1.5" ${S}/>` +
+      wheel(21, 40) + wheel(59, 40),
+  ),
+  auto: svg(
+    shadow(10, 60) +
+      `<path d="M16 16c0-4 3-7 7-7h22c7 0 13 5 15 12l3 9H16z" ${T}/>` +
+      `<path d="M16 26h47l3 5v6H16z" ${S}/><path d="M22 14h12v12H22z" ${P} opacity=".9"/><path d="M38 14h7c4 0 8 3 10 8l1 4H38z" ${P} opacity=".9"/>` +
+      `<rect x="16" y="33" width="50" height="4" ${SD}/>` + wheel(25) + wheel(58),
+  ),
+  tractor: svg(
+    shadow(6, 68) +
+      `<rect x="40" y="6" width="3" height="10" rx="1.5" ${TD}/>` +
+      `<path d="M30 14h16l4 12h18a3 3 0 0 1 3 3v6H30z" ${T}/><path d="M33 17h10l3 9H33z" ${P} opacity=".9"/>` +
+      `<rect x="30" y="31" width="41" height="4" ${TD}/>` +
+      `<circle cx="22" cy="34" r="12" fill="var(--ill-ink)"/><circle cx="22" cy="34" r="4.5" ${S}/>` + wheel(63, 40, 6),
+  ),
+  jcb: svg(
+    shadow(4, 72) +
+      `<path d="M50 20l16-10 4 4-12 12z" ${SD}/><path d="M66 10l8 8-2 9-9-3z" fill="var(--ill-ink)"/>` +
+      `<path d="M18 12h14a3 3 0 0 1 3 3v12H18z" ${S}/><path d="M21 15h11v8H21z" ${P} opacity=".9"/>` +
+      `<path d="M8 25h50l2 6v6H8z" ${S}/><rect x="8" y="33" width="52" height="4" ${SD}/>` +
+      `<path d="M2 28h7v8H4z" ${TM}/>` + wheel(18, 40, 6) + wheel(48, 40, 6),
+  ),
 }

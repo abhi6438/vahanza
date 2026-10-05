@@ -30,29 +30,31 @@ export default function Profile() {
   const vehicles = fleet.reduce((s, g) => s + g.vehicle_count, 0)
 
   const identity = (
-    <Card className="flex flex-col items-center text-center lg:items-start lg:text-left">
-      <div className="flex w-full flex-col items-center gap-3 lg:flex-row lg:items-center">
-        <Avatar url={profile.photo_url} name={profile.name} size={desktop ? 72 : 80} />
-        <div className="min-w-0">
-          <p className="truncate text-xl font-semibold">{profile.name}</p>
-          <p className="text-sm text-text-2">{isDriver ? t('role.driver') : profile.business_name || t('role.owner')}</p>
+    <Card pad={false} className="overflow-hidden">
+      <div className="surface-hero h-20" aria-hidden />
+      <div className="-mt-10 flex flex-col items-center px-card pb-card text-center lg:items-start lg:text-left">
+        <span className="relative rounded-full ring-4 ring-surface">
+          <Avatar url={profile.photo_url} name={profile.name} size={80} />
+          {profile.verified && <span className="absolute bottom-0.5 right-0.5 grid size-6 place-items-center rounded-full bg-success text-on-success ring-2 ring-surface [&>svg]:size-3.5">{Icon.check}</span>}
+        </span>
+        <p className="mt-2 max-w-full truncate font-display text-xl font-semibold tracking-[-0.01em]">{profile.name}</p>
+        <p className="text-sm text-text-2">{isDriver ? t('role.driver') : profile.business_name || t('role.owner')}</p>
+        <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+          <VerifiedBadge verified={profile.verified} />
+          <RatingBadge />
         </div>
+        <dl className="mt-4 w-full divide-y divide-border rounded-md bg-surface-2 text-sm ring-1 ring-inset ring-border">
+          <div className="flex items-center gap-2.5 px-3 py-2"><dt className="sr-only">{t('profile.phone')}</dt><span className="text-text-3 [&>svg]:size-icon-sm">{Icon.phone}</span><dd className="font-medium">+91 {phone.slice(0, 5)} {phone.slice(5)}</dd></div>
+          {place && <div className="flex items-center gap-2.5 px-3 py-2"><dt className="sr-only">{t('profile.place')}</dt><span className="text-text-3 [&>svg]:size-icon-sm">{Icon.pin}</span><dd className="truncate font-medium">{place}</dd></div>}
+        </dl>
+        {!profile.verified && (
+          <Link to="/verify" onClick={() => track('verify_open', { from: 'profile' })}
+            className="press mt-3 flex w-full items-center gap-3 rounded-md bg-success-soft px-3 py-2 text-left font-semibold text-success ring-1 ring-inset ring-success/20 hover:brightness-[0.98]">
+            <span className="icon-tile size-8 bg-success text-on-success [&>svg]:size-icon-sm">{Icon.shield}</span><span className="flex-1">{t('verify.getBadge')}</span>{Icon.chevron}
+          </Link>
+        )}
+        <ButtonLink to="/setup?edit" variant="outline" block className="mt-3">{t('profile.edit')}</ButtonLink>
       </div>
-      <dl className="mt-4 w-full space-y-2 text-sm">
-        <div className="flex items-center gap-2 lg:justify-start justify-center"><dt className="sr-only">{t('profile.phone')}</dt><span className="text-text-2">{Icon.phone}</span><dd>+91 {phone.slice(0, 5)} {phone.slice(5)}</dd></div>
-        {place && <div className="flex items-center gap-2 lg:justify-start justify-center"><dt className="sr-only">{t('profile.place')}</dt><span className="text-text-2">{Icon.pin}</span><dd>{place}</dd></div>}
-      </dl>
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-        <VerifiedBadge verified={profile.verified} />
-        <RatingBadge />
-      </div>
-      {!profile.verified && (
-        <Link to="/verify" onClick={() => track('verify_open', { from: 'profile' })}
-          className="mt-3 inline-flex min-h-ctl-md items-center gap-2 rounded-md bg-success-soft px-3 font-semibold text-success hover:brightness-95">
-          {Icon.shield}{t('verify.getBadge')}{Icon.chevron}
-        </Link>
-      )}
-      <ButtonLink to="/setup?edit" variant="outline" block className="mt-4">{t('profile.edit')}</ButtonLink>
     </Card>
   )
 
@@ -109,12 +111,12 @@ export default function Profile() {
 }
 
 function Row({ to, href, onClick, icon, label, last, danger }: { to?: string; href?: string; onClick?: () => void; icon: ReactNode; label: string; last?: boolean; danger?: boolean }) {
-  const cls = `flex min-h-ctl-lg w-full items-center gap-3 px-4 text-left font-medium transition-colors hover:bg-surface-2 ${last ? '' : 'border-b border-border'} ${danger ? 'text-error' : ''}`
+  const cls = `group flex min-h-ctl-lg w-full items-center gap-3 px-3 py-1.5 text-left font-medium transition-colors hover:bg-surface-2 ${last ? '' : 'border-b border-border'} ${danger ? 'text-error' : ''}`
   const inner = (
     <>
-      <span className={danger ? '' : 'text-primary'}>{icon}</span>
+      <span className={`icon-tile size-9 [&>svg]:size-icon-md ${danger ? 'bg-error-soft text-error' : 'bg-primary-soft text-primary'}`}>{icon}</span>
       <span className="flex-1">{label}</span>
-      {!danger && <span className="text-text-2">{Icon.chevron}</span>}
+      {!danger && <span className="text-text-3 transition-transform group-hover:translate-x-0.5">{Icon.chevron}</span>}
     </>
   )
   if (to) return <Link to={to} className={cls}>{inner}</Link>

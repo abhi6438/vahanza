@@ -62,8 +62,8 @@ export default function Login() {
         {invited !== null && <div className="mb-4"><Note tone="success" icon={Icon.check}>{invited ? t('login.readyName', { name: invited }) : t('login.ready')}</Note></div>}
         <H>{t('login.title')}</H>
         <Sub>{t('login.sub')}</Sub>
-        <label className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 focus-within:border-brand">
-          <span className="text-xl text-text-2">+91</span>
+        <label className="flex items-center gap-2.5 rounded-lg border border-border bg-surface pl-2 pr-3 shadow-xs transition-[border-color,box-shadow] focus-within:border-primary focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,var(--c-brand)_15%,transparent)]">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-2 px-2.5 py-1.5 text-base font-semibold text-text-2 ring-1 ring-inset ring-border">+91</span>
           <input
             id="phone"
             inputMode="numeric"
@@ -72,7 +72,7 @@ export default function Login() {
             placeholder={t('login.placeholder')}
             value={phone}
             onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-            className="w-full bg-transparent py-3 text-2xl font-semibold tracking-wider outline-none"
+            className="w-full min-w-0 bg-transparent py-3 font-display text-2xl font-semibold tracking-[0.06em] outline-none placeholder:font-sans placeholder:text-lg placeholder:font-normal placeholder:tracking-normal placeholder:text-text-3"
             aria-label={t('login.title')}
           />
         </label>

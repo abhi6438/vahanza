@@ -23,7 +23,7 @@ const W = 1080
 const H = 1920
 const C = brand.colors.light
 const FONT = '"Mukta", "Noto Sans Devanagari", system-ui, sans-serif'
-const DISPLAY = '"Baloo 2", "Mukta", system-ui, sans-serif'
+const DISPLAY = '"Anek Latin Variable", "Anek Devanagari Variable", "Mukta", system-ui, sans-serif'
 
 function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {

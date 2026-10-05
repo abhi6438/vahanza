@@ -24,14 +24,14 @@ async function printPoster(p: Poster, city: string) {
   const qr = await QRCode.toDataURL(link, { width: 640, margin: 1, color: { dark: '#13252A', light: '#ffffff' } })
   const c = brand.colors.light
   const html = `<!doctype html><html lang="hi"><head><meta charset="utf-8"><title>${esc(brand.name)} poster ${esc(p.code)}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Mukta:wght@500;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Anek+Devanagari:wght@600;700&family=Mukta:wght@500;700&display=swap" rel="stylesheet">
 <style>
 @page{size:A4;margin:0}*{box-sizing:border-box}html,body{margin:0;font-family:Mukta,sans-serif;color:${c.ink};-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .p{width:210mm;height:297mm;display:flex;flex-direction:column;overflow:hidden}
-.top{background:${c.header};color:#fff;padding:14mm 14mm 10mm}.brand{font:800 34pt 'Baloo 2','Mukta',sans-serif;margin:0}.tag{font-size:15pt;opacity:.9;margin:2mm 0 0}
+.top{background:${c.header};color:#fff;padding:14mm 14mm 10mm}.brand{font:700 34pt 'Anek Devanagari','Mukta',sans-serif;margin:0}.tag{font-size:15pt;opacity:.9;margin:2mm 0 0}
 .band{height:3mm;background:${c.accent}}
 .mid{flex:1;padding:10mm 14mm;display:flex;flex-direction:column;justify-content:space-between}
-h1{font:800 42pt/1.1 'Baloo 2','Mukta',sans-serif;margin:0}h2{font:600 22pt/1.2 'Baloo 2','Mukta',sans-serif;margin:4mm 0 0;color:${c.brand}}
+h1{font:700 42pt/1.1 'Anek Devanagari','Mukta',sans-serif;margin:0}h2{font:600 22pt/1.2 'Anek Devanagari','Mukta',sans-serif;margin:4mm 0 0;color:${c.brand}}
 .row{display:flex;gap:10mm;align-items:center}.qr{flex:none;width:96mm;height:96mm;border:2mm solid ${c.ink};border-radius:5mm;padding:2mm;background:#fff}
 .qr img{width:100%;height:100%;display:block}ol{margin:0;padding:0;list-style:none;font-size:20pt;line-height:1.35}
 ol li{display:flex;gap:4mm;margin-bottom:5mm}ol b{display:inline-grid;place-items:center;min-width:11mm;height:11mm;border-radius:50%;background:${c.accent};color:#2a1c00;font-size:15pt}

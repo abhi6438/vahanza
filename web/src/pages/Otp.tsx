@@ -86,15 +86,15 @@ export default function Otp() {
           />
           <div className="grid grid-cols-6 gap-2" aria-hidden>
             {Array.from({ length: 6 }, (_, i) => (
-              <div key={i} className={`grid h-14 place-items-center rounded-md border-2 bg-surface text-2xl font-bold ${i === code.length ? 'border-brand' : 'border-border'}`}>
+              <div key={i} className={`grid h-14 place-items-center rounded-lg border bg-surface font-display text-2xl font-semibold shadow-xs transition-[border-color,box-shadow,transform] duration-200 ${i === code.length ? 'border-primary shadow-[0_0_0_4px_color-mix(in_srgb,var(--c-brand)_15%,transparent)]' : code[i] ? 'border-border-strong' : 'border-border'} ${code[i] ? 'anim-check' : ''}`}>
                 {code[i] || ''}
               </div>
             ))}
           </div>
         </label>
         <div className="mt-3 flex items-center justify-between text-sm">
-          {left > 0 ? <span className="text-text-2">{t('otp.resendIn', { s: left })}</span> : <button onClick={resend} className="font-bold text-brand">{t('otp.resend')}</button>}
-          <button onClick={() => nav('/login', { replace: true })} className="font-bold text-brand">{t('otp.change')}</button>
+          {left > 0 ? <span className="text-text-2">{t('otp.resendIn', { s: left })}</span> : <button onClick={resend} className="font-semibold text-brand">{t('otp.resend')}</button>}
+          <button onClick={() => nav('/login', { replace: true })} className="font-semibold text-brand">{t('otp.change')}</button>
         </div>
         {error && <p className="mt-4 text-error">{error}</p>}
       </AuthLayout>

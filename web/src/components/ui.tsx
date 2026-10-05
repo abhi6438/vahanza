@@ -4,87 +4,120 @@
  */
 import { useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import {
+  ArrowRight, Award, Ban, Banknote, BadgeCheck, Bell, Briefcase, Bus, Calendar, Car, Check, ChevronDown, ChevronLeft, ChevronRight,
+  CircleHelp, ClipboardList, Clock, Copy, Download, Eye, FileText, Fingerprint, Flag, Gift, Handshake, Heart, History, House, IdCard,
+  Inbox, Info, Languages, LayoutDashboard, LocateFixed, Lock, LogOut, MapPin, MessageCircle, Mic, Moon, Navigation, Palette, Phone,
+  Plus, Printer, QrCode, RefreshCw, Route, Search, Settings, Share2, ShieldCheck, SlidersHorizontal, Sparkles, Star, Sun, Truck,
+  TriangleAlert, Upload, UserRound, Users, WifiOff, Wrench, X, Zap, type LucideIcon,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, type LinkProps } from 'react-router-dom'
+import { OfflineArt } from '../assets/illustrations'
 import { pushOverlay } from '../lib/layout'
 import { isDarkNow, saveTheme } from '../lib/theme'
 import { track } from '../lib/track'
 
-// ---------------------------------------------------------------- icons (one set, 24px grid, 2px stroke, scale with text)
-const svg = (d: ReactNode, fill = false) => (
-  <svg viewBox="0 0 24 24" width="1.25em" height="1.25em" fill={fill ? 'currentColor' : 'none'} stroke={fill ? 'none' : 'currentColor'}
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden focusable="false">{d}</svg>
+// ---------------------------------------------------------------- icons
+// ONE icon family everywhere: Lucide (24px grid, round caps). Same stroke, same size (scales with text).
+// Pages use Icon.<name>, so the whole app changes style from this one map.
+const lu = (C: LucideIcon, filled = false) => (
+  <C aria-hidden focusable="false" width="1.25em" height="1.25em" strokeWidth={1.85} className={filled ? 'fill-current' : undefined} />
 )
 export const Icon = {
-  back: svg(<path d="M15 5l-7 7 7 7" />),
-  chevron: svg(<path d="M9 5l7 7-7 7" />),
-  down: svg(<path d="M5 9l7 7 7-7" />),
-  close: svg(<path d="M6 6l12 12M18 6L6 18" />),
-  check: svg(<path d="M5 12.5l4.5 4.5L19 7.5" />),
-  settings: svg(<><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></>),
-  pin: svg(<><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z" /><circle cx="12" cy="9" r="2.5" /></>),
-  plus: svg(<path d="M12 5v14M5 12h14" />),
-  search: svg(<><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></>),
-  home: svg(<path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />),
-  list: svg(<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" />),
-  wrench: svg(<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z" />),
-  user: svg(<><circle cx="12" cy="8" r="4" /><path d="M4 21c1-4.5 4.2-7 8-7s7 2.5 8 7" /></>),
-  users: svg(<><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.8-3.8 3.3-6 6.5-6s5.7 2.2 6.5 6" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2c1.9.8 3 2.8 3.5 5.8" /></>),
-  heart: svg(<path d="M12 20s-7.5-4.6-9.3-9.2C1.4 7.4 3.6 4 7 4c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.4 0 5.6 3.4 4.3 6.8C19.5 15.4 12 20 12 20z" />),
-  sparkle: svg(<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z" />),
-  whatsapp: svg(<><path d="M4 20l1.3-4A8 8 0 1 1 8 18.7z" /><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8c-1-.4-1.9-1.3-2.3-2.3l.8-1-1-2z" /></>),
-  sun: svg(<><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>),
-  moon: svg(<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" />),
-  phone: svg(<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />),
-  bell: svg(<><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></>),
-  logout: svg(<><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" /><path d="M10 17l-5-5 5-5M5 12h11" /></>),
-  globe: svg(<><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z" /></>),
-  palette: svg(<><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.8 1.7-1.7 0-1.2-1-1.6-1-2.6 0-.9.8-1.7 1.8-1.7H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z" /><circle cx="7.5" cy="11" r="1" /><circle cx="10" cy="7" r="1" /><circle cx="14.5" cy="7" r="1" /></>),
-  lock: svg(<><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></>),
-  shield: svg(<><path d="M12 3l8 3v6c0 4.6-3.3 8.3-8 9-4.7-.7-8-4.4-8-9V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></>),
-  help: svg(<><circle cx="12" cy="12" r="9" /><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.8M12 17h.01" /></>),
-  info: svg(<><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></>),
-  alert: svg(<><path d="M12 3l9.5 17h-19z" /><path d="M12 10v4M12 17h.01" /></>),
-  ban: svg(<><circle cx="12" cy="12" r="9" /><path d="M5.6 5.6l12.8 12.8" /></>),
-  doc: svg(<><path d="M7 3h7l5 5v13H7z" /><path d="M14 3v5h5M10 13h6M10 17h6" /></>),
-  briefcase: svg(<><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18" /></>),
-  star: svg(<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />, true),
-  truck: svg(<><path d="M3 6h11v10H3zM14 9h4l3 3.5V16h-7" /><circle cx="7" cy="17.5" r="1.8" /><circle cx="17" cy="17.5" r="1.8" /></>),
-  upload: svg(<><path d="M12 16V4M7 9l5-5 5 5" /><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" /></>),
-  chart: svg(<path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />),
-  inbox: svg(<><path d="M3 13l3-8h12l3 8v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" /><path d="M3 13h5l1.5 2.5h5L16 13h5" /></>),
-  refresh: svg(<><path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 4v4h4" /><path d="M4 13a8 8 0 0 0 14.5 4.5L20 16M20 20v-4h-4" /></>),
-  share: svg(<><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" /></>),
-  mic: svg(<><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></>),
-  qr: svg(<><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3" /></>),
-  gift: svg(<><rect x="3" y="8" width="18" height="5" rx="1" /><path d="M5 13v8h14v-8M12 8v13M12 8c-1.5-3.5-6-4-6-1.5S10 8 12 8zM12 8c1.5-3.5 6-4 6-1.5S14 8 12 8z" /></>),
-  eye: svg(<><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></>),
-  idcard: svg(<><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="9" cy="11" r="2.2" /><path d="M5.8 16.2c.6-1.6 1.8-2.5 3.2-2.5s2.6.9 3.2 2.5M14.5 10h4M14.5 13.5h3" /></>),
-  download: svg(<><path d="M12 4v12M7 11l5 5 5-5" /><path d="M4 18v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" /></>),
-  print: svg(<><path d="M7 8V3h10v5" /><rect x="3" y="8" width="18" height="9" rx="2" /><path d="M7 14h10v7H7z" /></>),
-  copy: svg(<><rect x="8" y="8" width="13" height="13" rx="2" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" /></>),
-  wifiOff: svg(<><path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5.2-2.8M19 13a10 10 0 0 0-2.4-1.7M2 8.8a15 15 0 0 1 4.2-2.6M22 8.8A15 15 0 0 0 11 5.1" /><path d="M12 20h.01" /></>),
+  back: lu(ChevronLeft),
+  chevron: lu(ChevronRight),
+  down: lu(ChevronDown),
+  close: lu(X),
+  check: lu(Check),
+  settings: lu(Settings),
+  pin: lu(MapPin),
+  plus: lu(Plus),
+  search: lu(Search),
+  home: lu(House),
+  list: lu(ClipboardList),
+  wrench: lu(Wrench),
+  user: lu(UserRound),
+  users: lu(Users),
+  heart: lu(Heart),
+  sparkle: lu(Sparkles),
+  // WhatsApp is a brand mark, not a Lucide icon: drawn on the same 24px grid
+  whatsapp: (
+    <svg viewBox="0 0 24 24" width="1.25em" height="1.25em" fill="currentColor" aria-hidden focusable="false">
+      <path d="M12 2.2A9.7 9.7 0 0 0 3.7 16.9L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2zm0 17.7a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8 1c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.2.2-.6.2-1.1.1-1.2l-.5-.3z" />
+    </svg>
+  ),
+  sun: lu(Sun),
+  moon: lu(Moon),
+  phone: lu(Phone),
+  bell: lu(Bell),
+  logout: lu(LogOut),
+  globe: lu(Languages),
+  palette: lu(Palette),
+  lock: lu(Lock),
+  shield: lu(ShieldCheck),
+  help: lu(CircleHelp),
+  info: lu(Info),
+  alert: lu(TriangleAlert),
+  ban: lu(Ban),
+  doc: lu(FileText),
+  briefcase: lu(Briefcase),
+  star: lu(Star, true),
+  truck: lu(Truck),
+  upload: lu(Upload),
+  chart: lu(LayoutDashboard),
+  inbox: lu(Inbox),
+  refresh: lu(RefreshCw),
+  share: lu(Share2),
+  mic: lu(Mic),
+  qr: lu(QrCode),
+  gift: lu(Gift),
+  eye: lu(Eye),
+  idcard: lu(IdCard),
+  download: lu(Download),
+  print: lu(Printer),
+  copy: lu(Copy),
+  wifiOff: lu(WifiOff),
+  // added with the premium redesign
+  bus: lu(Bus),
+  car: lu(Car),
+  navigation: lu(Navigation),
+  locate: lu(LocateFixed),
+  verified: lu(BadgeCheck),
+  clock: lu(Clock),
+  filter: lu(SlidersHorizontal),
+  message: lu(MessageCircle),
+  zap: lu(Zap),
+  handshake: lu(Handshake),
+  route: lu(Route),
+  calendar: lu(Calendar),
+  arrow: lu(ArrowRight),
+  award: lu(Award),
+  money: lu(Banknote),
+  fingerprint: lu(Fingerprint),
+  history: lu(History),
+  flag: lu(Flag),
 }
 
 // ---------------------------------------------------------------- buttons
 type Variant = 'action' | 'primary' | 'outline' | 'ghost' | 'danger' | 'success' | 'whatsapp'
 type Size = 'sm' | 'md' | 'lg'
 const VARIANT: Record<Variant, string> = {
-  action: 'bg-action text-on-action hover:brightness-[1.04] active:brightness-95',
-  primary: 'bg-primary text-on-primary hover:brightness-110 active:brightness-95',
-  outline: 'border border-border bg-surface text-text hover:bg-surface-2 active:bg-surface-2',
-  ghost: 'text-primary hover:bg-primary-soft active:bg-primary-soft',
-  danger: 'border border-border bg-surface text-error hover:bg-error-soft',
-  success: 'bg-success text-on-success hover:brightness-110 active:brightness-95',
-  whatsapp: 'border border-border bg-surface text-text hover:bg-surface-2 [&>svg]:text-whatsapp',
+  action: 'btn-action text-on-action',
+  primary: 'btn-primary text-on-primary',
+  outline: 'border border-border bg-surface text-text shadow-xs hover:border-border-strong hover:bg-surface-2',
+  ghost: 'text-primary hover:bg-primary-soft',
+  danger: 'border border-border bg-surface text-error shadow-xs hover:border-error/40 hover:bg-error-soft',
+  success: 'btn-success text-on-success',
+  whatsapp: 'border border-border bg-surface text-text shadow-xs hover:border-whatsapp/40 hover:bg-surface-2 [&>svg]:text-whatsapp',
 }
 const SIZE: Record<Size, string> = {
   sm: 'min-h-ctl-sm px-3 text-sm gap-1.5 rounded-sm [&>svg]:size-icon-sm',
   md: 'min-h-ctl-md px-4 text-base gap-2 rounded-md [&>svg]:size-icon-md',
-  lg: 'min-h-ctl-lg px-5 text-lg gap-2 rounded-md [&>svg]:size-icon-md',
+  lg: 'min-h-ctl-lg px-5 text-base gap-2 rounded-md [&>svg]:size-icon-md',
 }
 export function buttonClass(variant: Variant = 'primary', size: Size = 'md', block = false) {
-  return `inline-flex items-center justify-center font-semibold transition-[filter,background-color] duration-150 select-none [&>svg]:shrink-0 disabled:cursor-not-allowed disabled:opacity-50 ${VARIANT[variant]} ${SIZE[size]} ${block ? 'w-full' : ''}`
+  return `press inline-flex items-center justify-center font-semibold tracking-[0.005em] select-none [&>svg]:shrink-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none ${VARIANT[variant]} ${SIZE[size]} ${block ? 'w-full' : ''}`
 }
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size; block?: boolean; icon?: ReactNode; loading?: boolean }
@@ -103,9 +136,9 @@ export function ButtonLink({ variant = 'primary', size = 'md', block, icon, clas
 
 /** Square icon-only button. Always has an accessible label. */
 export function IconButton({ label, children, tone = 'plain', className = '', ...rest }: ButtonHTMLAttributes<HTMLButtonElement> & { label: string; tone?: 'plain' | 'onDark' | 'outline' }) {
-  const look = tone === 'onDark' ? 'text-white hover:bg-white/15 active:bg-white/20' : tone === 'outline' ? 'border border-border bg-surface text-text hover:bg-surface-2' : 'text-text-2 hover:bg-surface-2 hover:text-text'
+  const look = tone === 'onDark' ? 'rounded-full text-white/90 hover:bg-white/12 hover:text-white active:bg-white/20' : tone === 'outline' ? 'rounded-md border border-border bg-surface text-text shadow-xs hover:border-border-strong hover:bg-surface-2' : 'rounded-full text-text-2 hover:bg-surface-2 hover:text-text'
   return (
-    <button type="button" aria-label={label} title={label} className={`relative grid size-ctl-md shrink-0 place-items-center rounded-md text-[length:var(--icon-size-md)] transition-colors ${look} ${className}`} {...rest}>
+    <button type="button" aria-label={label} title={label} className={`press relative grid size-ctl-md shrink-0 place-items-center text-[length:var(--icon-size-md)] ${look} ${className}`} {...rest}>
       {children}
     </button>
   )
@@ -121,13 +154,14 @@ export function Spinner({ className = '' }: { className?: string }) {
 }
 
 // ---------------------------------------------------------------- surfaces
-export function Card({ children, className = '', as: As = 'section', pad = true, ...rest }: { children: ReactNode; className?: string; as?: 'section' | 'article' | 'div'; pad?: boolean } & React.HTMLAttributes<HTMLElement>) {
-  return <As className={`rounded-lg border border-border bg-surface shadow-sm ${pad ? 'p-card' : ''} ${className}`} {...rest}>{children}</As>
+/** Layered card: raised surface, hairline border, soft shadow. interactive = lifts under the pointer. */
+export function Card({ children, className = '', as: As = 'section', pad = true, interactive, ...rest }: { children: ReactNode; className?: string; as?: 'section' | 'article' | 'div'; pad?: boolean; interactive?: boolean } & React.HTMLAttributes<HTMLElement>) {
+  return <As className={`rounded-lg border border-border bg-surface shadow-sm ${interactive ? 'card-lift' : ''} ${pad ? 'p-card' : ''} ${className}`} {...rest}>{children}</As>
 }
 
 type Tone = 'neutral' | 'primary' | 'success' | 'warning' | 'error' | 'action'
 const TONE: Record<Tone, string> = {
-  neutral: 'bg-surface-2 text-text-2',
+  neutral: 'bg-surface-2 text-text-2 ring-1 ring-inset ring-border',
   primary: 'bg-primary-soft text-primary',
   success: 'bg-success-soft text-success',
   warning: 'bg-warning-soft text-warning',
@@ -136,28 +170,29 @@ const TONE: Record<Tone, string> = {
 }
 /** Small status pill / tag. */
 export function Badge({ tone = 'neutral', icon, children, className = '' }: { tone?: Tone; icon?: ReactNode; children: ReactNode; className?: string }) {
-  return <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold leading-5 ${TONE[tone]} ${className}`}>{icon}{children}</span>
+  return <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold leading-5 [&>svg]:size-[1.1em] ${TONE[tone]} ${className}`}>{icon}{children}</span>
 }
 
 /** Selectable filter chip (aria-pressed). */
 export function Chip({ selected, onClick, children, icon, className = '' }: { selected: boolean; onClick: () => void; children: ReactNode; icon?: ReactNode; className?: string }) {
   return (
     <button type="button" aria-pressed={selected} onClick={onClick}
-      className={`inline-flex h-chip shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-sm font-medium transition-colors ${selected ? 'border-primary bg-primary-soft text-primary' : 'border-border bg-surface text-text hover:bg-surface-2'} ${className}`}>
+      className={`press inline-flex h-chip shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-sm font-medium [&>svg]:size-icon-sm ${selected ? 'border-primary/70 bg-primary-soft text-primary shadow-[inset_0_0_0_1px_var(--c-brand)]' : 'border-border bg-surface text-text shadow-xs hover:border-border-strong hover:bg-surface-2'} ${className}`}>
+      {selected && <span aria-hidden className="anim-check -ml-0.5 grid size-4 place-items-center rounded-full bg-primary text-on-primary [&>svg]:size-3">{Icon.check}</span>}
       {icon}{children}
     </button>
   )
 }
 
 // ---------------------------------------------------------------- headings used inside pages
-export const H = ({ children }: { children: ReactNode }) => <h1 className="font-display text-2xl font-bold leading-tight">{children}</h1>
+export const H = ({ children }: { children: ReactNode }) => <h1 className="font-display text-2xl font-semibold leading-tight tracking-[-0.01em]">{children}</h1>
 export const Sub = ({ children }: { children: ReactNode }) => <p className="mb-section mt-1 text-text-2">{children}</p>
 
 export function SectionTitle({ title, sub, right, className = '' }: { title: ReactNode; sub?: ReactNode; right?: ReactNode; className?: string }) {
   return (
     <div className={`flex items-end justify-between gap-3 ${className}`}>
       <div className="min-w-0">
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="font-display text-lg font-semibold tracking-[-0.005em]">{title}</h2>
         {sub && <p className="text-sm text-text-2">{sub}</p>}
       </div>
       {right}
@@ -177,7 +212,7 @@ export function CardSkeletons({ count = 3, height = 'h-56' }: { count?: number; 
     <>
       <span className="sr-only" role="status">{t('state.loading')}</span>
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} aria-hidden className={`rounded-lg border border-border bg-surface p-4 ${height}`}>
+        <div key={i} aria-hidden className={`rounded-lg border border-border bg-surface p-card shadow-sm ${height}`}>
           <div className="flex gap-3"><Skeleton className="size-12 rounded-full" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-1/2" /><Skeleton className="h-3 w-1/3" /></div></div>
           <Skeleton className="mt-5 h-3 w-4/5" /><Skeleton className="mt-2 h-3 w-3/5" /><Skeleton className="mt-6 h-10 w-full" />
         </div>
@@ -186,11 +221,14 @@ export function CardSkeletons({ count = 3, height = 'h-56' }: { count?: number; 
   )
 }
 
-export function EmptyState({ icon = Icon.inbox, title, body, action, compact }: { icon?: ReactNode; title: ReactNode; body?: ReactNode; action?: ReactNode; compact?: boolean }) {
+/** Empty list: an illustration (art) or an icon, a title that says what is missing, and the next step. */
+export function EmptyState({ icon = Icon.inbox, art, title, body, action, compact }: { icon?: ReactNode; art?: ReactNode; title: ReactNode; body?: ReactNode; action?: ReactNode; compact?: boolean }) {
   return (
-    <div className={`flex flex-col items-center rounded-lg border border-dashed border-border bg-surface text-center ${compact ? 'px-4 py-6' : 'px-6 py-10 lg:py-12'}`}>
-      <span className="grid size-12 place-items-center rounded-full bg-primary-soft text-[length:var(--icon-size-lg)] text-primary">{icon}</span>
-      <p className="mt-3 text-lg font-semibold">{title}</p>
+    <div className={`anim-rise flex flex-col items-center rounded-lg border border-border bg-surface text-center shadow-sm ${compact ? 'px-4 py-6' : 'px-6 py-9 lg:py-11'}`}>
+      {art
+        ? <div className={compact ? 'w-28' : 'w-40 lg:w-44'} aria-hidden>{art}</div>
+        : <span className="icon-tile size-12 bg-primary-soft text-[length:var(--icon-size-lg)] text-primary">{icon}</span>}
+      <p className="mt-3 font-display text-lg font-semibold">{title}</p>
       {body && <p className="mt-1 max-w-sm text-text-2">{body}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
@@ -201,8 +239,8 @@ export function ErrorState({ onRetry, message }: { onRetry?: () => void; message
   const { t } = useTranslation()
   const offline = typeof navigator !== 'undefined' && !navigator.onLine
   return (
-    <div role="alert" className="flex flex-col items-center rounded-lg border border-border bg-surface px-6 py-8 text-center">
-      <span className="grid size-12 place-items-center rounded-full bg-error-soft text-[length:var(--icon-size-lg)] text-error">{offline ? Icon.wifiOff : Icon.alert}</span>
+    <div role="alert" className="anim-rise flex flex-col items-center rounded-lg border border-border bg-surface px-6 py-8 text-center shadow-sm">
+      {offline ? <div className="w-32"><OfflineArt /></div> : <span className="icon-tile size-12 bg-error-soft text-[length:var(--icon-size-lg)] text-error">{Icon.alert}</span>}
       <p className="mt-3 font-semibold">{message || (offline ? t('error.network') : t('error.server'))}</p>
       {onRetry && <Button variant="outline" size="sm" className="mt-3" icon={Icon.refresh} onClick={onRetry}>{t('state.retry')}</Button>}
     </div>
@@ -214,7 +252,7 @@ export function Note({ children, tone = 'info', icon }: { children: ReactNode; t
   const look = { info: 'bg-primary-soft text-text', warn: 'bg-warning-soft text-warning', error: 'bg-error-soft text-error', success: 'bg-success-soft text-success' }[tone]
   const ic = icon ?? (tone === 'error' || tone === 'warn' ? Icon.alert : tone === 'success' ? Icon.check : Icon.info)
   return (
-    <p role={tone === 'error' ? 'alert' : undefined} className={`flex items-start gap-2.5 rounded-md px-3.5 py-2.5 text-[0.95rem] ${look}`}>
+    <p role={tone === 'error' ? 'alert' : undefined} className={`flex items-start gap-2.5 rounded-md px-3.5 py-2.5 text-sm ring-1 ring-inset ring-current/10 ${look}`}>
       <span className="mt-[0.2em] shrink-0">{ic}</span>
       <span className="min-w-0">{children}</span>
     </p>
@@ -259,13 +297,13 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md' }: 
   if (!open) return null
   // rendered on <body>, so no sticky header / sidebar (their own stacking layer) can sit above the dimmed backdrop
   return createPortal(
-    <div className="anim-fade fixed inset-0 z-[70] flex items-end justify-center bg-black/50 md:items-center md:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="anim-fade fixed inset-0 z-[70] flex items-end justify-center bg-[rgb(4_14_17/0.55)] backdrop-blur-[2px] md:items-center md:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div ref={box} role="dialog" aria-modal="true" aria-labelledby={titleId}
-        className={`anim-rise flex max-h-[92dvh] w-full flex-col rounded-t-xl bg-surface shadow-md md:rounded-xl ${size === 'lg' ? 'md:max-w-2xl' : 'md:max-w-md'}`}>
+        className={`anim-sheet flex max-h-[92dvh] w-full flex-col rounded-t-2xl border border-border bg-surface-3 shadow-lg md:rounded-xl ${size === 'lg' ? 'md:max-w-2xl' : 'md:max-w-md'}`}>
         <div className="flex items-start gap-2 px-5 pb-2 pt-3 md:pt-5">
           <div className="min-w-0 flex-1">
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-border md:hidden" aria-hidden />
-            <h2 id={titleId} className="text-xl font-semibold">{title}</h2>
+            <h2 id={titleId} className="font-display text-xl font-semibold tracking-[-0.01em]">{title}</h2>
           </div>
           <IconButton label={t('close')} onClick={onClose} className="-mr-2 hidden md:grid">{Icon.close}</IconButton>
         </div>
@@ -302,10 +340,10 @@ export function TopBar({ title, back = true, right }: { title: string; back?: bo
   const nav = useNavigate()
   const { t } = useTranslation()
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-surface" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+    <header className="glass sticky top-0 z-20 border-b border-border" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       <div className="mx-auto flex h-header max-w-3xl items-center gap-1 px-2 md:px-4">
         {back ? <IconButton label={t('back')} onClick={() => nav(-1)}>{Icon.back}</IconButton> : <span className="w-2" />}
-        <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">{title}</h1>
+        <h1 className="min-w-0 flex-1 truncate font-display text-lg font-semibold">{title}</h1>
         {right}
       </div>
     </header>
@@ -317,7 +355,7 @@ export function Screen({ children, footer }: { children: ReactNode; footer?: Rea
     <div className="flex min-h-full flex-col">
       <main className="mx-auto w-full max-w-xl flex-1 px-4 py-5 md:py-8">{children}</main>
       {footer && (
-        <footer className="sticky bottom-0 border-t border-border bg-bg/95 px-4 pt-3 backdrop-blur" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
+        <footer className="glass sticky bottom-0 border-t border-border px-4 pt-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
           <div className="mx-auto max-w-xl">{footer}</div>
         </footer>
       )}
@@ -346,8 +384,8 @@ export function Switch({ checked, onChange, label, sub, disabled }: { checked: b
         <span className="block font-medium">{label}</span>
         {sub && <span className="block text-sm text-text-2">{sub}</span>}
       </span>
-      <span aria-hidden className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${checked ? 'bg-success' : 'bg-border'}`}>
-        <span className={`absolute top-0.5 size-6 rounded-full bg-white shadow-sm transition-[left] ${checked ? 'left-[22px]' : 'left-0.5'}`} />
+      <span aria-hidden className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ${checked ? 'bg-success' : 'bg-border-strong'}`}>
+        <span className={`absolute top-0.5 size-6 rounded-full bg-white shadow-[0_1px_3px_rgb(0_0_0/0.25)] transition-[left] duration-300 ease-[var(--ease-spring)] ${checked ? 'left-[22px]' : 'left-0.5'}`} />
       </span>
     </button>
   )
@@ -356,10 +394,10 @@ export function Switch({ checked, onChange, label, sub, disabled }: { checked: b
 /** Segmented control (language, theme ...). */
 export function Segmented<K extends string>({ value, onChange, options, label }: { value: K; onChange: (k: K) => void; options: { key: K; label: ReactNode }[]; label: string }) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex w-full rounded-md border border-border bg-surface-2 p-1 sm:w-auto">
+    <div role="radiogroup" aria-label={label} className="inline-flex w-full rounded-md bg-surface-2 p-1 ring-1 ring-inset ring-border sm:w-auto">
       {options.map((o) => (
         <button key={o.key} type="button" role="radio" aria-checked={value === o.key} onClick={() => onChange(o.key)}
-          className={`min-h-ctl-sm flex-1 rounded-sm px-3 py-1 text-sm font-medium leading-tight transition-colors sm:flex-none sm:px-4 ${value === o.key ? 'bg-surface text-primary shadow-sm' : 'text-text-2 hover:text-text'}`}>
+          className={`press min-h-ctl-sm flex-1 rounded-sm px-3 py-1 text-sm font-medium leading-tight sm:flex-none sm:px-4 ${value === o.key ? 'bg-surface-3 font-semibold text-primary shadow-md' : 'text-text-2 hover:text-text'}`}>
           {o.label}
         </button>
       ))}

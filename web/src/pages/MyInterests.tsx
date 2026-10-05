@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { DiscoverArt } from '../assets/illustrations'
 import { JobItem } from '../components/jobs'
 import { PushAsk } from '../components/notify'
 import { AppShell, CardGrid } from '../components/shell'
-import { ButtonLink, CardSkeletons, EmptyState, ErrorState, Icon } from '../components/ui'
+import { ButtonLink, CardSkeletons, EmptyState, ErrorState } from '../components/ui'
 import { myInterests, type Job } from '../lib/api'
 import { trackScreen } from '../lib/track'
 
@@ -29,7 +30,7 @@ export default function MyInterests() {
       )}
       {error && <ErrorState onRetry={load} />}
       {items?.length === 0 && (
-        <EmptyState icon={Icon.heart} title={t('job.noInterestsTitle')} body={t('job.noInterests')}
+        <EmptyState art={<DiscoverArt />} title={t('job.noInterestsTitle')} body={t('job.noInterests')}
           action={<ButtonLink to="/home" variant="primary">{t('job.findJobs')}</ButtonLink>} />
       )}
       <CardGrid>

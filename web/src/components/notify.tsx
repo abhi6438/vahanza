@@ -57,11 +57,11 @@ export function useUnread() {
 export function Bell({ tone = 'plain' }: { tone?: 'plain' | 'onDark' }) {
   const { t } = useTranslation()
   const n = useUnread()
-  const look = tone === 'onDark' ? 'text-white hover:bg-white/15' : 'text-text-2 hover:bg-surface-2 hover:text-text'
+  const look = tone === 'onDark' ? 'text-white/90 hover:bg-white/12 hover:text-white' : 'text-text-2 hover:bg-surface-2 hover:text-text'
   return (
     <Link to="/notifications" aria-label={n ? t('notif.bellN', { n }) : t('notif.title')} title={t('notif.title')}
-      className={`relative grid size-ctl-md shrink-0 place-items-center rounded-md text-[length:var(--icon-size-md)] transition-colors ${look}`}>
-      {Icon.bell}
+      className={`press relative grid size-ctl-md shrink-0 place-items-center rounded-full text-[length:var(--icon-size-md)] ${look}`}>
+      <span className={`grid ${n > 0 ? 'origin-top animate-[vz-ring_2.4s_ease-in-out_1]' : ''}`}>{Icon.bell}</span>
       {n > 0 && <CountDot n={n} ring={tone === 'onDark' ? 'ring-header' : 'ring-surface'} />}
     </Link>
   )
@@ -69,7 +69,7 @@ export function Bell({ tone = 'plain' }: { tone?: 'plain' | 'onDark' }) {
 
 export function CountDot({ n, ring = 'ring-surface', className = 'absolute right-1 top-1' }: { n: number; ring?: string; className?: string }) {
   return (
-    <span className={`grid h-5 min-w-5 place-items-center rounded-full bg-action px-1 text-[0.6875rem] font-bold leading-none text-on-action ring-2 ${ring} ${className}`}>
+    <span className={`anim-check grid h-[1.125rem] min-w-[1.125rem] place-items-center rounded-full bg-action px-1 text-[0.625rem] font-semibold leading-none text-on-action ring-2 ${ring} ${className}`}>
       {n > 9 ? '9+' : n}
     </span>
   )

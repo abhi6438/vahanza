@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { MechanicArt } from '../assets/illustrations'
 import { AppShell } from '../components/shell'
 import { Badge, Button, Icon } from '../components/ui'
 import { storage } from '../lib/storage'
@@ -42,20 +43,20 @@ export default function Soon() {
   return (
     <AppShell title={t('tabs.mechanic')} sub={t('soonPage.sub')} width="default">
       <p className="mb-4 text-text-2 lg:hidden">{t('soonPage.sub')}</p>
-      <section className="mb-4 flex flex-col gap-4 rounded-lg border border-action/50 bg-warning-soft p-5 md:flex-row md:items-center">
-        <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-surface text-[length:var(--icon-size-lg)] text-warning">{Icon.wrench}</span>
+      <section className="anim-rise mb-5 flex flex-col gap-4 overflow-hidden rounded-xl border border-border bg-surface p-5 shadow-sm md:flex-row md:items-center">
+        <span className="w-32 shrink-0 self-center md:w-36"><MechanicArt /></span>
         <div className="min-w-0 flex-1">
           <Badge tone="action">{t('soon')}</Badge>
-          <p className="mt-1 text-xl font-semibold">{en ? first.n[1] : first.n[0]}</p>
+          <p className="mt-2 font-display text-xl font-semibold tracking-[-0.01em]">{en ? first.n[1] : first.n[0]}</p>
           <p className="text-text-2">{en ? first.d[1] : first.d[0]}</p>
         </div>
         <div className="md:w-56">{btn(first.k)}</div>
       </section>
-      <h2 className="mb-3 text-lg font-semibold">{t('soonPage.more')}</h2>
+      <h2 className="mb-3 font-display text-lg font-semibold">{t('soonPage.more')}</h2>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
         {rest.map((s) => (
-          <div key={s.k} className="flex flex-col rounded-lg border border-border bg-surface p-4 shadow-sm">
-            <span className="grid size-10 place-items-center rounded-md bg-primary-soft text-primary">{Icon.sparkle}</span>
+          <div key={s.k} className="card-lift flex flex-col rounded-lg border border-border bg-surface p-card shadow-sm">
+            <span className="icon-tile size-10 bg-primary-soft text-primary">{Icon.sparkle}</span>
             <strong className="mt-2 font-semibold leading-snug">{en ? s.n[1] : s.n[0]}</strong>
             <p className="mt-1 flex-1 text-sm text-text-2">{en ? s.d[1] : s.d[0]}</p>
             {btn(s.k)}

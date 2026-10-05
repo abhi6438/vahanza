@@ -35,7 +35,7 @@ export function Wizard({ step, total, title, sub, children, onBack, footer, canN
     <div className="min-w-0 flex-1">
       <p className="text-sm font-medium text-text-2">{t('setup.stepOf', { n: step + 1, total })}</p>
       <div className="mt-1 flex gap-1" role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={step + 1} aria-label={t('setup.stepOf', { n: step + 1, total })}>
-        {Array.from({ length: total }, (_, i) => <span key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-primary' : 'bg-border'}`} />)}
+        {Array.from({ length: total }, (_, i) => <span key={i} className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-border"><span className={`absolute inset-0 origin-left rounded-full bg-[linear-gradient(90deg,var(--c-brand),var(--ill-teal-mid))] transition-transform duration-500 ease-[var(--ease-out)] ${i <= step ? 'scale-x-100' : 'scale-x-0'}`} /></span>)}
       </div>
     </div>
   )
@@ -48,14 +48,14 @@ export function Wizard({ step, total, title, sub, children, onBack, footer, canN
   )
   const head = (
     <>
-      <h1 className="font-display text-2xl font-bold md:text-3xl">{title}</h1>
+      <h1 className="font-display text-2xl font-semibold tracking-[-0.01em] md:text-3xl">{title}</h1>
       {sub && <p className="mt-1 text-text-2">{sub}</p>}
     </>
   )
   if (desktop) {
     return (
       <div className="flex min-h-full flex-col">
-        <header className="sticky top-0 z-20 border-b border-border bg-surface/95 backdrop-blur">
+        <header className="glass sticky top-0 z-20 border-b border-border">
           <div className="mx-auto flex h-header max-w-3xl items-center gap-4 px-6">
             {back}
             {progress || <span className="flex-1" />}
@@ -63,7 +63,7 @@ export function Wizard({ step, total, title, sub, children, onBack, footer, canN
           </div>
         </header>
         <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-6 py-8">
-          <div className="rounded-xl border border-border bg-surface shadow-sm">
+          <div className="anim-rise rounded-2xl border border-border bg-surface shadow-lg">
             <div className="p-8">
               {head}
               <div className="mt-6">{children}</div>

@@ -22,8 +22,8 @@ export function usePlaceName() {
 export function VehicleFilter({ value, onChange, verified, onVerified }: { value: string | null; onChange: (v: string | null) => void; verified: boolean; onVerified: (v: boolean) => void }) {
   const { t, i18n } = useTranslation()
   return (
-    <div role="group" aria-label={t('home.filter')} className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:-mx-6 md:px-6 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
-      <Chip selected={verified} onClick={() => onVerified(!verified)} icon={<span className={verified ? '' : 'text-success'}>{Icon.shield}</span>}>
+    <div role="group" aria-label={t('home.filter')} className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 py-1 md:-mx-6 md:px-6 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
+      <Chip selected={verified} onClick={() => onVerified(!verified)} icon={verified ? undefined : <span className="text-success [&>svg]:size-icon-sm">{Icon.verified}</span>}>
         {t('home.verifiedOnly')}
       </Chip>
       <span className="mx-1 w-px shrink-0 self-stretch bg-border" aria-hidden />

@@ -10,6 +10,13 @@ import { loadTheme } from './lib/theme'
 import { captureSource } from './lib/share'
 import { isNative } from './lib/platform'
 import { initTracking } from './lib/track'
+// fonts are bundled (the APK works offline): Anek for headings, Mukta for text — both cover Hindi + English
+import '@fontsource-variable/anek-latin/wght.css'
+import '@fontsource-variable/anek-devanagari/wght.css'
+import '@fontsource/mukta/400.css'
+import '@fontsource/mukta/500.css'
+import '@fontsource/mukta/600.css'
+import '@fontsource/mukta/700.css'
 import './styles.css'
 
 applyBrandColors()

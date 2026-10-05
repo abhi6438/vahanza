@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { Icon } from '../../components/ui'
 import { admin, type AdminStats } from '../../lib/api'
 import { placeName, stateName } from '../../lib/catalog'
 import { trackScreen } from '../../lib/track'
@@ -23,33 +24,33 @@ export default function AdminDashboard() {
     <AdminLayout queue={s?.queue}>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className="flex-1" />
-        <div className="flex rounded-md border border-border bg-surface p-1" role="group" aria-label={t('admin.range')}>
+        <div className="flex rounded-md bg-surface-2 p-1 ring-1 ring-inset ring-border" role="group" aria-label={t('admin.range')}>
           {RANGES.map((d) => (
             <button key={d} type="button" aria-pressed={days === d} onClick={() => setDays(d)}
-              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-text-2 aria-pressed:bg-primary aria-pressed:text-on-primary">
+              className="press rounded-sm px-3 py-1.5 text-sm font-semibold text-text-2 hover:text-text aria-pressed:bg-surface-3 aria-pressed:text-primary aria-pressed:shadow-md">
               {t('admin.days', { n: d })}
             </button>
           ))}
         </div>
       </div>
       {error && <p className="rounded-md bg-surface p-4 text-error">{t('error.server')}</p>}
-      {!s && !error && <div className="h-64 animate-pulse rounded-lg bg-surface" />}
+      {!s && !error && <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{Array.from({ length: 8 }, (_, i) => <div key={i} className="skeleton h-28 rounded-lg" />)}</div>}
       {s && (
         <div className="flex flex-col gap-4">
           {s.queue > 0 && (
-            <Link to="/admin/queue" className="flex items-center justify-between rounded-lg bg-accent-soft px-4 py-3 font-semibold text-accent-ink">
-              {t('admin.queueBanner', { n: s.queue })}<span>→</span>
+            <Link to="/admin/queue" className="press flex items-center gap-3 rounded-lg border border-action/40 bg-warning-soft px-3 py-2.5 font-semibold text-accent-ink shadow-sm">
+              <span className="icon-tile size-9 bg-action text-on-action">{Icon.shield}</span><span className="flex-1">{t('admin.queueBanner', { n: s.queue })}</span>{Icon.arrow}
             </Link>
           )}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Tile label={t('admin.k.drivers')} value={s.users.drivers} sub={t('admin.k.listed', { n: nf(s.users.drivers_listed) })} />
-            <Tile label={t('admin.k.owners')} value={s.users.owners} sub={t('admin.k.verified', { n: nf(s.users.verified) })} />
-            <Tile label={t('admin.k.activeToday')} value={s.users.active_today} sub={t('admin.k.onlineNow', { n: nf(s.users.online_now) })} />
-            <Tile label={t('admin.k.newPeriod', { n: s.days })} value={s.users.new_period} sub={t('admin.k.today', { n: nf(s.users.new_today) })} />
-            <Tile label={t('admin.k.livePosts')} value={s.posts.live} sub={t('admin.k.driversWanted', { n: nf(s.posts.drivers_wanted) })} />
-            <Tile label={t('admin.k.interests', { n: s.days })} value={s.interests} />
-            <Tile label={t('admin.k.contacts', { n: s.days })} value={s.contacts.calls + s.contacts.whatsapp} sub={t('admin.k.callWa', { c: nf(s.contacts.calls), w: nf(s.contacts.whatsapp) })} />
-            <Tile label={t('admin.k.time')} value={s.time.avg_minutes} unit={t('admin.min')} sub={t('admin.k.sessions', { n: nf(s.time.sessions) })} />
+            <Tile icon={Icon.user} label={t('admin.k.drivers')} value={s.users.drivers} sub={t('admin.k.listed', { n: nf(s.users.drivers_listed) })} />
+            <Tile icon={Icon.truck} label={t('admin.k.owners')} value={s.users.owners} sub={t('admin.k.verified', { n: nf(s.users.verified) })} />
+            <Tile icon={Icon.zap} label={t('admin.k.activeToday')} value={s.users.active_today} sub={t('admin.k.onlineNow', { n: nf(s.users.online_now) })} />
+            <Tile icon={Icon.sparkle} label={t('admin.k.newPeriod', { n: s.days })} value={s.users.new_period} sub={t('admin.k.today', { n: nf(s.users.new_today) })} />
+            <Tile icon={Icon.list} label={t('admin.k.livePosts')} value={s.posts.live} sub={t('admin.k.driversWanted', { n: nf(s.posts.drivers_wanted) })} />
+            <Tile icon={Icon.heart} label={t('admin.k.interests', { n: s.days })} value={s.interests} />
+            <Tile icon={Icon.phone} label={t('admin.k.contacts', { n: s.days })} value={s.contacts.calls + s.contacts.whatsapp} sub={t('admin.k.callWa', { c: nf(s.contacts.calls), w: nf(s.contacts.whatsapp) })} />
+            <Tile icon={Icon.clock} label={t('admin.k.time')} value={s.time.avg_minutes} unit={t('admin.min')} sub={t('admin.k.sessions', { n: nf(s.time.sessions) })} />
           </div>
 
           <Card title={t('admin.c.signups')}>
@@ -112,11 +113,11 @@ export default function AdminDashboard() {
   )
 }
 
-function Tile({ label, value, sub, unit }: { label: string; value: number; sub?: string; unit?: string }) {
+function Tile({ label, value, sub, unit, icon }: { label: string; value: number; sub?: string; unit?: string; icon?: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
-      <p className="text-sm font-semibold text-text-2">{label}</p>
-      <p className="mt-1 font-display text-3xl font-bold leading-none">
+    <div className="card-lift rounded-lg border border-border bg-surface p-card shadow-sm">
+      <p className="flex items-center gap-2 text-sm font-medium text-text-2">{icon && <span className="icon-tile size-7 bg-primary-soft text-primary [&>svg]:size-icon-sm">{icon}</span>}<span className="min-w-0 truncate">{label}</span></p>
+      <p className="mt-2.5 font-display text-3xl font-semibold leading-none tracking-[-0.02em]">
         {nf(value)}
         {unit && <small className="ml-1 text-base font-semibold text-text-2">{unit}</small>}
       </p>
@@ -127,8 +128,8 @@ function Tile({ label, value, sub, unit }: { label: string; value: number; sub?:
 
 function Card({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg border border-border bg-surface p-4">
-      <h2 className="text-lg font-bold">{title}</h2>
+    <section className="rounded-lg border border-border bg-surface p-card shadow-sm">
+      <h2 className="font-display text-lg font-semibold tracking-[-0.005em]">{title}</h2>
       {sub && <p className="text-sm text-text-2">{sub}</p>}
       <div className="mt-3">{children}</div>
     </section>
@@ -193,7 +194,7 @@ function SignupChart({ data }: { data: AdminStats['signups'] }) {
       {h && hover != null && (
         <div className="pointer-events-none absolute top-6 rounded-md border border-border bg-surface px-3 py-2 text-sm shadow-lg"
           style={{ left: `min(calc(${((PAD_L + hover * band + band / 2) / W) * 100}% + 8px), calc(100% - 150px))` }}>
-          <p className="font-bold">{fmt(h.day)}</p>
+          <p className="font-semibold">{fmt(h.day)}</p>
           <p>{t('role.driver')}: <strong>{h.drivers}</strong></p>
           <p>{t('role.owner')}: <strong>{h.owners}</strong></p>
         </div>
@@ -221,8 +222,8 @@ function BarList({ items, percentOfFirst }: { items: [string, number][]; percent
             <span>{label}</span>
             <span className="font-semibold">{nf(v)}{percentOfFirst && first > 0 && <span className="ml-1.5 font-normal text-text-2">{Math.round((v / first) * 100)}%</span>}</span>
           </div>
-          <div className="h-3 rounded-full" style={{ background: 'var(--chart-grid)' }}>
-            <div className="h-3 rounded-full" style={{ width: `${(v / max) * 100}%`, background: 'var(--chart-1)', minWidth: v ? 6 : 0 }} />
+          <div className="h-2.5 rounded-full" style={{ background: 'var(--chart-grid)' }}>
+            <div className="h-2.5 rounded-full transition-[width] duration-700 ease-[var(--ease-out)]" style={{ width: `${(v / max) * 100}%`, background: 'linear-gradient(90deg, var(--chart-1), color-mix(in srgb, var(--chart-1) 70%, #fff))', minWidth: v ? 6 : 0 }} />
           </div>
         </div>
       ))}
@@ -255,7 +256,7 @@ function CityTable({ rows }: { rows: AdminStats['cities'] }) {
 
 function Mini({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className="rounded-md bg-surface-2 p-3">
+    <div className="rounded-md bg-surface-2 p-3 ring-1 ring-inset ring-border">
       <p className="text-sm text-text-2">{label}</p>
       <p className="mt-0.5 font-display text-2xl font-semibold">{value}</p>
       <p className="text-xs text-text-2">{sub}</p>

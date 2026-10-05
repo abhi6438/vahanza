@@ -50,17 +50,17 @@ export default function Settings() {
     <AppShell title={t('settings.title')} back={!desktop} width="default">
       {desktop ? (
         <div className="grid grid-cols-[260px_minmax(0,1fr)] items-start gap-8">
-          <nav aria-label={t('settings.title')} className="sticky top-[5.5rem] flex flex-col gap-1 rounded-lg border border-border bg-surface p-2 shadow-sm">
+          <nav aria-label={t('settings.title')} className="sticky top-[5.5rem] flex flex-col gap-0.5 rounded-lg border border-border bg-surface p-1.5 shadow-sm">
             {keys.map((k) => (
               <button key={k} type="button" aria-current={current === k ? 'page' : undefined}
                 onClick={() => setParams({ s: k }, { replace: true })}
-                className={`flex min-h-ctl-md items-center gap-3 rounded-md px-3 text-left font-medium transition-colors ${current === k ? 'bg-primary-soft text-primary' : 'text-text-2 hover:bg-surface-2 hover:text-text'}`}>
-                <span className="text-[length:var(--icon-size-md)]">{ICONS[k]}</span>{t(`settings.cat.${k}`)}
+                className={`press flex min-h-ctl-md items-center gap-3 rounded-md px-2 text-left text-sm font-medium ${current === k ? 'bg-primary-soft font-semibold text-primary' : 'text-text-2 hover:bg-surface-2 hover:text-text'}`}>
+                <span className={`icon-tile size-7 [&>svg]:size-icon-sm ${current === k ? 'bg-primary text-on-primary' : 'bg-surface-2 text-text-2'}`}>{ICONS[k]}</span>{t(`settings.cat.${k}`)}
               </button>
             ))}
           </nav>
           <section aria-labelledby="settings-h" className="min-w-0 rounded-lg border border-border bg-surface p-6 shadow-sm xl:p-8">
-            <h2 id="settings-h" className="text-xl font-semibold">{t(`settings.cat.${current}`)}</h2>
+            <h2 id="settings-h" className="font-display text-xl font-semibold tracking-[-0.01em]">{t(`settings.cat.${current}`)}</h2>
             <p className="mb-6 mt-1 text-sm text-text-2">{t(`settings.catSub.${current}`)}</p>
             <div className="max-w-2xl">{body(current)}</div>
           </section>
@@ -69,10 +69,10 @@ export default function Settings() {
         <div className="flex flex-col gap-5">
           {keys.map((k) => (
             <section key={k} aria-labelledby={`s-${k}`}>
-              <h2 id={`s-${k}`} className="mb-2 flex items-center gap-2 px-1 text-sm font-semibold uppercase tracking-wide text-text-2">
-                <span>{ICONS[k]}</span>{t(`settings.cat.${k}`)}
+              <h2 id={`s-${k}`} className="mb-2 flex items-center gap-2.5 px-1 font-display text-base font-semibold">
+                <span className="icon-tile size-7 bg-primary-soft text-primary [&>svg]:size-icon-sm">{ICONS[k]}</span>{t(`settings.cat.${k}`)}
               </h2>
-              <div className="rounded-lg border border-border bg-surface p-4 shadow-sm">{body(k)}</div>
+              <div className="rounded-lg border border-border bg-surface p-card shadow-sm">{body(k)}</div>
             </section>
           ))}
         </div>

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { TextField } from '../../components/form'
 import { admin, type AdminUser } from '../../lib/api'
 import { useToast } from '../../components/toast'
+import { Icon } from '../../components/ui'
 import { placeName } from '../../lib/catalog'
 import { pinApi } from '../../lib/pin'
 import { track, trackScreen } from '../../lib/track'
@@ -51,7 +52,7 @@ export default function AdminUsers() {
       <div className="grid gap-3 md:grid-cols-2">
         {items?.map((u) => <UserRow key={u.id} u={u} onChange={update} />)}
       </div>
-      {more && <button type="button" onClick={() => void loadMore()} className="mt-4 min-h-ctl-md w-full rounded-md border-2 border-brand font-bold text-brand">{t('admin.u.more')}</button>}
+      {more && <button type="button" onClick={() => void loadMore()} className="mt-4 min-h-ctl-md w-full rounded-md border-2 border-brand font-semibold text-brand">{t('admin.u.more')}</button>}
     </AdminLayout>
   )
 }
@@ -89,14 +90,14 @@ function UserRow({ u, onChange }: { u: AdminUser; onChange: (u: AdminUser) => vo
     <div className={`rounded-lg border bg-surface p-4 ${u.blocked ? 'border-danger/40 opacity-75' : 'border-border'}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate font-bold">{u.name || '—'}{u.business_name ? ` · ${u.business_name}` : ''}</p>
+          <p className="truncate font-semibold">{u.name || '—'}{u.business_name ? ` · ${u.business_name}` : ''}</p>
           <p className="text-sm text-text-2">{t(`role.${u.role}`)} · +91 {phone.slice(0, 5)} {phone.slice(5)}</p>
           <p className="text-sm text-text-2">{u.district ? placeName(`${u.district}, ${u.state}`, i18n.language) : t('admin.u.noPlace')}</p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          {u.verified && <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-bold text-call">✓ {t('badge.verified')}</span>}
-          {u.blocked && <span className="rounded-full bg-danger/15 px-2 py-0.5 text-xs font-bold text-error">{t('admin.u.blocked')}</span>}
-          {u.is_test && <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-bold text-accent-ink">{t('home.testAccount')}</span>}
+          {u.verified && <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-xs font-semibold text-success [&>svg]:size-3.5">{Icon.verified}{t('badge.verified')}</span>}
+          {u.blocked && <span className="rounded-full bg-danger/15 px-2 py-0.5 text-xs font-semibold text-error">{t('admin.u.blocked')}</span>}
+          {u.is_test && <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent-ink">{t('home.testAccount')}</span>}
         </div>
       </div>
       <p className="mt-2 text-sm text-text-2">
@@ -105,15 +106,15 @@ function UserRow({ u, onChange }: { u: AdminUser; onChange: (u: AdminUser) => vo
       </p>
       <div className="mt-3 flex gap-2">
         <button type="button" disabled={busy} onClick={() => void patch({ verified: !u.verified })}
-          className="min-h-ctl-sm flex-1 rounded-md border-2 border-brand text-sm font-bold text-brand disabled:opacity-50">
+          className="min-h-ctl-sm flex-1 rounded-md border-2 border-brand text-sm font-semibold text-brand disabled:opacity-50">
           {u.verified ? t('admin.u.unverify') : t('admin.u.verify')}
         </button>
         <button type="button" disabled={busy} onClick={() => void patch({ blocked: !u.blocked })}
-          className="min-h-ctl-sm flex-1 rounded-md border border-border text-sm font-bold text-error disabled:opacity-50">
+          className="min-h-ctl-sm flex-1 rounded-md border border-border text-sm font-semibold text-error disabled:opacity-50">
           {u.blocked ? t('admin.u.unblock') : t('admin.block')}
         </button>
         <button type="button" disabled={busy} onClick={() => void resetPin()} title={t('pin.adminResetSub')}
-          className="min-h-ctl-sm shrink-0 rounded-md border border-border px-3 text-sm font-bold text-text-2 disabled:opacity-50">
+          className="min-h-ctl-sm shrink-0 rounded-md border border-border px-3 text-sm font-semibold text-text-2 disabled:opacity-50">
           {t('pin.adminReset')}
         </button>
       </div>

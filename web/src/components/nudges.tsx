@@ -7,7 +7,7 @@ import type { Completion } from '../lib/completion'
 import { track } from '../lib/track'
 import { PhotoNudge } from './photo'
 import { useAuth } from '../lib/auth'
-import { ButtonLink, Note } from './ui'
+import { ButtonLink, Icon, Note } from './ui'
 
 const SNOOZE_DAYS = 3
 
@@ -41,13 +41,13 @@ export function CompleteCard({ role, percent, missing, listable, compact }: { ro
   const href = (step: string) => (step === 'about' ? '/setup?edit' : `/setup?step=${step}`)
   const shown = compact ? missing.slice(0, 3) : missing
   return (
-    <section className="rounded-lg border border-border bg-surface p-4 shadow-sm md:p-5">
+    <section className="rounded-lg border border-border bg-surface p-card shadow-sm">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-semibold">{t('complete.title', { n: percent })}</h2>
-        <span className="font-display text-xl font-bold text-primary">{percent}%</span>
+        <span className="font-display text-xl font-semibold text-primary">{percent}%</span>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label={t('complete.title', { n: percent })}>
-        <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${percent}%` }} />
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2 ring-1 ring-inset ring-border" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label={t('complete.title', { n: percent })}>
+        <div className="h-full rounded-full bg-[linear-gradient(90deg,var(--c-brand),var(--ill-teal-mid))] transition-[width] duration-700 ease-[var(--ease-out)]" style={{ width: `${percent}%` }} />
       </div>
       {!compact && <p className="mt-3 text-sm text-text-2">{t(role === 'driver' ? 'complete.whyDriver' : 'complete.whyOwner')}</p>}
       {!listable && role === 'driver' && <div className="mt-3"><Note tone="warn">{t('complete.hiddenDriver')}</Note></div>}
@@ -80,14 +80,15 @@ export function PinNudge() {
   }, [])
   if (!show) return null
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary-soft p-card">
+    <div className="anim-rise flex items-start gap-3 rounded-lg border border-primary/25 bg-[linear-gradient(135deg,var(--c-brand-soft),var(--c-card))] p-card shadow-sm">
+      <span className="icon-tile size-10 bg-primary text-on-primary shadow-sm">{Icon.lock}</span>
       <div className="min-w-0 flex-1">
         <p className="font-semibold">{t('pin.nudgeTitle')}</p>
         <p className="text-sm text-text-2">{t('pin.nudgeSub')}</p>
         <ButtonLink to="/pin" variant="primary" size="sm" className="mt-2" onClick={() => track('pin_nudge_tap')}>{t('pin.create')}</ButtonLink>
       </div>
-      <button type="button" aria-label={t('close')} className="grid size-ctl-sm shrink-0 place-items-center rounded-md text-text-2 hover:bg-surface"
-        onClick={() => { setShow(false); void storage.setItem('vz-pin-nudge-off', String(Date.now())) }}>✕</button>
+      <button type="button" aria-label={t('close')} className="press -mr-1 -mt-1 grid size-ctl-sm shrink-0 place-items-center rounded-full text-text-2 hover:bg-surface"
+        onClick={() => { setShow(false); void storage.setItem('vz-pin-nudge-off', String(Date.now())) }}>{Icon.close}</button>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { AppLock } from './components/app-lock'
 import { getPinAsk, pinApi, setPinAsk } from './lib/pin'
 import MpinLogin from './pages/MpinLogin'
 import PinSetup from './pages/PinSetup'
+import DevGallery from './pages/DevGallery'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './lib/auth'
@@ -107,6 +108,7 @@ function AppRoutes() {
     return () => { alive = false }
   }, [status, profile?.setup_done, profile?.role]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  if (import.meta.env.DEV && loc.pathname === '/dev/gallery') return <DevGallery />
   if (status === 'loading') return <Splash />
   if (status === 'blocked') return <div className="grid h-full place-items-center p-6 text-center text-lg">{t('error.blocked')}</div>
   if (OPEN.includes(loc.pathname)) return <Routes><Route path="/legal" element={<Legal />} /></Routes>

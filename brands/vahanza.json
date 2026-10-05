@@ -6,40 +6,48 @@
   "taglineEn": "Drivers and vehicle owners, in one place",
   "appId": "in.vahanza.app",
   "supportPhone": "+910000000000",
-  "grievanceOfficer": { "name": "To be confirmed", "email": "grievance@example.in" },
+  "grievanceOfficer": {
+    "name": "To be confirmed",
+    "email": "grievance@example.in"
+  },
   "colors": {
     "light": {
-      "brand": "#0E5A6B",
-      "brandDark": "#0A4452",
-      "brandSoft": "#DCEEF1",
-      "header": "#0E5A6B",
-      "accent": "#F4A21A",
-      "accentSoft": "#FFF1D6",
-      "accentInk": "#6B4500",
-      "call": "#1E8E4F",
-      "ink": "#13252A",
-      "muted": "#5B6E73",
-      "line": "#DCE5E7",
-      "bg": "#F4F7F7",
+      "brand": "#0D5C6C",
+      "brandDark": "#083F4A",
+      "brandSoft": "#E1EFF1",
+      "header": "#0A4D5A",
+      "headerAlt": "#0F6A7A",
+      "accent": "#F5A623",
+      "accentSoft": "#FFF2DA",
+      "accentInk": "#7A4B00",
+      "call": "#178A4A",
+      "ink": "#0F2328",
+      "muted": "#566A70",
+      "line": "#E0E7E8",
+      "bg": "#F2F5F5",
       "card": "#FFFFFF",
-      "danger": "#C8372D"
+      "danger": "#C63A31"
     },
     "dark": {
-      "brand": "#2A93A8",
-      "brandDark": "#8FD6E3",
-      "brandSoft": "#123A42",
-      "header": "#12424D",
-      "accent": "#F2AE33",
-      "accentSoft": "#3A2E14",
-      "accentInk": "#F6D9A0",
-      "call": "#23A35C",
-      "ink": "#E4EEF0",
-      "muted": "#9DB3B8",
-      "line": "#26393E",
-      "bg": "#0D1618",
-      "card": "#152327",
-      "danger": "#E5675C"
+      "brand": "#3FA9BE",
+      "brandDark": "#9EDDE9",
+      "brandSoft": "#0F3840",
+      "header": "#0B2B32",
+      "headerAlt": "#14505C",
+      "accent": "#F6B544",
+      "accentSoft": "#33270E",
+      "accentInk": "#F7D89C",
+      "call": "#33B46E",
+      "ink": "#E7F0F1",
+      "muted": "#93A9AE",
+      "line": "#1F3338",
+      "bg": "#081214",
+      "card": "#0F1D21",
+      "danger": "#EA6A5F"
     }
   },
-  "languages": ["hi", "en"]
+  "languages": [
+    "hi",
+    "en"
+  ]
 }

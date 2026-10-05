@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { brand } from '../lib/brand'
 import { useIsDesktop } from '../lib/layout'
 import { BrandMark } from './shell'
+import { HeroRoadArt } from '../assets/illustrations'
 import { Icon, IconButton, Screen, ThemeToggle, TopBar } from './ui'
 
 /**
@@ -26,24 +27,24 @@ export function AuthLayout({ title, back = true, footer, children }: { title: st
   const en = i18n.language === 'en'
   return (
     <div className="grid min-h-full grid-cols-[minmax(380px,5fr)_7fr]">
-      <aside className="relative flex flex-col justify-between overflow-hidden bg-header p-10 text-white xl:p-14">
+      <aside className="surface-hero sticky top-0 flex h-dvh flex-col justify-between overflow-hidden p-10 xl:p-14">
         <div className="flex items-center gap-3">
-          <BrandMark size={44} />
-          <span className="font-display text-2xl font-bold">{brand.name}</span>
+          <BrandMark size={42} />
+          <span className="font-display text-2xl font-semibold tracking-[-0.01em]">{brand.name}</span>
         </div>
         <div className="max-w-md">
-          <p className="font-display text-4xl font-bold leading-tight">{en ? brand.taglineEn : brand.taglineHi}</p>
-          <ul className="mt-8 space-y-4 text-lg text-white/90">
-            {(['free', 'direct', 'checked'] as const).map((k) => (
-              <li key={k} className="flex items-start gap-3">
-                <span className="mt-1 grid size-7 shrink-0 place-items-center rounded-full bg-white/15 text-action">{Icon.check}</span>
+          <p className="font-display text-[2.5rem] font-semibold leading-[1.1] tracking-[-0.02em]">{en ? brand.taglineEn : brand.taglineHi}</p>
+          <ul className="mt-7 space-y-3.5 text-white/90">
+            {([['free', Icon.money], ['direct', Icon.phone], ['checked', Icon.shield]] as const).map(([k, ic]) => (
+              <li key={k} className="flex items-center gap-3">
+                <span className="icon-tile size-9 bg-white/10 text-action ring-1 ring-inset ring-white/15 [&>svg]:size-icon-md">{ic}</span>
                 <span>{t(`auth.point.${k}`)}</span>
               </li>
             ))}
           </ul>
+          <div className="mt-8 -mx-2 max-w-sm"><HeroRoadArt /></div>
         </div>
-        <p className="text-sm text-white/70">{brand.nameHi} · {en ? brand.taglineHi : brand.taglineEn}</p>
-        <svg aria-hidden viewBox="0 0 200 200" className="pointer-events-none absolute -bottom-24 -right-24 size-96 text-white/5"><circle cx="100" cy="100" r="100" fill="currentColor" /></svg>
+        <p className="text-sm text-white/60">{brand.nameHi} · {en ? brand.taglineHi : brand.taglineEn}</p>
       </aside>
       <div className="flex min-w-0 flex-col">
         <header className="flex h-header items-center gap-2 px-8">
@@ -52,7 +53,7 @@ export function AuthLayout({ title, back = true, footer, children }: { title: st
           <ThemeToggle />
         </header>
         <main id="main" className="flex flex-1 items-center justify-center px-8 pb-16">
-          <div className="w-full max-w-md">
+          <div className="anim-rise w-full max-w-md rounded-2xl border border-border bg-surface p-8 shadow-lg">
             {children}
             {footer && <div className="mt-8">{footer}</div>}
           </div>

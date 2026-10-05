@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* dark: utilities follow the app's own theme switch (data-theme), and the phone setting when on "system" */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) { @slot; }
+  @media (prefers-color-scheme: dark) { &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) { @slot; } }
+}
+
 /*
  * Design tokens.
  * Brand colours come from brands/<id>.json as --c-* variables (lib/brand.ts writes light, dark and system).
@@ -48,9 +54,26 @@
   --color-error-soft: var(--c-error-soft);
   --color-on-error: var(--c-on-error);
   --color-whatsapp: #1b9e4b;
+  --color-header-to: var(--c-header-alt);
+  --color-surface-3: var(--c-surface-3);
+  --color-border-strong: var(--c-line-strong);
+  --color-text-3: var(--c-text-3);
+  --color-on-header: #ffffff;
+  --color-action-soft: var(--c-accent-soft);
+
+  /* elevation: e1 resting card · e2 raised / hover · e3 floating (dialogs, menus, bottom nav) */
+  --shadow-xs: var(--e0);
+  --shadow-sm: var(--e1);
+  --shadow-md: var(--e2);
+  --shadow-lg: var(--e3);
+  --shadow-xl: var(--e3);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   --font-sans: "Mukta", "Noto Sans Devanagari", system-ui, sans-serif;
-  --font-display: "Baloo 2", "Mukta", system-ui, sans-serif;
+  /* headings: Anek — a modern Indian type family, Latin and Devanagari drawn as one */
+  --font-display: "Anek Latin Variable", "Anek Devanagari Variable", "Mukta", system-ui, sans-serif;
 
   /* Type scale: the sizes live in the density tokens below (--fs-*), so every text-* class follows the
      device: comfortable on phones, a little denser on desktop, never bigger on huge screens. */
@@ -91,6 +114,7 @@
   --radius-md: var(--radius-m);
   --radius-lg: var(--radius-l);
   --radius-xl: 1.5rem;
+  --radius-2xl: 1.75rem;
 
   /* two elevation levels only */
   --shadow-sm: 0 1px 2px rgb(16 40 45 / 0.06), 0 1px 1px rgb(16 40 45 / 0.04);
@@ -141,7 +165,7 @@
 
   --radius-s: 0.5rem;
   --radius-m: 0.75rem;
-  --radius-l: 1rem;
+  --radius-l: 1.125rem;   /* cards */
 }
 @media (min-width: 768px) {
   :root {
@@ -170,7 +194,7 @@
     --header-height: 4rem;
     --page-gutter: 1.5rem;
     --radius-m: 0.625rem;
-    --radius-l: 0.875rem;
+    --radius-l: 1rem;
   }
   /* Devanagari needs a touch more size than Latin at the same px to stay readable */
   :root:not([data-native]):lang(hi) { --fs-sm: 0.84375rem; --fs-md: 0.96875rem; }
@@ -186,6 +210,14 @@
 
 /* derived colours, light */
 :root {
+  --c-surface-3: #ffffff;                                              /* floating: dialogs, menus */
+  --c-line-strong: color-mix(in srgb, var(--c-line) 70%, var(--c-ink) 12%);
+  --c-text-3: color-mix(in srgb, var(--c-muted) 75%, var(--c-bg));
+  --e0: 0 1px 0 rgb(15 35 40 / 0.04);
+  --e1: 0 1px 2px rgb(15 35 40 / 0.05), 0 1px 1px rgb(15 35 40 / 0.03);
+  --e2: 0 1px 2px rgb(15 35 40 / 0.04), 0 6px 18px -6px rgb(15 35 40 / 0.14);
+  --e3: 0 2px 6px rgb(15 35 40 / 0.06), 0 24px 48px -16px rgb(15 35 40 / 0.28);
+  --glow-action: 0 6px 16px -6px color-mix(in srgb, var(--c-accent) 70%, transparent);
   --c-on-primary: #ffffff;
   --c-on-success: #ffffff;
   --c-on-error: #ffffff;
@@ -196,6 +228,14 @@
 /* dark: the lighter brand/green/red need dark text on top for contrast */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    --c-surface-3: color-mix(in srgb, var(--c-card) 88%, #ffffff 6%);
+    --c-line-strong: color-mix(in srgb, var(--c-line) 75%, #ffffff 10%);
+    --c-text-3: color-mix(in srgb, var(--c-muted) 70%, var(--c-bg));
+    --e0: 0 1px 0 rgb(0 0 0 / 0.2);
+    --e1: 0 1px 2px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.03);
+    --e2: 0 8px 22px -8px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.04);
+    --e3: 0 24px 56px -12px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.05);
+    --glow-action: 0 6px 18px -6px color-mix(in srgb, var(--c-accent) 45%, transparent);
     --c-on-primary: #04191e;
     --c-on-success: #04170c;
     --c-on-error: #1f0604;
@@ -205,6 +245,14 @@
   }
 }
 :root[data-theme="dark"] {
+  --c-surface-3: color-mix(in srgb, var(--c-card) 88%, #ffffff 6%);
+  --c-line-strong: color-mix(in srgb, var(--c-line) 75%, #ffffff 10%);
+  --c-text-3: color-mix(in srgb, var(--c-muted) 70%, var(--c-bg));
+  --e0: 0 1px 0 rgb(0 0 0 / 0.2);
+  --e1: 0 1px 2px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.03);
+  --e2: 0 8px 22px -8px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.04);
+  --e3: 0 24px 56px -12px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.05);
+  --glow-action: 0 6px 18px -6px color-mix(in srgb, var(--c-accent) 45%, transparent);
   --c-on-primary: #04191e;
   --c-on-success: #04170c;
   --c-on-error: #1f0604;
@@ -258,20 +306,134 @@ h1, h2, h3 { text-wrap: balance; }
 
 /* loading skeleton */
 .skeleton {
-  background: linear-gradient(90deg, var(--c-line) 0%, color-mix(in srgb, var(--c-line) 50%, var(--c-card)) 50%, var(--c-line) 100%);
-  background-size: 200% 100%;
-  animation: vz-shimmer 1.4s ease-in-out infinite;
+  background: linear-gradient(100deg, var(--c-surface-2) 30%, color-mix(in srgb, var(--c-surface-2) 40%, var(--c-card)) 50%, var(--c-surface-2) 70%);
+  background-size: 300% 100%;
+  animation: vz-shimmer 1.6s linear infinite;
   border-radius: var(--radius-md);
 }
-@keyframes vz-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+@keyframes vz-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
 @keyframes vz-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes vz-fade { from { opacity: 0; } to { opacity: 1; } }
-.anim-rise { animation: vz-rise 160ms ease-out; }
-.anim-fade { animation: vz-fade 140ms ease-out; }
+@keyframes vz-sheet { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes vz-pop { from { opacity: 0; transform: translateY(6px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes vz-pulse { 0% { transform: scale(1); opacity: 0.55; } 80%, 100% { transform: scale(2.6); opacity: 0; } }
+@keyframes vz-ring { 0%, 60%, 100% { transform: rotate(0); } 8% { transform: rotate(14deg); } 16% { transform: rotate(-12deg); } 24% { transform: rotate(8deg); } 32% { transform: rotate(-5deg); } 40% { transform: rotate(2deg); } }
+@keyframes vz-check { from { transform: scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
+.anim-rise { animation: vz-rise 220ms var(--ease-out) both; }
+.anim-fade { animation: vz-fade 160ms ease-out both; }
+.anim-sheet { animation: vz-sheet 280ms var(--ease-out) both; }
+@media (min-width: 768px) { .anim-sheet { animation-name: vz-pop; animation-duration: 220ms; } }
+.anim-pop { animation: vz-pop 200ms var(--ease-out) both; }
+.anim-check { animation: vz-check 260ms var(--ease-spring) both; }
 @keyframes vz-shake { 0%, 100% { transform: none; } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
 .anim-shake { animation: vz-shake 320ms ease-in-out; }
 
-/* Chart series colours (validated: slots 1–2 of the reference categorical palette, light + dark). */
-:root { --chart-1: #2a78d6; --chart-2: #eb6834; --chart-grid: #e6ecee; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --chart-1: #3987e5; --chart-2: #d95926; --chart-grid: #26393e; } }
-:root[data-theme="dark"] { --chart-1: #3987e5; --chart-2: #d95926; --chart-grid: #26393e; }
+/* ---------------------------------------------------------------- premium surface & motion utilities */
+@layer components {
+  /* pressed feel on every tappable control */
+  .press { transition: transform 140ms var(--ease-out), box-shadow 180ms ease, background-color 160ms ease, border-color 160ms ease, color 160ms ease, filter 160ms ease; }
+  .press:active:not(:disabled) { transform: scale(0.97); }
+
+  /* the ONE main action: saffron with a soft glow */
+  .btn-action {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--c-accent) 88%, #fff 12%) 0%, var(--c-accent) 100%);
+    box-shadow: var(--glow-action), inset 0 1px 0 rgb(255 255 255 / 0.4);
+  }
+  .btn-action:hover:not(:disabled) { filter: brightness(1.03) saturate(1.05); }
+  .btn-primary {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--c-brand) 86%, #fff 14%) 0%, var(--c-brand) 100%);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.14), inset 0 1px 0 rgb(255 255 255 / 0.16);
+  }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.07); }
+  .btn-success {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--c-call) 86%, #fff 14%) 0%, var(--c-call) 100%);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.14), inset 0 1px 0 rgb(255 255 255 / 0.18);
+  }
+  .btn-success:hover:not(:disabled) { filter: brightness(1.06); }
+
+  /* cards that open something lift a little under the pointer */
+  .card-lift { transition: transform 220ms var(--ease-out), box-shadow 220ms ease, border-color 220ms ease; }
+  @media (hover: hover) {
+    .card-lift:hover { transform: translateY(-2px); box-shadow: var(--e2); border-color: var(--c-line-strong); }
+  }
+
+  /* teal hero surface: header, auth panel, highlight cards. Soft light top-right + faint route lines. */
+  .surface-hero {
+    position: relative;
+    isolation: isolate;
+    color: #fff;
+    background:
+      radial-gradient(110% 130% at 100% 0%, color-mix(in srgb, var(--c-header-alt) 95%, #fff 5%) 0%, transparent 60%),
+      linear-gradient(165deg, var(--c-header) 0%, color-mix(in srgb, var(--c-header) 82%, #000) 100%);
+  }
+  .surface-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.09;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='120' viewBox='0 0 240 120'%3E%3Cpath d='M-10 95 C 50 60, 90 110, 150 70 S 230 40, 260 60' fill='none' stroke='white' stroke-width='1.4' stroke-dasharray='6 7'/%3E%3Cpath d='M-10 30 C 40 10, 100 50, 160 22 S 230 0, 260 12' fill='none' stroke='white' stroke-width='1'/%3E%3C/svg%3E");
+    background-size: 240px 120px;
+  }
+
+  /* "available now" dot with a soft pulse */
+  .live-dot { position: relative; display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 9999px; background: var(--c-call); flex-shrink: 0; }
+  .live-dot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: vz-pulse 1.9s var(--ease-out) infinite; }
+
+  /* icon tile used in settings rows, stats, feature lists */
+  .icon-tile { display: inline-grid; place-items: center; flex-shrink: 0; border-radius: var(--radius-md); }
+
+  /* subtle glass bar (bottom nav, sticky headers) */
+  .glass { background: color-mix(in srgb, var(--c-card) 86%, transparent); backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px); }
+}
+
+/* ---------------------------------------------------------------- illustration palette (assets/illustrations.tsx) */
+:root {
+  --ill-blob: color-mix(in srgb, var(--c-brand-soft) 85%, var(--c-card));
+  --ill-teal: var(--c-brand);
+  --ill-teal-deep: color-mix(in srgb, var(--c-brand) 70%, #021015);
+  --ill-teal-mid: color-mix(in srgb, var(--c-brand) 62%, #ffffff);
+  --ill-sun: var(--c-accent);
+  --ill-sun-deep: color-mix(in srgb, var(--c-accent) 78%, #7a3a00);
+  --ill-paper: #ffffff;
+  --ill-line: color-mix(in srgb, var(--c-line) 80%, var(--c-brand) 10%);
+  --ill-skin: #c98b62;
+  --ill-skin-deep: #a86f4b;
+  --ill-hair: #1f2a2e;
+  --ill-ink: #17292e;
+  --ill-shadow: rgb(15 35 40 / 0.1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ill-blob: color-mix(in srgb, var(--c-brand-soft) 70%, var(--c-card));
+    --ill-teal-deep: color-mix(in srgb, var(--c-brand) 55%, #021015);
+    --ill-teal-mid: color-mix(in srgb, var(--c-brand) 75%, #ffffff);
+    --ill-paper: color-mix(in srgb, var(--c-card) 75%, #ffffff 14%);
+    --ill-line: color-mix(in srgb, var(--c-line) 70%, #ffffff 12%);
+    --ill-ink: #22373c;
+    --ill-shadow: rgb(0 0 0 / 0.35);
+  }
+}
+:root[data-theme="dark"] {
+  --ill-blob: color-mix(in srgb, var(--c-brand-soft) 70%, var(--c-card));
+  --ill-teal-deep: color-mix(in srgb, var(--c-brand) 55%, #021015);
+  --ill-teal-mid: color-mix(in srgb, var(--c-brand) 75%, #ffffff);
+  --ill-paper: color-mix(in srgb, var(--c-card) 75%, #ffffff 14%);
+  --ill-line: color-mix(in srgb, var(--c-line) 70%, #ffffff 12%);
+  --ill-ink: #22373c;
+  --ill-shadow: rgb(0 0 0 / 0.35);
+}
+.i-blob { fill: var(--ill-blob); } .i-t { fill: var(--ill-teal); } .i-td { fill: var(--ill-teal-deep); } .i-tm { fill: var(--ill-teal-mid); }
+.i-s { fill: var(--ill-sun); } .i-sd { fill: var(--ill-sun-deep); } .i-p { fill: var(--ill-paper); } .i-l { fill: var(--ill-line); }
+.i-sk { fill: var(--ill-skin); } .i-skd { fill: var(--ill-skin-deep); } .i-h { fill: var(--ill-hair); } .i-ink { fill: var(--ill-ink); } .i-sh { fill: var(--ill-shadow); }
+.is-l { stroke: var(--ill-line); } .is-p { stroke: var(--ill-paper); } .is-t { stroke: var(--ill-teal); } .is-td { stroke: var(--ill-teal-deep); }
+.is-tm { stroke: var(--ill-teal-mid); } .is-w { stroke: #ffffff; } .is-sd { stroke: var(--ill-sun-deep); } .is-ink { stroke: var(--ill-ink); }
+
+/* Android app: feels like an app, not a web page — no text selection on taps, no rubber-band scroll glow */
+:root[data-native] { -webkit-user-select: none; user-select: none; overscroll-behavior-y: none; }
+:root[data-native] :where(input, textarea, [contenteditable]) { -webkit-user-select: text; user-select: text; }
+:root[data-native] body { overscroll-behavior-y: none; }
+
+/* admin charts: drivers = brand teal, owners = saffron (same pairing as the illustrations) */
+:root { --chart-1: var(--c-brand); --chart-2: var(--c-accent); --chart-grid: var(--c-line); }

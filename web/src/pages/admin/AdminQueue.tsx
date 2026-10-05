@@ -55,7 +55,7 @@ export default function AdminQueue() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 text-lg font-bold">{title}</h2>
+      <h2 className="mb-2 text-lg font-semibold">{title}</h2>
       <div className="grid gap-3 md:grid-cols-2">{children}</div>
     </section>
   )
@@ -65,7 +65,7 @@ function Flags({ flags }: { flags: string[] }) {
   const { t } = useTranslation()
   return (
     <div className="mt-2 flex flex-wrap gap-1.5">
-      {flags.map((f) => <span key={f} className="rounded-lg bg-accent-soft px-2 py-1 text-xs font-bold text-accent-ink">! {t(`admin.flag.${f}`, { defaultValue: f })}</span>)}
+      {flags.map((f) => <span key={f} className="rounded-lg bg-accent-soft px-2 py-1 text-xs font-semibold text-accent-ink">! {t(`admin.flag.${f}`, { defaultValue: f })}</span>)}
     </div>
   )
 }
@@ -80,10 +80,10 @@ function PostRow({ p, onDone }: { p: QueuePost; onDone: () => void }) {
     try { await admin.reviewPost(p.id, action); track('admin_review_post', { action }); onDone() } finally { setBusy(false) }
   }
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
+    <div className="rounded-lg border border-border bg-surface p-card shadow-sm">
       <div className="flex justify-between gap-2">
         <div>
-          <p className="font-bold">{p.business_name || p.owner_name}</p>
+          <p className="font-semibold">{p.business_name || p.owner_name}</p>
           <p className="text-sm text-text-2">{phoneText(p.owner_phone)} · {p.district ? placeName(`${p.district}, ${p.state}`, i18n.language) : '—'}</p>
         </div>
         <span className="text-sm text-text-2">{ago(p.created_at, i18n.language)}</span>
@@ -91,8 +91,8 @@ function PostRow({ p, onDone }: { p: QueuePost; onDone: () => void }) {
       <p className="mt-2">{t('post.savings')} <strong>{rupees(p.savings_monthly)}</strong>{t('card.perMonthSavings')} · {t('post.totalN', { n: p.drivers_needed })}</p>
       <Flags flags={p.check_flags} />
       <div className="mt-3 flex gap-2">
-        <button type="button" disabled={busy} onClick={() => void act('approve')} className="min-h-ctl-md flex-1 rounded-md bg-success font-bold text-on-success disabled:opacity-50">{t('admin.approve')}</button>
-        <button type="button" disabled={busy} onClick={() => void act('reject')} className="min-h-ctl-md flex-1 rounded-md border border-border font-bold text-error disabled:opacity-50">{t('admin.reject')}</button>
+        <button type="button" disabled={busy} onClick={() => void act('approve')} className="min-h-ctl-md flex-1 rounded-md bg-success font-semibold text-on-success disabled:opacity-50">{t('admin.approve')}</button>
+        <button type="button" disabled={busy} onClick={() => void act('reject')} className="min-h-ctl-md flex-1 rounded-md border border-border font-semibold text-error disabled:opacity-50">{t('admin.reject')}</button>
       </div>
     </div>
   )
@@ -107,18 +107,18 @@ function ProfileRow({ p, onDone }: { p: QueueProfile; onDone: () => void }) {
     try { await admin.reviewProfile(p.id, action); track('admin_review_profile', { action }); onDone() } finally { setBusy(false) }
   }
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
+    <div className="rounded-lg border border-border bg-surface p-card shadow-sm">
       <div className="flex justify-between gap-2">
         <div>
-          <p className="font-bold">{p.name}{p.business_name ? ` · ${p.business_name}` : ''}</p>
+          <p className="font-semibold">{p.name}{p.business_name ? ` · ${p.business_name}` : ''}</p>
           <p className="text-sm text-text-2">{t(`role.${p.role}`)} · {phoneText(p.phone)} · {p.district ? placeName(`${p.district}, ${p.state}`, i18n.language) : '—'}</p>
         </div>
         <span className="text-sm text-text-2">{ago(p.created_at, i18n.language)}</span>
       </div>
       <Flags flags={p.check_flags} />
       <div className="mt-3 flex gap-2">
-        <button type="button" disabled={busy} onClick={() => void act('clear')} className="min-h-ctl-md flex-1 rounded-md bg-success font-bold text-on-success disabled:opacity-50">{t('admin.looksOk')}</button>
-        <button type="button" disabled={busy} onClick={() => void act('block')} className="min-h-ctl-md flex-1 rounded-md border border-border font-bold text-error disabled:opacity-50">{t('admin.block')}</button>
+        <button type="button" disabled={busy} onClick={() => void act('clear')} className="min-h-ctl-md flex-1 rounded-md bg-success font-semibold text-on-success disabled:opacity-50">{t('admin.looksOk')}</button>
+        <button type="button" disabled={busy} onClick={() => void act('block')} className="min-h-ctl-md flex-1 rounded-md border border-border font-semibold text-error disabled:opacity-50">{t('admin.block')}</button>
       </div>
     </div>
   )
@@ -132,17 +132,17 @@ function ReportRow({ r, onDone }: { r: QueueReport; onDone: () => void }) {
     setBusy(true)
     try { await admin.reviewReport(r.id, action); track('admin_review_report', { action }); onDone() } finally { setBusy(false) }
   }
-  const btn = 'min-h-ctl-md flex-1 rounded-md border border-border px-2 text-sm font-bold disabled:opacity-50'
+  const btn = 'min-h-ctl-md flex-1 rounded-md border border-border px-2 text-sm font-semibold disabled:opacity-50'
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
+    <div className="rounded-lg border border-border bg-surface p-card shadow-sm">
       <div className="flex justify-between gap-2">
         <div>
-          <p className="font-bold">{r.target_business || r.target_name || '—'} <span className="font-normal text-text-2">· {t(r.target_type === 'post' ? 'admin.q.aPost' : 'admin.q.aProfile')}</span></p>
+          <p className="font-semibold">{r.target_business || r.target_name || '—'} <span className="font-normal text-text-2">· {t(r.target_type === 'post' ? 'admin.q.aPost' : 'admin.q.aProfile')}</span></p>
           <p className="text-sm text-text-2">{phoneText(r.target_phone)}</p>
         </div>
         <span className="text-sm text-text-2">{ago(r.created_at, i18n.language)}</span>
       </div>
-      <p className="mt-2"><span className="rounded-lg bg-error-soft px-2 py-1 text-sm font-bold text-error">⚑ {t(`admin.reason.${r.reason}`, { defaultValue: r.reason })}</span>
+      <p className="mt-2"><span className="rounded-lg bg-error-soft px-2 py-1 text-sm font-semibold text-error">⚑ {t(`admin.reason.${r.reason}`, { defaultValue: r.reason })}</span>
         {r.open_reports > 1 && <span className="ml-2 text-sm font-semibold">{t('admin.q.nReports', { n: r.open_reports })}</span>}</p>
       {r.note && <p className="mt-2 rounded-lg bg-bg px-3 py-2 text-sm">“{r.note}”</p>}
       <p className="mt-1 text-sm text-text-2">{t('admin.q.by', { name: r.reporter_name || '—' })}</p>
@@ -173,10 +173,10 @@ function VerifyRow({ v, onDone }: { v: VerifyItem; onDone: () => void }) {
       : <div className="grid h-40 place-items-center rounded-md border border-dashed border-border text-sm text-text-2">{label}</div>
   }
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
+    <div className="rounded-lg border border-border bg-surface p-card shadow-sm">
       <div className="flex justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate font-bold">{v.name}{v.business_name ? ` · ${v.business_name}` : ''}</p>
+          <p className="truncate font-semibold">{v.name}{v.business_name ? ` · ${v.business_name}` : ''}</p>
           <p className="truncate text-sm text-text-2">{t(`role.${v.role}`)} · {phoneText(v.phone)} · {v.district ? placeName(`${v.district}, ${v.state}`, i18n.language) : '—'}</p>
         </div>
         <span className="shrink-0 text-sm text-text-2">{ago(v.submitted_at, i18n.language)}</span>
@@ -198,8 +198,8 @@ function VerifyRow({ v, onDone }: { v: VerifyItem; onDone: () => void }) {
         </div>
       ) : (
         <div className="mt-3 flex gap-2">
-          <button type="button" disabled={busy} onClick={() => void act('approve')} className="min-h-ctl-md flex-1 rounded-md bg-success font-bold text-on-success disabled:opacity-50">{t('admin.v.approve')}</button>
-          <button type="button" disabled={busy} onClick={() => setRejecting(true)} className="min-h-ctl-md flex-1 rounded-md border border-border font-bold text-error disabled:opacity-50">{t('admin.reject')}</button>
+          <button type="button" disabled={busy} onClick={() => void act('approve')} className="min-h-ctl-md flex-1 rounded-md bg-success font-semibold text-on-success disabled:opacity-50">{t('admin.v.approve')}</button>
+          <button type="button" disabled={busy} onClick={() => setRejecting(true)} className="min-h-ctl-md flex-1 rounded-md border border-border font-semibold text-error disabled:opacity-50">{t('admin.reject')}</button>
         </div>
       )}
       <p className="mt-2 text-xs text-text-2">{t('admin.v.deleted')}</p>

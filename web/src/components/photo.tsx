@@ -33,7 +33,8 @@ export function initials(name: string | null | undefined) {
 export function Avatar({ url, name, size = 56 }: { url?: string | null; name?: string | null; size?: number }) {
   const src = photoSrc(url)
   return (
-    <span className="grid shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft font-semibold text-primary" style={{ width: size, height: size, fontSize: size * 0.4 }}>
+    <span className="grid shrink-0 place-items-center overflow-hidden rounded-full font-display font-semibold text-primary ring-1 ring-inset ring-primary/15"
+      style={{ width: size, height: size, fontSize: size * 0.4, background: 'linear-gradient(145deg, var(--c-brand-soft), color-mix(in srgb, var(--c-brand-soft) 70%, var(--c-brand) 18%))' }}>
       {src ? <img src={src} alt="" className="h-full w-full object-cover" /> : initials(name)}
     </span>
   )
@@ -80,7 +81,7 @@ export function PhotoPicker({ owner }: { owner?: boolean }) {
             {owner ? t('photo.addLogo') : t('photo.add')}
           </span>
         )}
-        {busy && <span className="absolute inset-0 grid place-items-center bg-black/40 text-sm font-bold text-white">{t('photo.uploading')}</span>}
+        {busy && <span className="absolute inset-0 grid place-items-center bg-black/40 text-sm font-semibold text-white">{t('photo.uploading')}</span>}
         <input type="file" accept="image/*" className="sr-only" aria-label={t('photo.add')} onChange={(e) => void upload(e.target.files?.[0], 'setup')} />
       </label>
       <p className="mt-2 max-w-xs text-center text-sm text-text-2">

@@ -41,13 +41,14 @@ export function useNavItems(adminQueue?: number): NavItem[] {
   ]
 }
 
+/** Brand mark: a saffron tile with a teal "V" drawn as a road (dashed centre line) — Vahanza, on the move. */
 export function BrandMark({ size = 36 }: { size?: number }) {
   return (
-    <span className="grid shrink-0 place-items-center rounded-md bg-action" style={{ width: size, height: size }} aria-hidden>
-      <svg viewBox="0 0 80 50" width={size * 0.72} height={size * 0.45}>
-        <rect x="4" y="12" width="46" height="24" rx="3" fill="#E8742A" />
-        <path d="M50 18h14l10 10v8H50z" fill="#2F5DA8" /><path d="M54 21h9l6 7H54z" fill="#CFE3F7" />
-        <circle cx="16" cy="40" r="5" fill="#2B2F2C" /><circle cx="36" cy="40" r="5" fill="#2B2F2C" /><circle cx="64" cy="40" r="5" fill="#2B2F2C" />
+    <span className="grid shrink-0 place-items-center rounded-[30%] shadow-[0_2px_6px_-2px_rgb(0_0_0/0.3),inset_0_1px_0_rgb(255_255_255/0.45)]"
+      style={{ width: size, height: size, background: 'linear-gradient(160deg, color-mix(in srgb, var(--c-accent) 85%, #fff 15%), var(--c-accent))' }} aria-hidden>
+      <svg viewBox="0 0 32 32" width={size * 0.66} height={size * 0.66}>
+        <path d="M5 6l11 21L27 6" fill="none" stroke="#0A4D5A" strokeWidth="6.2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M5 6l11 21L27 6" fill="none" stroke="#fff" strokeWidth="1.3" strokeDasharray="2.4 2.6" strokeLinecap="round" strokeLinejoin="round" opacity=".9" />
       </svg>
     </span>
   )
@@ -96,16 +97,19 @@ function DesktopShell({ title, sub, actions, back, width = 'default', adminQueue
       <SkipLink />
       <Sidebar adminQueue={adminQueue} />
       <div className="flex min-w-0 flex-col">
-        <header className="sticky top-0 z-30 border-b border-border bg-bg/90 backdrop-blur">
+        <header className="glass sticky top-0 z-30 border-b border-border">
           <div className={`mx-auto flex h-header w-full items-center gap-3 px-[var(--page-gutter)] ${WIDTH[width]}`}>
             {back && <IconButton tone="outline" label={t('back')} onClick={() => nav(-1)}>{Icon.back}</IconButton>}
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-xl font-semibold leading-tight">{title}</h1>
-              {sub && <p className="truncate text-sm text-text-2">{sub}</p>}
+              <h1 className="truncate font-display text-xl font-semibold leading-tight tracking-[-0.01em]">{title}</h1>
+              {sub && <div className="truncate text-sm text-text-2">{sub}</div>}
             </div>
             {actions}
-            {!admin && <Bell />}
-            <ThemeToggle />
+            <div className="flex items-center gap-0.5 border-l border-border pl-2">
+              {!admin && <Bell />}
+              <ThemeToggle />
+              {!admin && <ProfileButton />}
+            </div>
           </div>
         </header>
         <main id="main" tabIndex={-1} className={`mx-auto w-full flex-1 px-[var(--page-gutter)] pb-12 pt-[var(--section-gap)] outline-none ${WIDTH[width]}`}>{children}</main>
@@ -135,45 +139,45 @@ function Sidebar({ adminQueue }: { adminQueue?: number }) {
   const unread = useUnread()
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
   const item = ({ isActive }: { isActive: boolean }) =>
-    `group relative flex min-h-ctl-md items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors ${isActive ? 'bg-primary-soft text-primary' : 'text-text-2 hover:bg-surface-2 hover:text-text'}`
+    `press group relative flex min-h-ctl-md items-center gap-3 rounded-md px-3 text-sm font-medium ${isActive ? 'bg-primary-soft font-semibold text-primary before:absolute before:-left-3 before:top-1.5 before:bottom-1.5 before:w-1 before:rounded-r-full before:bg-primary' : 'text-text-2 hover:bg-surface-2 hover:text-text'}`
   return (
     <div className="border-r border-border bg-surface">
     <aside className="sticky top-0 flex h-dvh flex-col px-3 pb-3 pt-4">
-      <Link to={isAdmin ? '/admin' : '/home'} className="mb-5 flex items-center gap-2.5 px-2">
-        <BrandMark size={32} />
+      <Link to={isAdmin ? '/admin' : '/home'} className="mb-6 flex items-center gap-2.5 px-2">
+        <BrandMark size={34} />
         <span className="leading-tight">
-          <span className="block font-display text-lg font-bold text-text">{brand.name}</span>
+          <span className="block font-display text-lg font-semibold tracking-[-0.01em] text-text">{brand.name}</span>
           <span className="block text-xs text-text-2">{isAdmin ? t('admin.title') : brand.nameHi}</span>
         </span>
       </Link>
       <nav aria-label={t('nav.main')} className="flex flex-col gap-1">
         {items.map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end} className={item}>
-            <span className="text-[1.15rem]">{i.icon}</span>
+            <span className="text-[length:var(--icon-size-md)] [&>svg]:transition-transform group-hover:[&>svg]:scale-110">{i.icon}</span>
             <span className="flex-1">{i.label}</span>
             {!!i.count && <CountDot n={i.count} className="" />}
           </NavLink>
         ))}
       </nav>
-      <div className="my-4 border-t border-border" />
+      <p className="mb-1.5 mt-6 px-3 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-text-3">{t('nav.more')}</p>
       <nav aria-label={t('nav.more')} className="flex flex-col gap-1">
         {!isAdmin && (
           <NavLink to="/notifications" className={item}>
-            <span className="text-[1.15rem]">{Icon.bell}</span>
+            <span className="text-[length:var(--icon-size-md)] [&>svg]:transition-transform group-hover:[&>svg]:scale-110">{Icon.bell}</span>
             <span className="flex-1">{t('notif.title')}</span>
             {unread > 0 && <CountDot n={unread} className="" />}
           </NavLink>
         )}
         <NavLink to="/settings" className={item}>
-          <span className="text-[1.15rem]">{Icon.settings}</span>
+          <span className="text-[length:var(--icon-size-md)] [&>svg]:transition-transform group-hover:[&>svg]:scale-110">{Icon.settings}</span>
           <span className="flex-1">{t('settings.title')}</span>
         </NavLink>
         <a href={`tel:${brand.supportPhone}`} className={item({ isActive: false })}>
-          <span className="text-[1.15rem]">{Icon.help}</span>
+          <span className="text-[length:var(--icon-size-md)] [&>svg]:transition-transform group-hover:[&>svg]:scale-110">{Icon.help}</span>
           <span className="flex-1">{t('profile.help')}</span>
         </a>
       </nav>
-      <div className="mt-auto flex items-center gap-2.5 rounded-md border border-border p-2">
+      <div className="mt-auto flex items-center gap-2.5 rounded-lg bg-surface-2 p-2 ring-1 ring-inset ring-border">
         <Avatar url={profile?.photo_url} name={profile?.name} size={36} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold leading-tight">{profile?.business_name || profile?.name || '—'}</p>
@@ -209,19 +213,19 @@ function MobileShell({ title, hero, back, mobileActions, adminQueue, children, t
     <div className={`min-h-full ${tabs ? 'pb-[calc(env(safe-area-inset-bottom,0px)+var(--bottom-nav-height)+16px)]' : 'pb-6'}`}>
       <SkipLink />
       {back ? (
-        <header className="sticky top-0 z-30 border-b border-border bg-surface" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <header className="glass sticky top-0 z-30 border-b border-border" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
           <div className={`mx-auto flex h-header items-center gap-1 ${tablet ? 'max-w-3xl px-4' : 'px-2'}`}>
             <IconButton label={t('back')} onClick={() => nav(-1)}>{Icon.back}</IconButton>
-            <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">{title}</h1>
+            <h1 className="min-w-0 flex-1 truncate font-display text-lg font-semibold">{title}</h1>
             {mobileActions}
           </div>
         </header>
       ) : (
-        <header className="bg-header text-white" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-          <div className={`mx-auto ${container} ${hero ? 'pb-3 pt-1' : ''}`}>
+        <header className={`surface-hero ${hero ? 'rounded-b-[1.75rem] shadow-md' : ''}`} style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div className={`mx-auto ${container} ${hero ? 'pb-4 pt-1' : ''}`}>
             {hero ?? (
               <div className="flex h-header items-center gap-1">
-                <h1 className="min-w-0 flex-1 truncate font-display text-xl font-semibold">{title}</h1>
+                <h1 className="min-w-0 flex-1 truncate font-display text-xl font-semibold tracking-[-0.01em]">{title}</h1>
                 {mobileActions}
                 {!admin && <Bell tone="onDark" />}
                 <ThemeToggle tone="onDark" />
@@ -229,7 +233,7 @@ function MobileShell({ title, hero, back, mobileActions, adminQueue, children, t
                 {admin && (
                   <>
                     <Link to="/settings" aria-label={t('settings.title')} title={t('settings.title')}
-                      className="grid size-ctl-md shrink-0 place-items-center rounded-md text-[length:var(--icon-size-md)] text-white transition-colors hover:bg-white/15 active:bg-white/20">{Icon.settings}</Link>
+                      className="press grid size-ctl-md shrink-0 place-items-center rounded-full text-[length:var(--icon-size-md)] text-white/90 hover:bg-white/12 active:bg-white/20">{Icon.settings}</Link>
                     <LogoutButton tone="onDark" />
                   </>
                 )}
@@ -248,35 +252,52 @@ function MobileShell({ title, hero, back, mobileActions, adminQueue, children, t
 export function HeroBar({ title, badge }: { title: ReactNode; badge?: ReactNode }) {
   return (
     <div className="flex h-header items-center gap-1">
-      <h1 className="min-w-0 flex-1 truncate font-display text-xl font-semibold">{title}</h1>
+      <h1 className="min-w-0 flex-1 truncate font-display text-[1.375rem] font-semibold tracking-[-0.01em]">{title}</h1>
       {badge}
       <Bell tone="onDark" />
       <ThemeToggle tone="onDark" />
+      <ProfileButton tone="onDark" />
     </div>
   )
 }
 
+/** Bottom tabs: glass bar, a pill that grows behind the active icon, bold label, haptic-like press. */
 export function BottomNav({ adminQueue }: { adminQueue?: number }) {
   const { t } = useTranslation()
   const items = useNavItems(adminQueue)
   return (
-    <nav aria-label={t('nav.main')} className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 backdrop-blur"
+    <nav aria-label={t('nav.main')} className="glass fixed inset-x-0 bottom-0 z-30 border-t border-border shadow-[0_-8px_24px_-12px_rgb(0_0_0/0.18)]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-      <div className="mx-auto grid max-w-xl" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+      <div className="mx-auto grid max-w-xl px-1" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
         {items.map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end}
-            className={({ isActive }) => `relative flex h-nav flex-col items-center justify-center gap-0.5 text-xs font-medium ${isActive ? 'text-primary' : 'text-text-2'}`}>
+            className={({ isActive }) => `press relative flex h-nav flex-col items-center justify-center gap-0.5 text-[0.6875rem] leading-tight ${isActive ? 'font-semibold text-primary' : 'font-medium text-text-2'}`}>
             {({ isActive }) => (
               <>
-                <span className={`grid h-7 w-12 place-items-center rounded-full text-[length:var(--icon-size-md)] transition-colors ${isActive ? 'bg-primary-soft' : ''}`}>{i.icon}</span>
-                <span className="max-w-full truncate px-1 leading-tight">{i.label}</span>
-                {!!i.count && <CountDot n={i.count} className="absolute right-[22%] top-1.5" />}
+                <span className="relative grid h-7 w-14 place-items-center text-[length:var(--icon-size-md)]">
+                  <span aria-hidden className={`absolute inset-0 rounded-full bg-primary-soft transition-transform duration-300 ease-[var(--ease-out)] ${isActive ? 'scale-100' : 'scale-x-0 scale-y-50 opacity-0'}`} />
+                  <span className={`relative transition-transform duration-200 ${isActive ? '-translate-y-px [&>svg]:stroke-[2.3]' : ''}`}>{i.icon}</span>
+                </span>
+                <span className="max-w-full truncate px-1">{i.label}</span>
+                {!!i.count && <CountDot n={i.count} className="absolute right-[20%] top-1" />}
               </>
             )}
           </NavLink>
         ))}
       </div>
     </nav>
+  )
+}
+
+/** Your photo in the top bar (desktop) / hero (phone): opens Profile. */
+export function ProfileButton({ tone = 'plain' }: { tone?: 'plain' | 'onDark' }) {
+  const { t } = useTranslation()
+  const { profile } = useAuth()
+  return (
+    <Link to="/profile" aria-label={t('tabs.profile')} title={t('tabs.profile')}
+      className={`press ml-1 grid shrink-0 place-items-center rounded-full ring-2 ${tone === 'onDark' ? 'ring-white/25 hover:ring-white/50' : 'ring-border hover:ring-primary/50'}`}>
+      <Avatar url={profile?.photo_url} name={profile?.name} size={32} />
+    </Link>
   )
 }
 

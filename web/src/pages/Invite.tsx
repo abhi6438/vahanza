@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { CommunityArt } from '../assets/illustrations'
 import { boosted, DigitalCardDialog, inviteText, useGrowth } from '../components/growth'
 import { AppShell } from '../components/shell'
 import { useToast } from '../components/toast'
@@ -33,14 +34,17 @@ export default function Invite() {
     <AppShell title={t('invite.title')} back width="narrow">
       <div className="flex flex-col gap-4">
         <Card className="overflow-hidden !p-0">
-          <div className="bg-header px-5 py-5 text-white">
-            <p className="flex items-center gap-2 text-sm font-semibold text-white/85">{Icon.gift}{t('invite.kicker')}</p>
-            <p className="mt-1 font-display text-2xl font-semibold leading-tight">{t(isDriver ? 'invite.headDriver' : 'invite.headOwner', { days: g?.boost_days ?? 7 })}</p>
+          <div className="surface-hero flex items-center gap-3 px-5 py-5">
+            <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-2 text-sm font-semibold text-white/85 [&>svg]:text-action">{Icon.gift}{t('invite.kicker')}</p>
+            <p className="mt-1 font-display text-2xl font-semibold leading-tight tracking-[-0.01em]">{t(isDriver ? 'invite.headDriver' : 'invite.headOwner', { days: g?.boost_days ?? 7 })}</p>
+            </div>
+            <div className="hidden w-28 shrink-0 rounded-xl bg-white/90 p-1 sm:block"><CommunityArt /></div>
           </div>
           <ol className="flex flex-col gap-3 px-5 py-4">
             {[1, 2, 3].map((n) => (
               <li key={n} className="flex items-start gap-3">
-                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary">{n}</span>
+                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-on-primary shadow-sm">{n}</span>
                 <span className="pt-0.5">{t(`invite.step${n}`, { days: g?.boost_days ?? 7 })}</span>
               </li>
             ))}

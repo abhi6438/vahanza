@@ -168,7 +168,7 @@ export default function SetupOwner() {
       {summary.length > 0 && (
         <div className="mb-4 flex items-center gap-3 rounded-lg bg-brand-soft p-3">
           <VehicleArt kind={g.vehicle_type} className="h-9 w-14" />
-          <span className="font-bold">{summary.join(' · ')}</span>
+          <span className="font-semibold">{summary.join(' · ')}</span>
         </div>
       )}
       {a.sub === 0 && (
@@ -181,7 +181,7 @@ export default function SetupOwner() {
         <div className="grid grid-cols-3 gap-2.5">
           {WHEELS.map((w) => (
             <button key={w} type="button" aria-pressed={g.wheels === w} onClick={() => setA((x) => ({ ...x, g: { ...x.g, wheels: w }, sub: 2 }))}
-              className="flex min-h-20 flex-col items-center justify-center rounded-lg border border-border bg-surface font-display text-3xl font-bold leading-none aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary">
+              className="flex min-h-20 flex-col items-center justify-center rounded-lg border border-border bg-surface font-display text-3xl font-semibold leading-none aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary">
               {w}
               <small className="mt-1 font-sans text-sm font-semibold text-text-2">{t('wheeler')}</small>
             </button>
@@ -194,7 +194,7 @@ export default function SetupOwner() {
           <div className="mt-4 flex justify-center gap-2">
             {[1, 2, 3, 5, 10].map((n) => (
               <button key={n} type="button" aria-pressed={g.vehicle_count === n} onClick={() => setG({ vehicle_count: n })}
-                className="h-12 w-12 rounded-md border border-border bg-surface text-lg font-bold aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary">{n}</button>
+                className="h-12 w-12 rounded-md border border-border bg-surface text-lg font-semibold aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary">{n}</button>
             ))}
           </div>
         </>
@@ -203,7 +203,7 @@ export default function SetupOwner() {
         <>
           <CityPicker value={g.base_cities} preferState={f.place?.state}
             onToggle={(v) => setG({ base_cities: g.base_cities.includes(v) ? g.base_cities.filter((c) => c !== v) : [...g.base_cities, v].slice(0, 20) })} />
-          <button type="button" className="mt-5 w-full py-2 text-center font-bold text-brand underline" onClick={() => commitGroup(false)}>{t('setup.o.noCity')}</button>
+          <button type="button" className="mt-5 w-full py-2 text-center font-semibold text-brand underline" onClick={() => commitGroup(false)}>{t('setup.o.noCity')}</button>
           {g.base_cities.length === 0 && <div className="mt-2"><Note>{t('setup.o.basesWhy')}</Note></div>}
         </>
       )}

@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { BellArt } from '../assets/illustrations'
 import { useNavigate } from 'react-router-dom'
 import { notifLink, notifText, PushAsk, refreshUnread } from '../components/notify'
 import { AppShell } from '../components/shell'
@@ -63,8 +64,8 @@ export default function Notifications() {
     <AppShell title={t('notif.title')} back={!desktop} width="narrow" actions={readAllBtn} mobileActions={readAllBtn}>
       <div className="mb-4"><PushAsk from="bell" why={why} /></div>
       {error && <ErrorState onRetry={() => { setError(false); notifications.list().then((r) => { setItems(r.items); setMore(r.has_more) }).catch(() => setError(true)) }} />}
-      {items === null && !error && <div className="flex flex-col gap-2">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-20" />)}</div>}
-      {items?.length === 0 && <EmptyState icon={Icon.bell} title={t('notif.none')} body={why} />}
+      {items === null && !error && <div className="flex flex-col gap-2">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-[4.5rem] rounded-lg" />)}</div>}
+      {items?.length === 0 && <EmptyState art={<BellArt />} title={t('notif.none')} body={why} />}
       {!!items?.length && (
         <ul className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
           {items.map((n) => {
@@ -72,8 +73,8 @@ export default function Notifications() {
             return (
               <li key={n.id} className="border-b border-border last:border-0">
                 <button type="button" onClick={() => void open(n)}
-                  className={`flex w-full gap-3 px-4 py-3.5 text-left transition-colors hover:bg-surface-2 ${n.read_at ? '' : 'bg-primary-soft/60'}`}>
-                  <span className={`grid size-10 shrink-0 place-items-center rounded-full ${n.read_at ? 'bg-surface-2 text-text-2' : 'bg-primary-soft text-primary'}`}>{KIND_ICON[n.kind]}</span>
+                  className={`relative flex w-full gap-3 px-card py-3 text-left transition-colors hover:bg-surface-2 ${n.read_at ? '' : 'bg-primary-soft/40 before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-r-full before:bg-primary'}`}>
+                  <span className={`icon-tile size-10 rounded-full [&>svg]:size-icon-md ${n.read_at ? 'bg-surface-2 text-text-2 ring-1 ring-inset ring-border' : 'bg-primary text-on-primary shadow-sm'}`}>{KIND_ICON[n.kind]}</span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline gap-2">
                       <span className={`min-w-0 flex-1 ${n.read_at ? 'font-medium' : 'font-semibold'}`}>{title}</span>

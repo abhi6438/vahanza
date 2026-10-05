@@ -100,8 +100,8 @@ function Upload({ onDone }: { onDone: () => void }) {
   const ready = preview ? preview.counts.new + preview.counts.update : 0
 
   return (
-    <section className="rounded-lg border border-border bg-surface p-4">
-      <h2 className="mb-3 text-lg font-bold">{t('admin.imp.addFile')}</h2>
+    <section className="rounded-lg border border-border bg-surface p-card shadow-sm">
+      <h2 className="mb-3 text-lg font-semibold">{t('admin.imp.addFile')}</h2>
       <p className="mb-2 text-sm font-semibold">{t('admin.imp.who')}</p>
       <div className="mb-3 flex gap-2">
         {(['driver', 'owner'] as Role[]).map((r) => (
@@ -120,7 +120,7 @@ function Upload({ onDone }: { onDone: () => void }) {
       <label className={`flex min-h-28 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed p-4 text-center ${busy ? 'border-border opacity-60' : 'border-brand bg-brand-soft/50'}`}>
         <input ref={input} type="file" className="sr-only" accept=".csv,.xlsx,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           disabled={busy} onChange={(e) => { const f = e.target.files?.[0]; if (f) void check(f, role) }} />
-        <span className="font-bold text-brand">{file ? file.name : t('admin.imp.pick')}</span>
+        <span className="font-semibold text-brand">{file ? file.name : t('admin.imp.pick')}</span>
         <span className="text-sm text-text-2">{t('admin.imp.pickSub')}</span>
       </label>
 
@@ -140,9 +140,9 @@ function Upload({ onDone }: { onDone: () => void }) {
           {!!preview.rows?.length && <PreviewTable rows={preview.rows} />}
           <div className="mt-3 flex gap-2">
             <button type="button" onClick={() => { setPreview(null); setFile(null); if (input.current) input.current.value = '' }}
-              className="min-h-ctl-lg flex-1 rounded-md border border-border font-bold">{t('cancel')}</button>
+              className="min-h-ctl-lg flex-1 rounded-md border border-border font-semibold">{t('cancel')}</button>
             <button type="button" disabled={!ready} onClick={() => void save()}
-              className="min-h-ctl-lg flex-[2] rounded-md bg-primary font-bold text-on-primary disabled:opacity-50">{t('admin.imp.save', { n: nf(ready) })}</button>
+              className="min-h-ctl-lg flex-[2] rounded-md bg-primary font-semibold text-on-primary disabled:opacity-50">{t('admin.imp.save', { n: nf(ready) })}</button>
           </div>
         </div>
       )}
@@ -160,7 +160,7 @@ function Counts({ c }: { c: ImportResult['counts'] }) {
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {tiles.map(([k, n, cls]) => (
           <div key={k} className="rounded-md bg-bg p-2.5">
-            <p className={`font-display text-2xl font-bold ${cls}`}>{nf(n)}</p>
+            <p className={`font-display text-2xl font-semibold ${cls}`}>{nf(n)}</p>
             <p className="text-xs font-semibold text-text-2">{t(`admin.imp.c.${k}`)}</p>
           </div>
         ))}
@@ -187,7 +187,7 @@ function PreviewTable({ rows }: { rows: ImportPreviewRow[] }) {
           {rows.map((r) => (
             <tr key={r.row} className="border-t border-border align-top">
               <td className="p-2 text-text-2">{r.row}</td>
-              <td className="p-2"><span className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-xs font-bold ${STATUS_PILL[r.status]}`}>{t(`admin.imp.s.${r.reason || r.status}`)}</span></td>
+              <td className="p-2"><span className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-xs font-semibold ${STATUS_PILL[r.status]}`}>{t(`admin.imp.s.${r.reason || r.status}`)}</span></td>
               <td className="p-2">
                 {r.business_name || r.name || '—'}{r.business_name && r.name ? <span className="block text-xs text-text-2">{r.name}</span> : null}
                 {r.warnings.length > 0 && <span className="mt-0.5 block text-xs font-semibold text-accent-ink">! {r.warnings.map((w) => t(`admin.imp.w.${w}`)).join(' · ')}</span>}
@@ -216,8 +216,8 @@ function History({ items, active, onPick }: { items: ImportRow[] | null; active:
   if (!items) return <div className="h-32 animate-pulse rounded-lg bg-surface" />
   if (!items.length) return null
   return (
-    <section className="rounded-lg border border-border bg-surface p-4">
-      <h2 className="mb-1 text-lg font-bold">{t('admin.imp.history')}</h2>
+    <section className="rounded-lg border border-border bg-surface p-card shadow-sm">
+      <h2 className="mb-1 text-lg font-semibold">{t('admin.imp.history')}</h2>
       <p className="mb-3 text-sm text-text-2">{t('admin.imp.historySub')}</p>
       <div className="flex flex-col gap-2">
         {items.map((i) => {
@@ -226,7 +226,7 @@ function History({ items, active, onPick }: { items: ImportRow[] | null; active:
             <button key={i.id} type="button" aria-pressed={active?.id === i.id} onClick={() => onPick(i)}
               className="rounded-md border border-border p-3 text-left aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:ring-1 aria-pressed:ring-primary/50">
               <div className="flex justify-between gap-2">
-                <p className="min-w-0 truncate font-bold">{i.source || i.filename || `#${i.id}`}</p>
+                <p className="min-w-0 truncate font-semibold">{i.source || i.filename || `#${i.id}`}</p>
                 <span className="shrink-0 text-sm text-text-2">{ago(i.created_at, i18n.language)}</span>
               </div>
               <p className="text-sm text-text-2">{t(i.role === 'driver' ? 'admin.imp.drivers' : 'admin.imp.owners')} · {t('admin.imp.histLine', { added: nf(i.added), updated: nf(i.updated), bad: nf(i.bad) })}</p>
@@ -294,13 +294,13 @@ function People({ cfg, importFilter, clearImport, reload, onInvited }: {
   }
 
   return (
-    <section className="rounded-lg border border-border bg-surface p-4">
-      <h2 className="mb-1 text-lg font-bold">{t('admin.imp.people')}</h2>
+    <section className="rounded-lg border border-border bg-surface p-card shadow-sm">
+      <h2 className="mb-1 text-lg font-semibold">{t('admin.imp.people')}</h2>
       <p className="mb-3 text-sm text-text-2">{t('admin.imp.peopleSub', { max: cfg?.max_invites ?? 3, days: cfg?.gap_days ?? 7 })}</p>
       {importFilter && (
         <p className="mb-3 flex items-center gap-2 rounded-md bg-brand-soft px-3 py-2 text-sm font-semibold text-brand">
           <span className="min-w-0 flex-1 truncate">{t('admin.imp.fromFile', { name: importFilter.source || importFilter.filename || `#${importFilter.id}` })}</span>
-          <button type="button" onClick={clearImport} className="font-bold underline">{t('admin.imp.showAll')}</button>
+          <button type="button" onClick={clearImport} className="font-semibold underline">{t('admin.imp.showAll')}</button>
         </p>
       )}
       <div className="mb-3"><TextField value={q} onChange={setQ} label={t('admin.u.search')} placeholder={t('admin.u.search')} /></div>
@@ -319,7 +319,7 @@ function People({ cfg, importFilter, clearImport, reload, onInvited }: {
 
       <div className="mb-3 rounded-md bg-bg p-3">
         <button type="button" disabled={busy || !readyN || !!smsBlocked} onClick={() => void smsAll()}
-          className="min-h-ctl-lg w-full rounded-md bg-brand px-3 font-bold text-white disabled:opacity-50">
+          className="min-h-ctl-lg w-full rounded-md bg-brand px-3 font-semibold text-white disabled:opacity-50">
           {t('admin.imp.smsAll', { n: nf(Math.min(readyN, 500)) })}
         </button>
         {smsBlocked && <p className="mt-2 text-sm text-text-2">{smsBlocked}</p>}
@@ -332,7 +332,7 @@ function People({ cfg, importFilter, clearImport, reload, onInvited }: {
       <div className="flex flex-col gap-2">
         {data?.items.map((p) => <PersonRow key={p.id} p={p} onChange={replace} onInvited={invitedOne} />)}
       </div>
-      {data?.has_more && <button type="button" onClick={() => void more()} className="mt-3 min-h-ctl-md w-full rounded-md border-2 border-brand font-bold text-brand">{t('admin.u.more')}</button>}
+      {data?.has_more && <button type="button" onClick={() => void more()} className="mt-3 min-h-ctl-md w-full rounded-md border-2 border-brand font-semibold text-brand">{t('admin.u.more')}</button>}
     </section>
   )
 }
@@ -373,7 +373,7 @@ function PersonRow({ p, onChange, onInvited }: { p: Prospect; onChange: (p: Pros
     <div className={`rounded-md border p-3 ${p.joined_at ? 'border-call/40' : 'border-border'}`}>
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate font-bold">{p.business_name || p.name || '—'}{p.business_name && p.name ? <span className="font-normal text-text-2"> · {p.name}</span> : null}</p>
+          <p className="truncate font-semibold">{p.business_name || p.name || '—'}{p.business_name && p.name ? <span className="font-normal text-text-2"> · {p.name}</span> : null}</p>
           <p className="text-sm text-text-2">{t(`role.${p.role}`)} · {phoneText(p.phone)}{p.district ? ` · ${placeName(`${p.district}, ${p.state}`, lang)}` : ''}</p>
           {(vehicles || p.vehicle_count) && <p className="text-sm text-text-2">{vehicles}{p.vehicle_count ? ` · ${t('admin.imp.nVehicles', { n: p.vehicle_count })}` : ''}</p>}
           <p className={`mt-1 text-sm font-semibold ${p.joined_at ? 'text-call' : p.opted_out ? 'text-error' : 'text-ink'}`}>{p.joined_at ? '✓ ' : ''}{state}</p>
