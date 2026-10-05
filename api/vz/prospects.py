@@ -17,9 +17,12 @@ ELIGIBLE_SQL = (
 )
 
 
-def invite_link(role: str, base: str | None = None) -> str:
+def invite_link(role: str, base: str | None = None, code: str | None = None) -> str:
+    """Personal link: opens "your profile is ready" with the number filled in (code = prospects.code)."""
     base = (base or get_settings().public_app_url or "").rstrip("/")
-    return f"{base}/?inv={role}" if base else ""
+    if not base:
+        return ""
+    return f"{base}/?inv={role}&p={code}" if code else f"{base}/?inv={role}"
 
 
 def invite_text(role: str, name: str | None, brand: str, link: str) -> str:

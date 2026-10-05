@@ -79,7 +79,7 @@ export function CountDot({ n, ring = 'ring-surface', className = 'absolute right
 export function notifText(n: Notif, t: (k: string, o?: Record<string, unknown>) => string, lang: string) {
   const d = n.data || {}
   const vehicles = (d.vehicles_raw || []).map((v) => pick(VEHICLES.find((x) => x.key === v)?.label, lang) || v).join(', ')
-  const o = { owner: d.owner || '', driver: d.driver || '', vehicles, n: d.n ?? '', savings: d.savings || '' }
+  const o = { owner: d.owner || '', driver: d.driver || '', vehicles, n: d.n ?? '', savings: d.savings || '', days: d.days ?? '', name: d.name || '' }
   return { title: t(`notif.${n.kind}.title`, o), body: t(`notif.${n.kind}.body`, o) }
 }
 
@@ -89,6 +89,9 @@ export function notifLink(n: Notif) {
     case 'new_post': return '/home'
     case 'new_interest': return n.data.post_id ? `/posts?open=${n.data.post_id}` : '/posts'
     case 'interest_seen': return '/interests'
+    case 'profile_views': return '/home'
+    case 'licence_expiry': return '/setup?step=licence'
+    case 'referral_joined': return '/invite'
     default: return '/posts'
   }
 }

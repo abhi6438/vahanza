@@ -11,7 +11,8 @@ import { useAuth } from '../lib/auth'
 import { brand } from '../lib/brand'
 import { driverCompletion, ownerCompletion } from '../lib/completion'
 import { useIsDesktop } from '../lib/layout'
-import { trackScreen } from '../lib/track'
+import { track, trackScreen } from '../lib/track'
+import { DigitalCardLauncher } from '../components/growth'
 
 /** "Profile": who I am, how complete my profile is, how others see me, and account links. */
 export default function Profile() {
@@ -19,6 +20,7 @@ export default function Profile() {
   const { profile, driver, fleet, logout } = useAuth()
   const desktop = useIsDesktop()
   const [confirm, setConfirm] = useState(false)
+  const [card, setCard] = useState(false)
   useEffect(() => { trackScreen('profile_tab') }, [])
   if (!profile) return null
   const isDriver = profile.role === 'driver'
@@ -52,6 +54,8 @@ export default function Profile() {
   const links = (
     <nav aria-label={t('profile.more')} className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
       {!isDriver && <Row to="/setup?step=fleet" icon={Icon.truck} label={t('profile.vehicles', { n: vehicles })} />}
+      {isDriver && <Row onClick={() => { setCard(true); track('card_open', { from: 'profile' }) }} icon={Icon.idcard} label={t('card.mine')} />}
+      <Row to="/invite" icon={Icon.gift} label={t('growth.invite')} />
       <Row to="/blocked" icon={Icon.ban} label={t('trust.blockedList')} />
       <Row to="/settings" icon={Icon.settings} label={t('settings.title')} />
       <Row href={`tel:${brand.supportPhone}`} icon={Icon.help} label={t('profile.help')} />
@@ -92,6 +96,7 @@ export default function Profile() {
           {links}
         </div>
       )}
+      {card && <DigitalCardLauncher onClose={() => setCard(false)} />}
       <ConfirmDialog open={confirm} title={t('settings.logoutQ')} confirmLabel={t('settings.logout')}
         onCancel={() => setConfirm(false)} onConfirm={() => { setConfirm(false); void logout(false) }} />
     </AppShell>

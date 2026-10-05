@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { AppShell } from '../../components/shell'
 import { useIsDesktop } from '../../lib/layout'
 
-const TITLE: Record<string, string> = { '/admin': 'admin.tab.dashboard', '/admin/queue': 'admin.tab.queue', '/admin/users': 'admin.tab.users', '/admin/import': 'admin.tab.import' }
+const TITLE: Record<string, string> = { '/admin': 'admin.tab.dashboard', '/admin/queue': 'admin.tab.queue', '/admin/users': 'admin.tab.users', '/admin/import': 'admin.tab.import', '/admin/posters': 'admin.tab.posters' }
 
 /** Admin pages use the same app shell (sidebar on desktop, bottom tabs on phones) with admin sections. */
 export function AdminLayout({ children, queue, actions }: { children: ReactNode; queue?: number; actions?: ReactNode }) {

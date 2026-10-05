@@ -7,6 +7,7 @@ import { ToastProvider } from './components/toast'
 import { AuthProvider } from './lib/auth'
 import { applyBrandColors } from './lib/brand'
 import { loadTheme } from './lib/theme'
+import { captureSource } from './lib/share'
 import { initTracking } from './lib/track'
 import './styles.css'
 
@@ -16,6 +17,8 @@ try {
   const inv = new URLSearchParams(window.location.search).get('inv')
   if (inv === 'driver' || inv === 'owner') sessionStorage.setItem('vz-inv', inv)
 } catch { /* storage blocked: the person just picks the role */ }
+// job share / friend's invite / QR poster: remember the first link (sent with the first login)
+captureSource()
 void loadTheme()
 void initTracking()
 

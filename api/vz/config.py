@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     public_app_url: str = ""               # e.g. https://vahanza.in (empty: invites need it set)
     msg91_invite_template_id: str = ""     # DLT-approved template with ##name## and ##link##
 
+    # Sprint 8: Vercel cron sends "Authorization: Bearer <CRON_SECRET>" to /api/v1/cron/daily
+    cron_secret: str = ""
+
     cors_origins: str = (
         "http://localhost:5173,http://localhost:4173,"
         "capacitor://localhost,http://localhost,https://localhost"

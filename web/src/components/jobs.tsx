@@ -4,6 +4,7 @@ import { contactOwner, removeInterest, showInterest, type Job } from '../lib/api
 import { placeName } from '../lib/catalog'
 import { track } from '../lib/track'
 import { JobCard } from './cards'
+import { ShareJobButton } from './growth'
 import { ContactButtons } from './home'
 import { useToast } from './toast'
 import { CardMenu } from './trust'
@@ -48,6 +49,7 @@ export function JobItem({ job, showStatus, onBlocked }: { job: Job; showStatus?:
             aria-pressed={interested} loading={busy} icon={interested ? Icon.check : Icon.heart} onClick={() => void toggle()}>
             {interested ? t('job.interestSent') : t('job.interest')}
           </Button>
+          <ShareJobButton post={job} from="job_list" compact fallbackCity={job.owner_district ? placeName(`${job.owner_district}, ${job.owner_state}`, lang) : ''} />
           {showStatus && interested && (
             <p className={`mt-2 text-center text-sm ${job.interest_status === 'seen' ? 'font-medium text-success' : 'text-text-2'}`}>{job.interest_status === 'seen' ? t('job.seen') : t('job.notSeen')}</p>
           )}

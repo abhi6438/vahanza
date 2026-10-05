@@ -26,8 +26,15 @@ TEXT = {
                   "en": ("Your post is live", "The check is done. Drivers near you can see it now.")},
     "post_rejected": {"hi": ("आपकी पोस्ट नहीं लगी", "पोस्ट नियमों के हिसाब से नहीं थी। मदद के लिए हमें कॉल करें।"),
                       "en": ("Your post was not accepted", "The post did not meet the rules. Call us for help.")},
+    "profile_views": {"hi": ("मालिक आपकी प्रोफ़ाइल देख रहे हैं", "इस हफ़्ते {n} मालिकों ने आपकी प्रोफ़ाइल देखी। उपलब्ध रहें, कॉल आ सकता है।"),
+                      "en": ("Owners are looking at you", "{n} owner(s) viewed your profile this week. Stay available for calls.")},
+    "licence_expiry": {"hi": ("लाइसेंस रिन्यू करवाएँ", "आपका ड्राइविंग लाइसेंस {days} दिन में खत्म हो रहा है। समय पर रिन्यू करवाएँ।"),
+                       "en": ("Renew your licence", "Your driving licence expires in {days} days. Renew it in time.")},
+    "referral_joined": {"hi": ("आपके दोस्त जुड़ गए", "{name} ने प्रोफ़ाइल पूरी की। अब {days} दिन आप लिस्ट में सबसे ऊपर दिखेंगे।"),
+                        "en": ("Your friend joined", "{name} finished their profile. You show at the top of lists for {days} days.")},
 }
-URL = {"new_post": "/home", "new_interest": "/posts", "interest_seen": "/interests", "post_live": "/posts", "post_rejected": "/posts"}
+URL = {"new_post": "/home", "new_interest": "/posts", "interest_seen": "/interests", "post_live": "/posts", "post_rejected": "/posts",
+       "profile_views": "/home", "licence_expiry": "/setup?step=licence", "referral_joined": "/invite"}
 VEHICLE_HI = {"truck": "ट्रक", "trailer": "ट्रेलर", "bus": "बस", "car": "कार", "jcb": "जेसीबी", "tractor": "ट्रैक्टर", "auto": "ऑटो", "pickup": "पिकअप"}
 
 
@@ -66,7 +73,7 @@ def _push_for(db, rows: list[dict]) -> None:
             if lang == "hi" and d.get("vehicles_raw"):
                 d["vehicles"] = ", ".join(VEHICLE_HI.get(v, v) for v in d["vehicles_raw"])
             try:
-                body = body.format(**{k: d.get(k, "") for k in ("owner", "driver", "vehicles", "n", "savings")})
+                body = body.format(**{k: d.get(k, "") for k in ("owner", "driver", "vehicles", "n", "savings", "days", "name")})
             except (KeyError, IndexError):
                 pass
             msgs.append((s["id"], dict(s), {"title": title, "body": body, "url": URL[r["kind"]], "kind": r["kind"]}))

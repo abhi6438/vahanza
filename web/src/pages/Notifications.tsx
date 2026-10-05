@@ -12,9 +12,11 @@ import { track, trackScreen } from '../lib/track'
 
 const DOT: Record<Notif['kind'], string> = {
   new_post: 'bg-primary', new_interest: 'bg-success', interest_seen: 'bg-action', post_live: 'bg-success', post_rejected: 'bg-error',
+  profile_views: 'bg-action', licence_expiry: 'bg-warning', referral_joined: 'bg-success',
 }
 const KIND_ICON: Record<Notif['kind'], ReactNode> = {
   new_post: Icon.briefcase, new_interest: Icon.heart, interest_seen: Icon.user, post_live: Icon.check, post_rejected: Icon.alert,
+  profile_views: Icon.user, licence_expiry: Icon.doc, referral_joined: Icon.users,
 }
 
 /** The bell page: newest first, unread ones highlighted. Tapping one opens the right screen. */

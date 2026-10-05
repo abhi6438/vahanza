@@ -155,8 +155,42 @@ def stats(days: int = Query(30, ge=7, le=180), ctx: dict = Depends(admin_ctx), d
         """,
         p,
     ).fetchone() or {}
+    # Sprint 8: where new people come from, shares, and the "jobs without login" funnel
+    sources = _rows(db, """
+        select coalesce(joined_via, 'direct') as via, count(*) filter (where role = 'driver') as drivers,
+               count(*) filter (where role = 'owner') as owners
+        from public.profiles
+        where tenant_id = %(t)s and not is_test and role in ('driver', 'owner')
+          and created_at > now() - make_interval(days => %(days)s)
+        group by 1 order by count(*) desc
+        """, p)
+    shares = db.execute(
+        """
+        select count(*) filter (where name = 'job_share')  as jobs,
+               count(*) filter (where name = 'card_share') as cards,
+               count(*) filter (where name = 'ref_share')  as invites
+        from public.events where tenant_id = %(t)s and not is_test and ts > now() - make_interval(days => %(days)s)
+        """,
+        p,
+    ).fetchone() or {}
+    public = db.execute(
+        """
+        with seen as (
+          select distinct anon_id from public.events
+          where tenant_id = %(t)s and not is_test and name = 'public_jobs_view' and ts > now() - make_interval(days => %(days)s)
+        )
+        select (select count(*) from seen) as visitors,
+               count(distinct e.anon_id) filter (where e.name = 'public_contact_tap') as tapped,
+               count(distinct e.anon_id) filter (where e.name = 'otp_requested') as otp,
+               count(distinct e.anon_id) filter (where e.name = 'signup_complete') as joined
+        from public.events e join seen using (anon_id)
+        where e.tenant_id = %(t)s and e.ts > now() - make_interval(days => %(days)s)
+        """,
+        p,
+    ).fetchone() or {}
     num = lambda r: {k: (float(v) if hasattr(v, "is_integer") and not isinstance(v, int) else v) for k, v in dict(r).items()}
     return {
+        "growth": {"sources": sources, "shares": num(shares), "public": num(public)},
         "days": days,
         "users": num(totals) | {"drivers_listed": listed.get("n", 0)},
         "posts": num(posts),

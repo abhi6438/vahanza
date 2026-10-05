@@ -21,10 +21,11 @@ const Wheel = () => (
 
 export default function Role() {
   const { t } = useTranslation()
-  const { setPendingRole, chooseRole, logout } = useAuth()
+  const { setPendingRole, chooseRole, logout, suggestedRole } = useAuth()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const invited = (() => { try { return sessionStorage.getItem('vz-inv') as R | null } catch { return null } })()
+  // invite link (?inv=driver) or a number we imported earlier: put that card first, marked "for you"
+  const invited = (() => { try { return (sessionStorage.getItem('vz-inv') as R | null) || suggestedRole } catch { return suggestedRole } })()
   useEffect(() => {
     trackScreen('role')
     if (invited) track('invite_open', { role: invited })

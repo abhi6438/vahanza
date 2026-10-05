@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { DriverCard, JobCard, PostStatus } from '../components/cards'
+import { ShareJobButton } from '../components/growth'
 import { VehicleArt } from '../components/form'
 import { DriverContact } from '../components/home'
 import { PushAsk } from '../components/notify'
@@ -9,7 +10,7 @@ import { AppShell, CardGrid } from '../components/shell'
 import { useToast } from '../components/toast'
 import { CardMenu } from '../components/trust'
 import { Badge, Button, ButtonLink, CardSkeletons, ConfirmDialog, EmptyState, ErrorState, Icon, Note, SectionTitle } from '../components/ui'
-import { myPosts, postInterests, setPostStatus, type InterestedDriver, type MyPost } from '../lib/api'
+import { myPosts, postInterests, setPostStatus, type InterestedDriver, type MyPost, recordView } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { label, placeName, rupees, VEHICLES } from '../lib/catalog'
 import { useIsDesktop } from '../lib/layout'
@@ -138,6 +139,7 @@ function StatusActions({ post, onChange }: { post: MyPost; onChange: () => void 
   return (
     <>
       {post.status === 'under_check' && <div className="mt-3"><Note tone="warn">{t('post.underCheckNote')}</Note></div>}
+      {post.status === 'live' && <div className="mt-3"><ShareJobButton post={post} from="my_posts" compact /><p className="mt-1.5 text-sm text-text-2">{t('share.jobOwnerHint')}</p></div>}
       <div className="mt-3 flex flex-wrap gap-2">
         {post.status === 'live' && <Button variant="outline" size="sm" loading={busy === 'paused'} onClick={() => void status('paused')}>{t('post.pause')}</Button>}
         {(post.status === 'paused' || post.status === 'filled') && <Button variant="outline" size="sm" loading={busy === 'live'} onClick={() => void status('live')}>{t('post.resume')}</Button>}
@@ -169,7 +171,7 @@ function InterestedList({ drivers, setDrivers, error, retry }: { drivers: Intere
   return (
     <CardGrid>
       {drivers.map((d) => (
-        <DriverCard key={d.id}
+        <DriverCard key={d.id} onOpen={() => void recordView(d.id).catch(() => {})}
           data={{ name: d.name || '', photo_url: d.photo_url, verified: d.verified, rating_avg: d.rating_avg, rating_count: d.rating_count, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
           menu={<CardMenu target={{ type: 'profile', id: d.id }} personId={d.id} name={d.name || ''} onBlocked={() => setDrivers((cur) => cur?.filter((x) => x.id !== d.id) || null)} />}
           actions={<DriverContact driverId={d.id} name={(d.name || '').split(' ')[0]} />} />

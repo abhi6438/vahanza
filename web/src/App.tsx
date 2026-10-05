@@ -14,6 +14,10 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminQueue from './pages/admin/AdminQueue'
 import AdminUsers from './pages/admin/AdminUsers'
 import AdminImport from './pages/admin/AdminImport'
+import AdminPosters from './pages/admin/AdminPosters'
+import Invite from './pages/Invite'
+import PublicJobs from './pages/PublicJobs'
+import { inviteCode, takeNext } from './lib/share'
 import Login from './pages/Login'
 import Otp from './pages/Otp'
 import Role from './pages/Role'
@@ -27,6 +31,8 @@ import Setup from './pages/Setup'
 import Splash from './pages/Splash'
 
 const PUBLIC = ['/language', '/login', '/otp']
+// no login needed: live jobs and one shared job (Sprint 8)
+const isPublicJobs = (p: string) => p === '/jobs' || /^\/jobs\/[A-Za-z0-9]{4,16}$/.test(p)
 const OPEN = ['/legal'] // reachable in any state
 
 export default function App() {
@@ -60,12 +66,24 @@ export default function App() {
     return () => remove?.()
   }, [])
 
+  // after login, go back to what they tapped (e.g. "Call" on a shared job)
+  // (waits until the first setup screen is done, so a new user lands on the job right after it)
+  useEffect(() => {
+    if (status !== 'ready' || !profile?.setup_done) return
+    const next = takeNext()
+    if (next && next !== loc.pathname) nav(next, { replace: true })
+  }, [status, profile?.setup_done]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (status === 'loading') return <Splash />
   if (status === 'blocked') return <div className="grid h-full place-items-center p-6 text-center text-lg">{t('error.blocked')}</div>
   if (OPEN.includes(loc.pathname)) return <Routes><Route path="/legal" element={<Legal />} /></Routes>
   if (status === 'needsRole' && loc.pathname !== '/role') return <Navigate to="/role" replace />
-  // signed out: language first only the very first time; after that straight to the number
-  if (status === 'signedOut' && !PUBLIC.includes(loc.pathname)) return <Navigate to={langChosen ? '/login' : '/language'} replace />
+  // signed out: language first only the very first time; then the live jobs (no login), or the
+  // number straight away when they came from a personal invite
+  if (status === 'signedOut') {
+    if (isPublicJobs(loc.pathname)) return <Routes><Route path="/jobs" element={<PublicJobs />} /><Route path="/jobs/:code" element={<PublicJobs />} /></Routes>
+    if (!PUBLIC.includes(loc.pathname)) return <Navigate to={!langChosen ? '/language' : inviteCode() ? '/login' : '/jobs'} replace />
+  }
   if (status === 'ready' && loc.pathname === '/role') return <Navigate to="/home" replace />
   if (status === 'ready' && PUBLIC.includes(loc.pathname)) return <Navigate to="/home" replace />
   // Admins get the admin panel only (and settings, to log out).
@@ -77,6 +95,7 @@ export default function App() {
         <Route path="/admin/queue" element={<AdminQueue />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/import" element={<AdminImport />} />
+        <Route path="/admin/posters" element={<AdminPosters />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
@@ -101,6 +120,9 @@ export default function App() {
       <Route path="/posts/new" element={<PostNew />} />
       <Route path="/interests" element={<MyInterests />} />
       <Route path="/notifications" element={<Notifications />} />
+      <Route path="/invite" element={<Invite />} />
+      <Route path="/jobs" element={<Navigate to="/home" replace />} />
+      <Route path="/jobs/:code" element={<PublicJobs />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

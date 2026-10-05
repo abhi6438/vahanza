@@ -1,3 +1,4 @@
+import { canSpeak, MicButton } from './voice'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { VEHICLE_SVG } from '../assets/vehicles'
@@ -130,7 +131,7 @@ export function Toggle({ on, onChange, children }: { on: boolean; onChange: (v: 
   )
 }
 
-export function TextField({ value, onChange, placeholder, label, big, inputMode, maxLength, upper }: {
+export function TextField({ value, onChange, placeholder, label, big, inputMode, maxLength, upper, voice }: {
   value: string
   onChange: (v: string) => void
   placeholder?: string
@@ -139,8 +140,10 @@ export function TextField({ value, onChange, placeholder, label, big, inputMode,
   inputMode?: 'text' | 'numeric' | 'tel'
   maxLength?: number
   upper?: boolean
+  /** show a mic button: speak instead of typing (where the phone supports it) */
+  voice?: boolean
 }) {
-  return (
+  const input = (
     <input
       aria-label={label}
       value={value}
@@ -149,8 +152,15 @@ export function TextField({ value, onChange, placeholder, label, big, inputMode,
       maxLength={maxLength}
       autoComplete="off"
       onChange={(e) => onChange(upper ? e.target.value.toUpperCase() : e.target.value)}
-      className={`w-full rounded-md border border-border bg-surface px-4 py-3 font-medium outline-none transition-colors placeholder:font-normal placeholder:text-text-2/70 hover:border-text-2/40 focus:border-primary focus:ring-2 focus:ring-primary/25 ${big ? 'text-2xl' : 'text-lg'}`}
+      className={`w-full min-w-0 rounded-md border border-border bg-surface px-4 py-3 font-medium outline-none transition-colors placeholder:font-normal placeholder:text-text-2/70 hover:border-text-2/40 focus:border-primary focus:ring-2 focus:ring-primary/25 ${big ? 'text-2xl' : 'text-lg'}`}
     />
+  )
+  if (!voice || !canSpeak()) return input
+  return (
+    <div className="flex flex-wrap items-center gap-2 [&>input]:flex-1">
+      {input}
+      <MicButton label={label} onText={(text) => onChange((maxLength ? text.slice(0, maxLength) : text).replace(/[.।]$/, ''))} />
+    </div>
   )
 }
 

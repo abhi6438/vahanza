@@ -89,6 +89,8 @@ export interface DriverDetails {
   languages: string[]
   available_from: 'now' | 'w1' | 'd15' | 'm1' | null
   is_available?: boolean
+  /** YYYY-MM-DD, for the renewal reminder */
+  licence_expiry?: string | null
 }
 
 export interface FleetGroup {
@@ -100,7 +102,9 @@ export interface FleetGroup {
 }
 
 export interface PlaceIn { district: string; state: string; pincode?: string | null; lat?: number | null; lng?: number | null }
-export interface Me { exists: boolean; profile: Profile | null; driver?: DriverDetails | null; fleet?: FleetGroup[] | null }
+export interface Me { exists: boolean; profile: Profile | null; driver?: DriverDetails | null; fleet?: FleetGroup[] | null; suggested_role?: 'driver' | 'owner' | null }
+/** The first link this phone opened (job share, referral, QR poster, import invite). */
+export interface Source { via: 'direct' | 'share' | 'ref' | 'poster' | 'invite'; code?: string | null }
 export interface ProfileBody {
   name: string
   business_name?: string | null
@@ -116,7 +120,7 @@ export const photoSrc = (url: string | null | undefined) =>
   !url ? null : url.startsWith('/') ? (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + url : url
 
 export const getMe = () => api<Me>('/me')
-export const startMe = (role: 'driver' | 'owner', lang: 'hi' | 'en') => api<Me>('/me', { method: 'POST', json: { role, lang } })
+export const startMe = (role: 'driver' | 'owner', lang: 'hi' | 'en', source?: Source | null) => api<Me>('/me', { method: 'POST', json: { role, lang, source: source || null } })
 export const saveProfile = (body: ProfileBody) => api<Me>('/me/profile', { method: 'PUT', json: body })
 export const uploadPhoto = (jpeg: Blob) =>
   api<{ photo_url: string }>('/me/photo', { method: 'POST', body: jpeg, headers: { 'Content-Type': jpeg.type || 'image/jpeg' } })
@@ -140,6 +144,8 @@ export interface DriverListItem extends DriverDetails {
   last_seen_at: string | null
   rating_avg: number | null
   rating_count: number
+  /** brought friends: shown first for a few days */
+  top?: boolean
 }
 export const listDrivers = (q: { vehicle?: string | null; verified?: boolean; offset?: number }) => {
   const p = new URLSearchParams()
@@ -172,6 +178,8 @@ export interface Post {
   created_at: string
   expires_at: string
   groups: PostGroup[]
+  /** short code for the public / WhatsApp link (/j/<code>) */
+  share_code?: string
 }
 export interface MyPost extends Post { interested: number; new_interested: number }
 export interface Job extends Post {
@@ -220,6 +228,34 @@ export const removeInterest = (id: string) => api<void>(`/jobs/${id}/interest`, 
 export const contactOwner = (id: string, via: 'call' | 'whatsapp') => api<{ phone: string }>(`/jobs/${id}/contact`, { method: 'POST', json: { via } })
 export const myInterests = () => api<{ items: Job[] }>('/me/interests')
 
+// ---- Sprint 8: no-login pages, sharing, referral ----
+export interface PublicJob extends Omit<Post, 'check_flags'> {
+  owner_district: string | null
+  owner_state: string | null
+  owner_verified: boolean
+  owner_rating_avg: number | null
+  owner_rating_count: number
+  /** only on the single-job answer: still taking drivers */
+  open?: boolean
+}
+export interface PublicStats { posts: number; drivers: number; posts_here: number; drivers_here: number; district: string | null }
+export const pub = {
+  jobs: (q: { district?: string | null; vehicle?: string | null; offset?: number }) => {
+    const p = new URLSearchParams()
+    if (q.district) p.set('district', q.district)
+    if (q.vehicle) p.set('vehicle', q.vehicle)
+    if (q.offset) p.set('offset', String(q.offset))
+    return api<{ items: PublicJob[]; has_more: boolean }>(`/public/jobs?${p}`, { auth: false })
+  },
+  stats: (district?: string | null) => api<PublicStats>(`/public/stats${district ? `?district=${encodeURIComponent(district)}` : ''}`, { auth: false }),
+  job: (code: string) => api<PublicJob>(`/public/jobs/${encodeURIComponent(code)}`, { auth: false }),
+  invite: (code: string) => api<{ role: 'driver' | 'owner'; name: string | null; phone: string }>(`/public/invite/${encodeURIComponent(code)}`, { auth: false }),
+  ref: (code: string) => api<{ name: string | null; photo_url: string | null; role: string | null }>(`/public/ref/${encodeURIComponent(code)}`, { auth: false }),
+}
+export interface Growth { ref_code: string; joined: number; completed: number; boost_until: string | null; boost_days: number; views_week: number; views_total: number }
+export const myGrowth = () => api<Growth>('/me/growth')
+export const recordView = (driverId: string) => api<void>(`/drivers/${driverId}/view`, { method: 'POST' })
+
 // ---- admin ----
 export interface AdminStats {
   days: number
@@ -234,7 +270,13 @@ export interface AdminStats {
   time: { avg_minutes: number; sessions: number }
   cities: { district: string; state: string; drivers: number; owners: number }[]
   queue: number
+  growth?: {
+    sources: { via: string; drivers: number; owners: number }[]
+    shares: { jobs: number; cards: number; invites: number }
+    public: { visitors: number; tapped: number; otp: number; joined: number }
+  }
 }
+export interface Poster { id: number; code: string; place: string; district: string | null; state: string | null; created_at: string; opened: number; joined: number }
 export interface QueuePost { id: string; check_flags: string[]; savings_monthly: number; base_cities: string[]; created_at: string; owner_id: string; owner_name: string | null; business_name: string | null; owner_phone: string | null; district: string | null; state: string | null; drivers_needed: number }
 export interface QueueProfile { id: string; name: string | null; business_name: string | null; phone: string | null; role: string; district: string | null; state: string | null; check_flags: string[]; created_at: string }
 export interface QueueReport { id: string; target_type: 'profile' | 'post'; target_id: string; reason: string; note: string | null; created_at: string; reporter_name: string | null; target_name: string | null; target_business: string | null; target_phone: string | null; target_profile_id: string | null; open_reports: number }
@@ -274,6 +316,8 @@ export const admin = {
   inviteConfig: () => api<{ sms: boolean; sms_dry_run: boolean; app_url: string | null; max_invites: number; gap_days: number }>('/admin/invite-config'),
   inviteSms: (body: { ids?: number[]; role?: string | null; import_id?: number | null }) => api<{ sent: number }>('/admin/prospects/invite-sms', { method: 'POST', json: body }),
   inviteWhatsapp: (id: number) => api<{ url: string; text: string }>(`/admin/prospects/${id}/whatsapp`, { method: 'POST', json: { app_url: window.location.origin } }),
+  posters: () => api<{ items: Poster[] }>('/admin/posters'),
+  newPoster: (body: { place: string; district?: string | null; state?: string | null }) => api<Poster>('/admin/posters', { method: 'POST', json: body }),
   optOut: (id: number, opted_out: boolean) => api<{ opted_out: boolean }>(`/admin/prospects/${id}`, { method: 'PATCH', json: { opted_out } }),
 }
 
@@ -310,11 +354,11 @@ export const toRate = () => api<{ items: ToRate[] }>('/me/to-rate')
 export const ratePerson = (ratee_id: string, stars: number, tags: string[]) => api<{ rated: boolean }>('/ratings', { method: 'POST', json: { ratee_id, stars, tags } })
 
 // ---------------------------------------------------------------- notifications (Sprint 6)
-export type NotifKind = 'new_post' | 'new_interest' | 'interest_seen' | 'post_live' | 'post_rejected'
+export type NotifKind = 'new_post' | 'new_interest' | 'interest_seen' | 'post_live' | 'post_rejected' | 'profile_views' | 'licence_expiry' | 'referral_joined'
 export interface Notif {
   id: number
   kind: NotifKind
-  data: { post_id?: string; owner?: string; driver?: string; driver_id?: string; vehicles_raw?: string[]; n?: number; savings?: string }
+  data: { post_id?: string; owner?: string; driver?: string; driver_id?: string; vehicles_raw?: string[]; n?: number; savings?: string; days?: number; date?: string; name?: string }
   read_at: string | null
   created_at: string
 }

@@ -28,6 +28,7 @@ export function useNavItems(adminQueue?: number): NavItem[] {
       { to: '/admin/queue', icon: Icon.shield, label: t('admin.tab.queue'), count: adminQueue },
       { to: '/admin/users', icon: Icon.users, label: t('admin.tab.users') },
       { to: '/admin/import', icon: Icon.upload, label: t('admin.tab.import') },
+      { to: '/admin/posters', icon: Icon.qr, label: t('admin.tab.posters') },
     ]
   }
   return [

@@ -18,8 +18,18 @@
       "destination": "/api/index"
     },
     {
+      "source": "/(j|r|q)/(.*)",
+      "destination": "/api/index"
+    },
+    {
       "source": "/((?!assets/|icons/|manifest.webmanifest|sw.js|workbox-).*)",
       "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/v1/cron/daily",
+      "schedule": "30 3 * * *"
     }
   ]
 }

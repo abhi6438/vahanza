@@ -200,7 +200,7 @@ def invite_sms(body: SmsInvite, ctx: dict = Depends(admin_ctx), db=Depends(get_d
         where += " and p.id = any(%(ids)s)"
         params["ids"] = body.ids
     people = db.execute(
-        f"select p.id, p.phone, p.name, p.role from public.prospects p where {where} order by p.id limit {SMS_MAX_PER_CALL}",
+        f"select p.id, p.phone, p.name, p.role, p.code from public.prospects p where {where} order by p.id limit {SMS_MAX_PER_CALL}",
         params,
     ).fetchall() or []
     if not people:
@@ -210,7 +210,7 @@ def invite_sms(body: SmsInvite, ctx: dict = Depends(admin_ctx), db=Depends(get_d
         batch = people[start:start + SMS_BATCH]
         try:
             send_flow(s, s.msg91_invite_template_id, [
-                {"mobiles": p["phone"], "name": (p["name"] or "").split(" ")[0] or "ji", "link": pr.invite_link(p["role"])}
+                {"mobiles": p["phone"], "name": (p["name"] or "").split(" ")[0] or "ji", "link": pr.invite_link(p["role"], code=p.get("code"))}
                 for p in batch
             ])
         except SmsError as e:
@@ -234,7 +234,7 @@ class WaInvite(BaseModel):
 def invite_whatsapp(prospect_id: int, body: WaInvite, ctx: dict = Depends(admin_ctx), db=Depends(get_db)):
     """Returns a wa.me link with the invite text; the admin sends it from their own WhatsApp."""
     p = db.execute(
-        f"select p.id, p.phone, p.name, p.role, ({pr.ELIGIBLE_SQL}) as ok, p.joined_at, p.opted_out "
+        f"select p.id, p.phone, p.name, p.role, p.code, ({pr.ELIGIBLE_SQL}) as ok, p.joined_at, p.opted_out "
         "from public.prospects p where p.id = %s and p.tenant_id = %s",
         (prospect_id, ctx["tenant"]),
     ).fetchone()
@@ -246,7 +246,7 @@ def invite_whatsapp(prospect_id: int, body: WaInvite, ctx: dict = Depends(admin_
     base = get_settings().public_app_url or (body.app_url or "")
     if not base.startswith(("https://", "http://localhost")):
         raise HTTPException(409, {"code": "no_app_url"})
-    text = pr.invite_text(p["role"], p["name"], _brand_name(db, ctx["tenant"]), pr.invite_link(p["role"], base))
+    text = pr.invite_text(p["role"], p["name"], _brand_name(db, ctx["tenant"]), pr.invite_link(p["role"], base, p.get("code")))
     db.execute(
         "update public.prospects set invites = invites + 1, last_invited_at = now(), last_channel = 'whatsapp' where id = %s",
         (prospect_id,),

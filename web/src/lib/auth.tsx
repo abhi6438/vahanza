@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import i18n from '../i18n'
 import { ApiError, getMe, heartbeat, startMe, type DriverDetails, type FleetGroup, type Me, type Profile } from './api'
+import { clearInvite, clearSource, getSource } from './share'
 import { storage } from './storage'
 import { isValidIndianMobile, supabase, toE164 } from './supabase'
 import { track } from './track'
@@ -20,6 +21,8 @@ interface AuthState {
   /** The person has picked a language before on this phone (returning users skip that screen). */
   langChosen: boolean
   pendingRole: Role | null
+  /** A new number that was imported earlier (bulk import): the role it was imported as. */
+  suggestedRole: Role | null
   setLang: (l: Lang) => Promise<void>
   setPendingRole: (r: Role) => void
   sendOtp: (phone10: string) => Promise<void>
@@ -42,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>('hi')
   const [langChosen, setLangChosen] = useState(false)
   const [pendingRole, setPendingRoleState] = useState<Role | null>(null)
+  const [suggestedRole, setSuggestedRole] = useState<Role | null>(null)
 
   const applyMe = useCallback((me: Me) => {
     setProfile(me.profile)
@@ -59,7 +63,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (me.exists && me.profile?.role) {
         applyMe(me)
         setStatus('ready')
-      } else setStatus('needsRole')
+      } else {
+        setSuggestedRole(me.suggested_role ?? null)
+        setStatus('needsRole')
+      }
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) {
         await supabase.auth.signOut({ scope: 'local' })
@@ -149,6 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
       // new number: ask "who are you?" now (only once, ever)
+      setSuggestedRole(me.suggested_role ?? null)
       await storage.removeItem('pending-role')
       setStatus('needsRole')
     },
@@ -157,10 +165,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const chooseRole = useCallback(
     async (r: Role) => {
-      const res = await startMe(r, lang)
+      const source = getSource()
+      const res = await startMe(r, lang, source)
       applyMe(res)
       setStatus('ready')
-      track('signup_complete', { role: r })
+      clearSource()
+      clearInvite()
+      track('signup_complete', { role: r, via: source?.via || 'direct' })
     },
     [lang, applyMe],
   )
@@ -175,8 +186,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [applyMe])
 
   const value = useMemo(
-    () => ({ status, session, profile, driver, fleet, lang, langChosen, pendingRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout, applyMe, setPhotoUrl }),
-    [status, session, profile, driver, fleet, lang, langChosen, pendingRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout, applyMe, setPhotoUrl],
+    () => ({ status, session, profile, driver, fleet, lang, langChosen, pendingRole, suggestedRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout, applyMe, setPhotoUrl }),
+    [status, session, profile, driver, fleet, lang, langChosen, pendingRole, suggestedRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout, applyMe, setPhotoUrl],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

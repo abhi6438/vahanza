@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/auth-layout'
-import { BigButton, H, Segmented, Sub } from '../components/ui'
+import { BigButton, H, Icon, Note, Segmented, Sub } from '../components/ui'
+import { pub } from '../lib/api'
+import { inviteCode } from '../lib/share'
 import { useAuth } from '../lib/auth'
 import { brand } from '../lib/brand'
 import { isValidIndianMobile } from '../lib/supabase'
@@ -16,7 +18,14 @@ export default function Login() {
   const [consent, setConsent] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [invited, setInvited] = useState<string | null>(null)
   useEffect(() => { trackScreen('login') }, [])
+  // personal invite link from a bulk import: "your profile is ready", number already filled in
+  useEffect(() => {
+    const code = inviteCode()
+    if (!code) return
+    pub.invite(code).then((r) => { setPhone((cur) => cur || r.phone); setInvited(r.name || '') }).catch(() => {})
+  }, [])
 
   const ok = isValidIndianMobile(phone) && consent
 
@@ -35,11 +44,12 @@ export default function Login() {
   }
 
   return (
-    <AuthLayout title={t('login.title')} back={false} footer={<BigButton disabled={!ok || busy} onClick={submit}>{t('login.send')}</BigButton>}>
+    <AuthLayout title={t('login.title')} back={window.history.length > 1 && !invited} footer={<BigButton disabled={!ok || busy} onClick={submit}>{t('login.send')}</BigButton>}>
         <div className="mb-5 flex justify-end">
           <Segmented label={t('settings.language')} value={lang} onChange={(l) => void setLang(l)}
             options={[{ key: 'hi', label: 'हिंदी' }, { key: 'en', label: 'English' }]} />
         </div>
+        {invited !== null && <div className="mb-4"><Note tone="success" icon={Icon.check}>{invited ? t('login.readyName', { name: invited }) : t('login.ready')}</Note></div>}
         <H>{t('login.title')}</H>
         <Sub>{t('login.sub')}</Sub>
         <label className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 focus-within:border-brand">

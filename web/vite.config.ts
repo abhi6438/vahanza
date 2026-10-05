@@ -53,6 +53,6 @@ export default defineConfig(({ mode }) => {
     ],
     define: { __BRAND_ID__: JSON.stringify(brandId), __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || process.env.npm_package_version || '1.0.0') },
     // brands/ and shared/ live one level up, next to api/
-    server: { proxy: { '/api': 'http://localhost:8000' }, fs: { allow: ['..'] } },
+    server: { proxy: { '/api': 'http://localhost:8000', '^/(j|r|q)/': 'http://localhost:8000' }, fs: { allow: ['..'] } },
   }
 })

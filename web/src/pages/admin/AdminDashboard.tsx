@@ -71,6 +71,26 @@ export default function AdminDashboard() {
             </Card>
           </div>
 
+          {s.growth && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card title={t('admin.c.sources')} sub={t('admin.c.sourcesSub', { n: s.days })}>
+                {s.growth.sources.length
+                  ? <BarList items={s.growth.sources.map((r) => [t(`admin.src.${r.via}`, { defaultValue: r.via }), r.drivers + r.owners] as [string, number])} />
+                  : <p className="text-sm text-text-2">{t('admin.none')}</p>}
+                <p className="mt-3 text-sm text-text-2">{t('admin.c.shares', { j: nf(s.growth.shares.jobs), c: nf(s.growth.shares.cards), i: nf(s.growth.shares.invites) })}</p>
+                <Link to="/admin/posters" className="mt-2 inline-block text-sm font-semibold text-primary hover:underline">{t('admin.c.postersLink')} →</Link>
+              </Card>
+              <Card title={t('admin.c.public')} sub={t('admin.c.publicSub')}>
+                <BarList items={[
+                  [t('admin.pf.visitors'), s.growth.public.visitors],
+                  [t('admin.pf.tapped'), s.growth.public.tapped],
+                  [t('admin.pf.otp'), s.growth.public.otp],
+                  [t('admin.pf.joined'), s.growth.public.joined],
+                ]} percentOfFirst />
+              </Card>
+            </div>
+          )}
+
           <Card title={t('admin.c.cities')}>
             <CityTable rows={s.cities} />
           </Card>

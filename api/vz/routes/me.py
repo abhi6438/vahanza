@@ -1,4 +1,5 @@
 """Who am I: profile, first-time role choice, profile setup (driver details / owner fleet), heartbeat."""
+from datetime import date
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -7,7 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ..auth import AuthUser, current_user
 from ..checks import clean_name, fleet_flags, name_error, profile_flags
-from .. import prospects
+from .. import growth, prospects
 from ..deps import get_db, tenant_id
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -18,7 +19,7 @@ PROFILE_COLS = (
 )
 DRIVER_COLS = (
     "vehicles, max_wheels, licence_type, licence_last4, experience_years, savings_wanted, savings_negotiable, "
-    "pay_prefs, work_type, area, languages, available_from, is_available"
+    "pay_prefs, work_type, area, languages, available_from, is_available, licence_expiry"
 )
 VEHICLES = Literal["truck", "trailer", "bus", "car", "jcb", "tractor", "auto", "pickup"]
 WHEELED = {"truck", "trailer", "bus"}
@@ -57,6 +58,14 @@ class DriverDetails(BaseModel):
     languages: list[str] = Field(default_factory=list, max_length=10)
     available_from: Optional[Literal["now", "w1", "d15", "m1"]] = None
     is_available: bool = True
+    licence_expiry: Optional[date] = None          # for the renewal reminder
+
+    @field_validator("licence_expiry")
+    @classmethod
+    def _expiry(cls, v):
+        if v is not None and not date(2000, 1, 1) <= v <= date(2080, 12, 31):
+            raise ValueError("licence expiry out of range")
+        return v
 
     @field_validator("max_wheels")
     @classmethod
@@ -95,15 +104,23 @@ class FleetGroup(BaseModel):
 
 class MeResponse(BaseModel):
     exists: bool
+    suggested_role: Optional[Literal["driver", "owner"]] = None
     profile: Optional[Profile] = None
     driver: Optional[DriverDetails] = None
     fleet: Optional[list[FleetGroup]] = None
+
+
+class Source(BaseModel):
+    """The first link this phone opened: job share, referral, QR poster or import invite."""
+    via: Literal["direct", "share", "ref", "poster", "invite"] = "direct"
+    code: Optional[str] = Field(default=None, max_length=16)
 
 
 class StartBody(BaseModel):
     role: Literal["driver", "owner"]
     lang: Literal["hi", "en"] = "hi"
     name: Optional[str] = Field(default=None, max_length=80)
+    source: Optional[Source] = None
 
 
 class Place(BaseModel):
@@ -163,7 +180,12 @@ def _my_row(db, user: AuthUser, tenant: str) -> dict:
 def get_me(user: AuthUser = Depends(current_user), db=Depends(get_db), tenant: str = Depends(tenant_id)):
     row = db.execute(f"select {PROFILE_COLS} from public.profiles where id = %s", (user.id,)).fetchone()
     if not row:
-        return MeResponse(exists=False)
+        # a new number that was imported earlier: suggest its role ("for you" on the role screen)
+        hit = db.execute(
+            "select role from public.prospects where tenant_id = %s and phone = %s and joined_at is null",
+            (tenant, user.phone),
+        ).fetchone() if user.phone else None
+        return MeResponse(exists=False, suggested_role=hit["role"] if hit else None)
     if row["blocked"]:
         raise HTTPException(403, "Account blocked")
     if row["tenant_id"] != tenant:
@@ -200,6 +222,9 @@ def start(body: StartBody, user: AuthUser = Depends(current_user), db=Depends(ge
             "insert into public.driver_details (profile_id, tenant_id) values (%s, %s) on conflict do nothing",
             (user.id, tenant),
         )
+    # where they came from (first time only)
+    src = body.source or Source()
+    growth.attribute(db, tenant, user.id, src.via, src.code)
     # imported earlier (bulk import)? link it and pre-fill name / place / vehicles
     if not row.get("setup_done") and prospects.claim(db, tenant, user.id, row.get("phone") or user.phone, row["role"]):
         row = db.execute(f"select {PROFILE_COLS} from public.profiles where id = %s", (user.id,)).fetchone() or row
@@ -268,6 +293,7 @@ def save_profile(body: ProfileBody, user: AuthUser = Depends(current_user), db=D
     """Saves the setup screens (also used later for "edit profile")."""
     row = _my_row(db, user, tenant)
     role = row["role"]
+    first_finish = body.finish and not row["setup_done"]
     err = name_error(body.name)
     if err:
         raise HTTPException(422, {"code": err})
@@ -314,6 +340,8 @@ def save_profile(body: ProfileBody, user: AuthUser = Depends(current_user), db=D
         )
     if fleet is not None:
         _sync_fleet(db, user.id, tenant, fleet)
+    if first_finish:
+        growth.reward_referrer(db, tenant, user.id)   # whoever invited them gets the "Top" boost
     return _load(db, user.id, row)
 
 

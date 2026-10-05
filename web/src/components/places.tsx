@@ -64,7 +64,7 @@ export function CityPicker({ value, onToggle, preferState, multi = true }: {
           ))}
         </div>
       )}
-      <TextField value={q} onChange={setQ} label={t('place.search')} placeholder={t('place.searchPh')} />
+      <TextField value={q} onChange={setQ} label={t('place.search')} placeholder={t('place.searchPh')} voice />
       <div className="mt-3 grid grid-cols-2 gap-2">
         {shown.map((h) => (
           <button key={h.value} type="button" className={cityBtn} aria-pressed={value.includes(h.value)} onClick={() => onToggle(h.value, h)}>

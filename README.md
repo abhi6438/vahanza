@@ -37,7 +37,7 @@ A white-label app for vehicle owners and drivers. One codebase serves the web/PW
 ## 1. Supabase setup (one time)
 
 1. Create a project in region **Mumbai (ap-south-1)**.
-2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql`).
+2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql`).
 3. Auth → Providers → **Phone**: enable it. You can pick any SMS provider here because the hook below replaces it.
 4. Auth → Hooks → **Send SMS hook** → HTTPS:
    `https://<your-domain>/api/v1/hooks/send-sms`. Generate the secret and copy it into `SEND_SMS_HOOK_SECRET` (format `v1,whsec_...`).
@@ -107,6 +107,21 @@ Put both into `.env` and Vercel, plus `VAPID_SUBJECT=mailto:<your support email>
 4. When an imported number logs in, the app suggests the right role ("आपके लिए") and the first setup screen comes pre-filled with their name, place (and vehicles for drivers). They only confirm. Past files show how many were invited and how many joined.
 
 Settings: `PUBLIC_APP_URL` (the address in invites, e.g. `https://vahanza.in`) and `MSG91_INVITE_TEMPLATE_ID` (DLT template with variables `##name##` and `##link##`, e.g. "नमस्ते ##name## जी, Vahanza पर पास का काम / ड्राइवर देखें, मुफ़्त। जुड़ें: ##link##").
+
+## Driver growth (Sprint 8)
+
+- **Jobs without login** (`/jobs`): after choosing a language, a new visitor sees live jobs in their city ("आज रीवा में 12 ड्राइवर चाहिए"). Number + OTP are asked only on "Call the owner", and the app then opens that job. Owner names and numbers are never shown there.
+- **WhatsApp share**: every live post has "WhatsApp पर भेजें" (owners in My posts, drivers on each job). The link `/j/<code>` shows a preview in WhatsApp (title + savings) and opens the job.
+- **Driver's Digital Card**: Profile / Home → "मेरा कार्ड". A 1080×1920 picture (WhatsApp Status size) with photo, vehicles, licence, experience and a QR to the driver's invite link. No phone number on it.
+- **Invite friends** (`/invite`): personal link `/r/<code>`. When a friend who joined through it finishes their profile, the inviter is shown first in lists (nearby only) for 7 days. No money.
+- **QR posters** (admin → QR पोस्टर): one A4 poster per place (dhaba, transport nagar, RTO…), printed or saved as PDF from the browser. The table shows how many phones opened each QR and how many people joined.
+- **Profile views**: owners opening a driver's full details are counted (once per owner per day); drivers see "इस हफ़्ते 8 मालिकों ने आपकी प्रोफ़ाइल देखी" and get a weekly alert.
+- **Licence renewal reminder**: optional expiry date in the licence step; alerts 30 and 7 days before.
+- **Personal import invites**: the invite link now carries a code (`/?inv=driver&p=<code>`): the login screen says "आपकी प्रोफ़ाइल तैयार है" with the number already filled in.
+- **Speak instead of typing**: mic button on name, firm and city search (Chrome on Android / desktop). In the APK the keyboard's own mic is used.
+- **Admin dashboard**: "where new people came from" (share / friend's link / poster / invite / direct), shares, and the no-login jobs funnel.
+
+Settings: `CRON_SECRET` (any long random text). Vercel calls `/api/v1/cron/daily` every day at 09:00 IST (see `vercel.json`) for licence reminders and the Monday "profile views" alert; without the secret the job is refused. New packages: run `npm install` in `web/` (qrcode, @capacitor/share, @capacitor/filesystem) and `npx cap sync android` before an APK build.
 
 ## 2. MSG91
 

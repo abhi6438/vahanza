@@ -123,9 +123,9 @@ export default function SetupOwner() {
         canNext={f.name.trim().length > 1 && !!f.place} onNext={() => void aboutNext()} error={error}>
         <PhotoPicker owner />
         <Label>{t('setup.yourName')}</Label>
-        <TextField big value={f.name} onChange={(v) => set('name', v)} label={t('setup.yourName')} placeholder={t('setup.o.namePh')} maxLength={60} />
+        <TextField big value={f.name} onChange={(v) => set('name', v)} label={t('setup.yourName')} placeholder={t('setup.o.namePh')} maxLength={60} voice />
         <Label optional>{t('setup.o.business')}</Label>
-        <TextField value={f.business_name} onChange={(v) => set('business_name', v)} label={t('setup.o.business')} placeholder={t('setup.o.businessPh')} maxLength={80} />
+        <TextField value={f.business_name} onChange={(v) => set('business_name', v)} label={t('setup.o.business')} placeholder={t('setup.o.businessPh')} maxLength={80} voice />
         <Label>{t('setup.o.where')}</Label>
         <PlaceField value={f.place} onChange={(p) => set('place', p)} />
       </Wizard>

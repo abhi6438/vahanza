@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/auth-layout'
 import { BigButton, H, Sub } from '../components/ui'
 import { useAuth, type Lang } from '../lib/auth'
+import { inviteCode } from '../lib/share'
 import { trackScreen } from '../lib/track'
 
 const OPTIONS: { code: Lang; glyph: string; name: string; sub: string }[] = [
@@ -18,7 +19,7 @@ export default function Language() {
   useEffect(() => { trackScreen('language') }, [])
 
   return (
-    <AuthLayout title={"भाषा चुनें · Language"} back={false} footer={<BigButton onClick={() => { void setLang(lang); nav('/login') }}>{t('continue')}</BigButton>}>
+    <AuthLayout title={"भाषा चुनें · Language"} back={false} footer={<BigButton onClick={() => { void setLang(lang); nav(inviteCode() ? '/login' : '/jobs') }}>{t('continue')}</BigButton>}>
         <H>{t('lang.title')}</H>
         <Sub>{t('lang.sub')}</Sub>
         <div className="flex flex-col gap-3">

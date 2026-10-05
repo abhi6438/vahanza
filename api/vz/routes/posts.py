@@ -107,7 +107,7 @@ def _require(me: dict, *roles: str) -> None:
 POST_SELECT = """
     p.id, p.status, p.savings_monthly, p.savings_negotiable, p.pay_mix, p.base_cities, p.coverage,
     p.often_cities, p.licence_type, p.min_experience, p.work_type, p.facilities, p.check_flags,
-    p.created_at, p.expires_at,
+    p.created_at, p.expires_at, p.share_code,
     (select coalesce(jsonb_agg(jsonb_build_object(
         'fleet_group_id', fg.id, 'vehicle_type', fg.vehicle_type, 'wheels', fg.wheels,
         'drivers_needed', pg.drivers_needed) order by fg.created_at), '[]'::jsonb)
@@ -297,6 +297,10 @@ def list_jobs(
                   where (bl.blocker_id = %(me)s::uuid and bl.blocked_id = o.id) or (bl.blocker_id = o.id and bl.blocked_id = %(me)s::uuid))
         order by
           (exists (select 1 from unnest(p.base_cities) c where lower(split_part(c, ',', 1)) = lower(%(district)s))) desc,
+          -- owners who brought friends ("Top" boost) first, but only nearby ones
+          (coalesce(o.boost_until, now()) > now() and (lower(o.district) = lower(%(district)s)
+             or (o.location is not null and %(loc)s::extensions.geography is not null
+                 and extensions.st_dwithin(o.location, %(loc)s::extensions.geography, 150000)))) desc,
           o.location operator(extensions.<->) %(loc)s::extensions.geography nulls last,
           p.created_at desc
         limit %(limit)s offset %(offset)s

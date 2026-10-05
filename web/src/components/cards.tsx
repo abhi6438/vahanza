@@ -82,10 +82,12 @@ export interface DriverCardData {
   distance_km?: number | null
   rating_avg?: number | null
   rating_count?: number | null
+  /** brought friends: "Top" for a few days */
+  top?: boolean
   d: DriverDetails
 }
 
-export function DriverCard({ data, self, actions, menu, full }: { data: DriverCardData; self?: boolean; actions?: ReactNode; menu?: ReactNode; full?: boolean }) {
+export function DriverCard({ data, self, actions, menu, full, onOpen }: { data: DriverCardData; self?: boolean; actions?: ReactNode; menu?: ReactNode; full?: boolean; onOpen?: () => void }) {
   const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(false)
   const lang = i18n.language
@@ -98,7 +100,7 @@ export function DriverCard({ data, self, actions, menu, full }: { data: DriverCa
     <>
       <CardHead photo={data.photo_url} name={data.name || t('setup.yourName')} meta={meta} verified={data.verified} menu={menu}
         rating={<RatingBadge avg={data.rating_avg} count={data.rating_count} />}
-        extra={d.available_from && <Badge tone={now ? 'success' : 'neutral'} icon={now ? <span className="size-1.5 rounded-full bg-current" /> : undefined}>{t(`card.when.${d.available_from}`)}</Badge>} />
+        extra={<>{data.top && <Badge tone="action" icon={Icon.sparkle}>{t('card.top')}</Badge>}{d.available_from && <Badge tone={now ? 'success' : 'neutral'} icon={now ? <span className="size-1.5 rounded-full bg-current" /> : undefined}>{t(`card.when.${d.available_from}`)}</Badge>}</>} />
       {d.vehicles.length > 0 && (
         <div className="mt-3 flex items-center gap-2.5 rounded-md bg-surface-2 px-3 py-2">
           <span className="flex -space-x-2">{d.vehicles.slice(0, 3).map((v) => <VehicleArt key={v} kind={v} className="h-6 w-10" />)}</span>
@@ -120,7 +122,7 @@ export function DriverCard({ data, self, actions, menu, full }: { data: DriverCa
   return (
     <article className={full && !self ? 'flex flex-col' : `flex h-full flex-col rounded-lg border bg-surface p-4 shadow-sm ${self ? 'border-action' : 'border-border'}`}>
       {body}
-      {!showAll && <DetailsLink onClick={() => setOpen(true)} />}
+      {!showAll && <DetailsLink onClick={() => { setOpen(true); onOpen?.() }} />}
       {actions && <div className="mt-auto pt-1">{actions}</div>}
       {!showAll && (
         <Dialog open={open} onClose={() => setOpen(false)} title={t('card.details')} size="lg" footer={actions}>

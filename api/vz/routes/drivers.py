@@ -47,6 +47,7 @@ def list_drivers(
     rows = db.execute(
         """
         select p.id, p.name, p.photo_url, p.district, p.state, p.verified, p.last_seen_at, p.rating_avg, p.rating_count,
+               (coalesce(p.boost_until, now()) > now()) as top,
                case when p.location is not null and %(loc)s::extensions.geography is not null
                     then round((extensions.st_distance(p.location, %(loc)s::extensions.geography) / 1000)::numeric)::int end
                  as distance_km,
@@ -62,6 +63,10 @@ def list_drivers(
           and not exists (select 1 from public.blocks bl
                   where (bl.blocker_id = %(me)s::uuid and bl.blocked_id = p.id) or (bl.blocker_id = p.id and bl.blocked_id = %(me)s::uuid))
         order by
+          -- drivers who brought friends ("Top" boost) first, but only nearby ones
+          (coalesce(p.boost_until, now()) > now() and (lower(p.district) = lower(%(district)s)
+             or (p.location is not null and %(loc)s::extensions.geography is not null
+                 and extensions.st_dwithin(p.location, %(loc)s::extensions.geography, 150000)))) desc,
           case when %(loc)s::extensions.geography is null then
             case when lower(p.district) = lower(%(district)s) then 0 else 1 end end,
           p.location operator(extensions.<->) %(loc)s::extensions.geography nulls last,

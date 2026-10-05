@@ -5,6 +5,7 @@ import { DriverCard } from '../components/cards'
 import { Chips, Label, OptionList, Stepper, TextField, Toggle, VehicleGrid } from '../components/form'
 import { PhotoPicker } from '../components/photo'
 import { placeText, PlaceField, type PlaceValue } from '../components/places'
+import { Icon } from '../components/ui'
 import { Wizard } from '../components/Wizard'
 import { ApiError, saveProfile, type DriverDetails } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -19,6 +20,7 @@ interface Form {
   max_wheels: number | null
   licence_type: DriverDetails['licence_type']
   licence_number: string
+  licence_expiry: string
   experience_years: number | null
   savings_wanted: number | null
   savings_negotiable: boolean
@@ -67,6 +69,7 @@ export default function SetupDriver() {
     max_wheels: driver?.max_wheels ?? null,
     licence_type: driver?.licence_type ?? null,
     licence_number: '',
+    licence_expiry: driver?.licence_expiry || '',
     experience_years: driver?.experience_years ?? null,
     savings_wanted: driver?.savings_wanted ?? null,
     savings_negotiable: driver?.savings_negotiable ?? true,
@@ -118,6 +121,7 @@ export default function SetupDriver() {
     area: f.area,
     languages: f.languages,
     available_from: f.available_from,
+    licence_expiry: f.licence_expiry || null,
   })
 
   /** Saves after every step, so leaving half-way never loses answers. */
@@ -177,7 +181,7 @@ export default function SetupDriver() {
         <>
           <PhotoPicker />
           <Label>{t('setup.yourName')}</Label>
-          <TextField big value={f.name} onChange={(v) => set('name', v)} label={t('setup.yourName')} placeholder={t('setup.d.namePh')} maxLength={60} />
+          <TextField big value={f.name} onChange={(v) => set('name', v)} label={t('setup.yourName')} placeholder={t('setup.d.namePh')} maxLength={60} voice />
           <Label>{t('setup.d.whereLive')}</Label>
           <PlaceField value={f.place} onChange={(p) => set('place', p)} />
         </>
@@ -201,6 +205,11 @@ export default function SetupDriver() {
           <Label optional>{t('setup.d.licenceNo')}</Label>
           <TextField upper value={f.licence_number} onChange={(v) => set('licence_number', v.slice(0, 24))} label={t('setup.d.licenceNo')} placeholder="MP17 20190012345" />
           <p className="mt-1.5 text-sm text-text-2">{last4.length === 4 ? t('setup.d.othersSee', { last4 }) : t('setup.d.onlyLast4')}</p>
+          <Label optional>{t('setup.d.licenceExpiry')}</Label>
+          <input type="date" value={f.licence_expiry} min="2000-01-01" max="2080-12-31" aria-label={t('setup.d.licenceExpiry')}
+            onChange={(e) => set('licence_expiry', e.target.value)}
+            className="w-full rounded-md border border-border bg-surface px-4 py-3 text-lg font-medium outline-none hover:border-text-2/40 focus:border-primary focus:ring-2 focus:ring-primary/25" />
+          <p className="mt-1.5 flex items-center gap-1.5 text-sm text-text-2">{Icon.bell}{t('setup.d.licenceExpirySub')}</p>
         </>
       )}
 
