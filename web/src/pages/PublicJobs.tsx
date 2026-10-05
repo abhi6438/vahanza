@@ -8,7 +8,7 @@ import { ShareJobButton } from '../components/growth'
 import { JobItem } from '../components/jobs'
 import { CityPicker } from '../components/places'
 import { AppShell, BrandMark, CardGrid } from '../components/shell'
-import { Button, CardSkeletons, Chip, Dialog, EmptyState, ErrorState, Icon, Note, ThemeToggle } from '../components/ui'
+import { Button, CardSkeletons, Chip, Dialog, EmptyState, ErrorState, Icon, IconButton, Note, ThemeToggle } from '../components/ui'
 import { geo, pub, type Job, type PublicDriver, type PublicJob, type PublicStats } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { brand } from '../lib/brand'
@@ -40,16 +40,20 @@ function PublicFrame({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
   const { lang, setLang } = useAuth()
   const nav = useNavigate()
+  const loc = useLocation()
+  // lists / shared job: back goes to "आप क्या ढूंढ रहे हैं?" to choose again
+  const back = loc.pathname !== '/start' ? () => nav('/start') : null
   return (
     <div className="min-h-full">
       <header className="surface-hero sticky top-0 z-30 shadow-md" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="mx-auto flex h-header max-w-6xl items-center gap-2 px-4 md:px-6">
+          {back && <IconButton tone="onDark" label={t('back')} onClick={back} className="-ml-2">{Icon.back}</IconButton>}
           <Link to="/start" className="flex min-w-0 flex-1 items-center gap-2.5">
             <BrandMark size={34} />
             <span className="truncate font-display text-xl font-semibold tracking-[-0.01em]">{brand.name}</span>
           </Link>
           <button type="button" onClick={() => void setLang(lang === 'hi' ? 'en' : 'hi')} aria-label={t('settings.language')}
-            className="press inline-flex min-h-ctl-sm items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-white/90 ring-1 ring-inset ring-white/20 hover:bg-white/12 [&>svg]:size-icon-sm">{Icon.globe}{lang === 'hi' ? 'English' : 'हिंदी'}</button>
+            className="press inline-flex min-h-ctl-sm items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-white/90 ring-1 ring-inset ring-white/20 hover:bg-white/12 [&>svg]:size-icon-sm">{Icon.globe}<span className="hidden sm:inline">{lang === 'hi' ? 'English' : 'हिंदी'}</span><span className="sm:hidden">{lang === 'hi' ? 'EN' : 'हि'}</span></button>
           <ThemeToggle tone="onDark" />
           <Button variant="action" size="sm" onClick={() => { track('public_login_tap'); nav('/login') }}>{t('pub.login')}</Button>
         </div>
@@ -188,28 +192,6 @@ function Chooser() {
   )
 }
 
-/** Switch between "find work", "find drivers" and "mechanic" on the list pages. */
-function SeekSwitch({ value }: { value: Seeking }) {
-  const { t } = useTranslation()
-  const nav = useNavigate()
-  const opts: { key: Seeking; label: string; icon: ReactNode }[] = [
-    { key: 'job', label: t('pub.tabWork'), icon: Icon.briefcase },
-    { key: 'driver', label: t('pub.tabDrivers'), icon: Icon.users },
-    { key: 'mechanic', label: t('pub.tabMechanic'), icon: Icon.wrench },
-  ]
-  return (
-    <div role="tablist" aria-label={t('pub.startTitle')} className="mb-5 grid grid-cols-3 gap-1 rounded-xl bg-surface-2 p-1 ring-1 ring-inset ring-border lg:max-w-xl">
-      {opts.map((o) => (
-        <button key={o.key} type="button" role="tab" aria-selected={value === o.key}
-          onClick={() => { if (o.key !== value) { setSeeking(o.key); track('seeking_set', { seeking: o.key, from: 'tabs' }); nav(seekPath(o.key)) } }}
-          className="press flex min-h-ctl-lg flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-center text-xs font-semibold leading-tight text-text-2 hover:text-text aria-selected:bg-surface-3 aria-selected:text-primary aria-selected:shadow-md sm:flex-row sm:gap-2 sm:text-sm">
-          <span className="text-[length:var(--icon-size-md)]">{o.icon}</span>{o.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
 /** Owners before login: drivers ready for work. "Call" asks for the number first, then opens the full list. */
 function DriverList() {
   const { t, i18n } = useTranslation()
@@ -248,7 +230,6 @@ function DriverList() {
   }
   return (
     <PublicFrame>
-      <SeekSwitch value="driver" />
       <section className="mb-5">
         <h1 className="font-display text-3xl font-semibold leading-tight">{title}</h1>
         <p className="mt-1 text-text-2">{t('pub.driversSub')}</p>
@@ -293,7 +274,6 @@ function MechanicSoon() {
   useEffect(() => { setSeeking('mechanic'); trackScreen('public_mechanics') }, [])
   return (
     <PublicFrame>
-      <SeekSwitch value="mechanic" />
       <div className="anim-rise mx-auto max-w-xl rounded-xl border border-border bg-surface p-5 text-center shadow-sm">
         <div className="mx-auto w-44">{<MechanicArt />}</div>
         <span className="mt-1 inline-flex rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-ink">{t('soon')}</span>
@@ -352,7 +332,6 @@ function JobList() {
   return (
     <PublicFrame>
       <ReferralWelcome />
-      <SeekSwitch value="job" />
       <section className="mb-5">
         <h1 className="font-display text-3xl font-semibold leading-tight">{title}</h1>
         <p className="mt-1 text-text-2">{t('pub.sub')}</p>

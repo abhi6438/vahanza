@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiError } from '../lib/api'
 import { useAuth } from '../lib/auth'
-import { bioAvailable, bioEnabled, bioVerify, checkLocalPin, clearLocalPin, hasLocalPin, localPinStale, LOCAL_MAX_FAILS, LOCK_AFTER_MS, LOCK_EVENT, lockEnabled, pinApi, saveLocalPin } from '../lib/pin'
+import { bioAvailable, bioEnabled, bioVerify, checkLocalPin, clearLocalPin, PIN_LEN, hasLocalPin, localPinStale, LOCAL_MAX_FAILS, LOCK_AFTER_MS, LOCK_EVENT, lockEnabled, pinApi, saveLocalPin } from '../lib/pin'
 import { track } from '../lib/track'
 import { FingerprintIcon, PinDots, PinPad } from './pinpad'
 import { BrandMark } from './shell'
@@ -108,7 +108,7 @@ export function AppLock() {
   }, [logout, t, toast])
 
   useEffect(() => {
-    if (pin.length !== 6 || !uid || busy) return
+    if (pin.length !== PIN_LEN || !uid || busy) return
     void (async () => {
       setBusy(true)
       try {

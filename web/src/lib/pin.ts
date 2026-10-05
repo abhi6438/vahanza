@@ -22,6 +22,10 @@ export const pinApi = {
 }
 
 /** Same rule as the API: no 111111 / 123456 / 654321 / 121212. */
+/** MPIN length (4 digits; any number is allowed). */
+export const PIN_LEN = 4
+
+/** Kept for reference: easy numbers are allowed (decided 5 Oct 2026). */
 export function tooSimple(pin: string) {
   if (new Set(pin).size <= 2) return true
   const d = [...pin].map(Number)

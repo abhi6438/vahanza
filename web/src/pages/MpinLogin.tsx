@@ -6,6 +6,7 @@ import { PinDots, PinPad } from '../components/pinpad'
 import { H, Sub } from '../components/ui'
 import { ApiError } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { PIN_LEN } from '../lib/pin'
 import { trackScreen } from '../lib/track'
 
 /** Sprint 11: log in with the 6-digit MPIN. "Forgot MPIN" = log in with an OTP and make a new one. */
@@ -22,7 +23,7 @@ export default function MpinLogin() {
   useEffect(() => { trackScreen('mpin_login') }, [])
 
   useEffect(() => {
-    if (pin.length === 6 && !busy) void submit(pin)
+    if (pin.length === PIN_LEN && !busy) void submit(pin)
   }, [pin]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!phone) return <Navigate to="/login" replace />
@@ -43,6 +44,10 @@ export default function MpinLogin() {
         window.setTimeout(() => setShake(false), 400)
       } else if (e instanceof ApiError && e.code === 'pin_locked') {
         setLocked((e.detail as { locked_until: string }).locked_until)
+      } else if (e instanceof ApiError && e.code === 'session_failed') {
+        // the MPIN was right but the login service refused: say so, OTP is right below
+        const d = e.detail as { step?: string; reason?: string }
+        setError(`${t('pin.sessionFailed')} (${d.step || ''}${d.reason ? ': ' + d.reason : ''})`)
       } else if (e instanceof ApiError && e.status === 429) {
         setError(t('pin.tooMany'))
       } else if (e instanceof ApiError && (e.code === 'pin_login_unavailable' || e.code === 'no_pin')) {

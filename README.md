@@ -138,7 +138,7 @@ All reminders run in the same daily job (`/api/v1/cron/daily`). Migration `0009_
 
 ## MPIN and app lock (Sprint 11)
 
-- **MPIN (6 digits)**: after an OTP login the app offers "MPIN बनाएं" (skippable; admins must make one). Next time: number → MPIN, no OTP. "MPIN भूल गए" = OTP login, then a new MPIN. Settings → "MPIN और लॉक" to change it. Too-easy numbers (111111, 123456, 654321, 121212) are refused.
+- **MPIN (4 digits, any number)**: after an OTP login the app offers "MPIN बनाएं" (skippable; admins must make one). Next time: number → MPIN, no OTP. "MPIN भूल गए" = OTP login, then a new MPIN. Settings → "MPIN और लॉक" to change it.
 - **Safety**: only a scrypt hash is stored. 5 wrong MPINs in a row lock MPIN login for 30 minutes (OTP still works). Each network address gets 30 number checks and 20 wrong MPINs per hour. Every login, wrong try, change and admin reset is logged (`pin_events`, kept 90 days).
 - **Admin**: Users → "MPIN रीसेट" (phone lost / MPIN forgotten without SMS access).
 - **APK lock**: the app asks for the fingerprint / face (Android's own sheet) or the MPIN when opened and after 5 minutes in the background. The MPIN check works offline (a PBKDF2 copy on the phone). 5 wrong tries or "MPIN भूल गए" log out. Settings: "ऐप लॉक" and "फिंगरप्रिंट से खोलें" on/off.

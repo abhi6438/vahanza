@@ -1,4 +1,4 @@
-"""Sprint 11: MPIN — log in with a 6-digit number instead of an OTP every time.
+"""Sprint 11: MPIN — log in with a 4-digit number instead of an OTP every time.
 
 No login needed:  POST /auth/pin/check  (does this number have an MPIN?)   POST /auth/pin/login
 Logged in:        GET/PUT /me/pin  (set or change)   POST /me/pin/verify  (APK lock screen, online check)
@@ -162,8 +162,6 @@ def set_pin(body: PinSet, request: Request, user: AuthUser = Depends(current_use
     _profile(db, user, tenant)
     if not P.valid_pin(body.pin):
         raise HTTPException(422, {"code": "pin_format"})
-    if P.too_simple(body.pin):
-        raise HTTPException(422, {"code": "pin_simple"})
     ip = _ip(request)
     row = db.execute("select profile_id, pin_hash, failed, locked_until from public.user_pins where profile_id = %s", (user.id,)).fetchone()
     if row and not P.recent_otp(user.claims):

@@ -350,15 +350,17 @@ export function TopBar({ title, back = true, right }: { title: string; back?: bo
   )
 }
 
+/**
+ * Focused screen (sign-in steps). The main button sits right under the content, not pinned to the
+ * bottom: it stays visible when the phone keyboard is open and is where people look after typing.
+ */
 export function Screen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   return (
-    <div className="flex min-h-full flex-col">
-      <main className="mx-auto w-full max-w-xl flex-1 px-4 py-5 md:py-8">{children}</main>
-      {footer && (
-        <footer className="glass sticky bottom-0 border-t border-border px-4 pt-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
-          <div className="mx-auto max-w-xl">{footer}</div>
-        </footer>
-      )}
+    <div>
+      <main className="mx-auto w-full max-w-xl px-4 py-5 md:py-8" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)' }}>
+        {children}
+        {footer && <div className="mt-6">{footer}</div>}
+      </main>
     </div>
   )
 }

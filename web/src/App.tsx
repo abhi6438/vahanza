@@ -74,7 +74,9 @@ function AppRoutes() {
     void import('@capacitor/app').then(({ App: Cap }) => {
       void Cap.addListener('backButton', ({ canGoBack }) => {
         if (closeTopOverlay()) return
-        const root = ['/home', '/admin', '/language', '/role'].includes(window.location.pathname)
+        // no-login lists: back = choose again on "आप क्या ढूंढ रहे हैं?"
+        if (['/jobs', '/drivers', '/mechanics'].includes(window.location.pathname)) { nav('/start'); return }
+        const root = ['/home', '/admin', '/language', '/role', '/start'].includes(window.location.pathname)
         if (root || !canGoBack) void Cap.exitApp()
         else window.history.back()
       }).then((h) => { remove = () => void h.remove() })

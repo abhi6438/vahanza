@@ -11,11 +11,16 @@ import secrets
 import time
 import uuid
 
+import logging
+
 import httpx
 import jwt
 from fastapi import HTTPException
 
 from .config import Settings
+
+PIN_LEN = 4          # decided 5 Oct 2026: 4 digits, any number (easy ones allowed)
+log = logging.getLogger("vz.pin")
 
 MAX_FAILS = 5
 LOCK_MINUTES = 30
@@ -49,25 +54,46 @@ def too_simple(pin: str) -> bool:
 
 
 def valid_pin(pin: str) -> bool:
-    return len(pin) == 6 and pin.isdigit()
+    return len(pin) == PIN_LEN and pin.isdigit()
+
+
+def _ok(r, step: str) -> None:
+    """Supabase said no: keep its short reason (e.g. "bad_jwt", "invalid_credentials") for the app and the log.
+    Never the key or the password."""
+    if r.status_code < 400:
+        return
+    try:
+        body = r.json()
+    except ValueError:
+        body = {}
+    reason = str(body.get("error_code") or body.get("code") or body.get("error") or r.status_code)[:60]
+    log.warning("MPIN session %s failed: %s %s", step, r.status_code, reason)
+    raise HTTPException(502, {"code": "session_failed", "step": step, "status": r.status_code, "reason": reason})
 
 
 def mint_session(settings: Settings, user_id: str, phone: str) -> dict:
     """A normal Supabase login session for this user (same shape as supabase.auth.verifyOtp's session)."""
     if settings.supabase_service_role_key and settings.supabase_url:
         base = settings.supabase_url.rstrip("/") + "/auth/v1"
-        key = settings.supabase_service_role_key
+        key = settings.supabase_service_role_key.strip()
+        # legacy service_role key (a JWT, "eyJ...") goes in both headers; the new "sb_secret_..." keys
+        # only in apikey (Supabase refuses them as a Bearer token)
+        admin_headers = {"apikey": key}
+        if not key.startswith("sb_"):
+            admin_headers["Authorization"] = f"Bearer {key}"
         pw = secrets.token_urlsafe(32)          # used once, never stored, never shown
+        step = "update_user"
         try:
-            r = httpx.put(f"{base}/admin/users/{user_id}", json={"password": pw},
-                          headers={"apikey": key, "Authorization": f"Bearer {key}"}, timeout=10)
-            r.raise_for_status()
+            r = httpx.put(f"{base}/admin/users/{user_id}", json={"password": pw}, headers=admin_headers, timeout=10)
+            _ok(r, step)
+            step = "sign_in"
             r = httpx.post(f"{base}/token?grant_type=password", json={"phone": phone, "password": pw},
                            headers={"apikey": key}, timeout=10)
-            r.raise_for_status()
+            _ok(r, step)
             data = r.json()
-        except (httpx.HTTPError, ValueError) as exc:
-            raise HTTPException(502, {"code": "session_failed"}) from exc
+        except httpx.HTTPError as exc:
+            log.warning("MPIN session %s failed: %s", step, exc)
+            raise HTTPException(502, {"code": "session_failed", "step": step, "reason": "network"}) from exc
         return {k: data.get(k) for k in ("access_token", "refresh_token", "expires_in", "expires_at", "token_type", "user")}
     if settings.dev_mint_sessions and settings.supabase_jwt_secret:
         now = int(time.time())

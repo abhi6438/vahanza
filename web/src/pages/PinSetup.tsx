@@ -8,7 +8,7 @@ import { useToast } from '../components/toast'
 import { Button, ErrorState, H, Skeleton, Sub } from '../components/ui'
 import { ApiError } from '../lib/api'
 import { useAuth } from '../lib/auth'
-import { bioAvailable, clearPinAsk, clearPinSkipped, getPinAsk, pinApi, saveLocalPin, setLockEnabled, setPinSkipped, tooSimple, type MyPin } from '../lib/pin'
+import { bioAvailable, clearPinAsk, clearPinSkipped, getPinAsk, pinApi, saveLocalPin, setLockEnabled, setPinSkipped, PIN_LEN, type MyPin } from '../lib/pin'
 import { isNative } from '../lib/platform'
 import { track, trackScreen } from '../lib/track'
 
@@ -55,11 +55,10 @@ export default function PinSetup() {
   }
 
   useEffect(() => {
-    if (pin.length !== 6 || busy) return
+    if (pin.length !== PIN_LEN || busy) return
     setError('')
     if (step === 'old') { setOldPin(pin); setPin(''); setStep('new'); return }
     if (step === 'new') {
-      if (tooSimple(pin)) return fail(t('pin.simple'))
       if (mine?.has_pin && oldPin === pin) return fail(t('pin.sameAsOld'))
       setFirst(pin); setPin(''); setStep('confirm'); return
     }

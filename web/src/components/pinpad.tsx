@@ -7,7 +7,7 @@ import { Delete, Fingerprint } from 'lucide-react'
  * A pad on the screen instead of the phone keyboard: same place every time, big keys, works the
  * same on every phone. A computer keyboard also works (digits, Backspace).
  */
-export function PinDots({ n, length = 6, error }: { n: number; length?: number; error?: boolean }) {
+export function PinDots({ n, length = 4, error }: { n: number; length?: number; error?: boolean }) {
   return (
     <div className={`flex justify-center gap-3 ${error ? 'anim-shake' : ''}`} aria-hidden>
       {Array.from({ length }, (_, i) => (
@@ -17,7 +17,7 @@ export function PinDots({ n, length = 6, error }: { n: number; length?: number; 
   )
 }
 
-export function PinPad({ value, onChange, length = 6, disabled, extra }: {
+export function PinPad({ value, onChange, length = 4, disabled, extra }: {
   value: string
   onChange: (v: string) => void
   length?: number
