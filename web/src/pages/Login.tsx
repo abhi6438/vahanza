@@ -4,7 +4,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/auth-layout'
 import { BigButton, H, Icon, Note, Segmented, Sub } from '../components/ui'
 import { pub } from '../lib/api'
+import { LAST_PHONE, pinApi } from '../lib/pin'
 import { inviteCode } from '../lib/share'
+import { storage } from '../lib/storage'
 import { useAuth } from '../lib/auth'
 import { brand } from '../lib/brand'
 import { isValidIndianMobile } from '../lib/supabase'
@@ -26,6 +28,8 @@ export default function Login() {
     if (!code) return
     pub.invite(code).then((r) => { setPhone((cur) => cur || r.phone); setInvited(r.name || '') }).catch(() => {})
   }, [])
+  // returning user: the number typed last time on this phone
+  useEffect(() => { if (!inviteCode()) void storage.getItem(LAST_PHONE).then((p) => p && setPhone((cur) => cur || p)) }, [])
 
   const ok = isValidIndianMobile(phone) && consent
 
@@ -33,6 +37,12 @@ export default function Login() {
     setError('')
     setBusy(true)
     try {
+      // has an MPIN: type it instead of waiting for an OTP (OTP stays one tap away)
+      const pin = await pinApi.check(phone).catch(() => null)
+      if (pin?.has_pin && !pin.locked_until) {
+        nav('/mpin', { state: { phone } })
+        return
+      }
       await sendOtp(phone)
       nav('/otp', { state: { phone } })
     } catch (e) {
@@ -44,7 +54,7 @@ export default function Login() {
   }
 
   return (
-    <AuthLayout title={t('login.title')} back={window.history.length > 1 && !invited} footer={<BigButton disabled={!ok || busy} onClick={submit}>{t('login.send')}</BigButton>}>
+    <AuthLayout title={t('login.title')} back={window.history.length > 1 && !invited} footer={<BigButton disabled={!ok || busy} onClick={submit}>{t('login.next')}</BigButton>}>
         <div className="mb-5 flex justify-end">
           <Segmented label={t('settings.language')} value={lang} onChange={(l) => void setLang(l)}
             options={[{ key: 'hi', label: 'हिंदी' }, { key: 'en', label: 'English' }]} />

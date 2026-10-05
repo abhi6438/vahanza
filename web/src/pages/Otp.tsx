@@ -13,7 +13,8 @@ export default function Otp() {
   const { t } = useTranslation()
   const { verifyOtp, sendOtp } = useAuth()
   const nav = useNavigate()
-  const phone: string | undefined = useLocation().state?.phone
+  const state = useLocation().state as { phone?: string; resetPin?: boolean } | null
+  const phone = state?.phone
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -34,8 +35,8 @@ export default function Otp() {
     setBusy(true)
     setError('')
     try {
-      await verifyOtp(phone!, value)
-      nav('/home', { replace: true })
+      await verifyOtp(phone!, value, !!state?.resetPin)
+      nav(state?.resetPin ? '/pin' : '/home', { replace: true })
     } catch (e) {
       // Wrong OTP comes from Supabase; ApiError / TypeError mean our API could not be reached or failed.
       if (e instanceof ApiError || e instanceof TypeError) {

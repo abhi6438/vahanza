@@ -268,6 +268,8 @@ h1, h2, h3 { text-wrap: balance; }
 @keyframes vz-fade { from { opacity: 0; } to { opacity: 1; } }
 .anim-rise { animation: vz-rise 160ms ease-out; }
 .anim-fade { animation: vz-fade 140ms ease-out; }
+@keyframes vz-shake { 0%, 100% { transform: none; } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+.anim-shake { animation: vz-shake 320ms ease-in-out; }
 
 /* Chart series colours (validated: slots 1–2 of the reference categorical palette, light + dark). */
 :root { --chart-1: #2a78d6; --chart-2: #eb6834; --chart-grid: #e6ecee; }

@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     # Sprint 8: Vercel cron sends "Authorization: Bearer <CRON_SECRET>" to /api/v1/cron/daily
     cron_secret: str = ""
 
+    # Sprint 11: MPIN login. The API checks the MPIN, then asks Supabase for a normal login session,
+    # so it needs the project's service_role key (Supabase > Project Settings > API). Secret: Vercel env only.
+    supabase_service_role_key: str = ""
+    # Local testing only: sign the session ourselves with SUPABASE_JWT_SECRET (never set this in production).
+    dev_mint_sessions: bool = False
+
     cors_origins: str = (
         "http://localhost:5173,http://localhost:4173,"
         "capacitor://localhost,http://localhost,https://localhost"

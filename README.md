@@ -37,7 +37,7 @@ A white-label app for vehicle owners and drivers. One codebase serves the web/PW
 ## 1. Supabase setup (one time)
 
 1. Create a project in region **Mumbai (ap-south-1)**.
-2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql` → `0009_trust.sql`).
+2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql` → `0009_trust.sql` → `0010_mpin.sql`).
 3. Auth → Providers → **Phone**: enable it. You can pick any SMS provider here because the hook below replaces it.
 4. Auth → Hooks → **Send SMS hook** → HTTPS:
    `https://<your-domain>/api/v1/hooks/send-sms`. Generate the secret and copy it into `SEND_SMS_HOOK_SECRET` (format `v1,whsec_...`).
@@ -135,6 +135,24 @@ Settings: `CRON_SECRET` (any long random text). Vercel calls `/api/v1/cron/daily
 - **Admin dashboard**: jobs confirmed, average rating, verified people and check time, and how many came back after 7 / 30 days.
 
 All reminders run in the same daily job (`/api/v1/cron/daily`). Migration `0009_trust.sql`.
+
+## MPIN and app lock (Sprint 11)
+
+- **MPIN (6 digits)**: after an OTP login the app offers "MPIN बनाएं" (skippable; admins must make one). Next time: number → MPIN, no OTP. "MPIN भूल गए" = OTP login, then a new MPIN. Settings → "MPIN और लॉक" to change it. Too-easy numbers (111111, 123456, 654321, 121212) are refused.
+- **Safety**: only a scrypt hash is stored. 5 wrong MPINs in a row lock MPIN login for 30 minutes (OTP still works). Each network address gets 30 number checks and 20 wrong MPINs per hour. Every login, wrong try, change and admin reset is logged (`pin_events`, kept 90 days).
+- **Admin**: Users → "MPIN रीसेट" (phone lost / MPIN forgotten without SMS access).
+- **APK lock**: the app asks for the fingerprint / face (Android's own sheet) or the MPIN when opened and after 5 minutes in the background. The MPIN check works offline (a PBKDF2 copy on the phone). 5 wrong tries or "MPIN भूल गए" log out. Settings: "ऐप लॉक" and "फिंगरप्रिंट से खोलें" on/off.
+
+How an MPIN login becomes a normal Supabase session: the API checks the MPIN, sets a fresh random password on the Supabase user and signs in with it once (server to server). The MPIN itself never goes to Supabase.
+
+Go-live checklist:
+1. Run `0010_mpin.sql`.
+2. Vercel env: `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API → service_role; secret, never in the app or git). Without it MPIN login answers "unavailable" and the app falls back to OTP.
+3. Supabase → Authentication → Rate Limits: raise "Sign-ups and sign-ins" (all MPIN logins come from Vercel's addresses).
+4. Supabase → Authentication → Providers → Phone stays enabled (OTP is still the first login and the fallback).
+5. `npm install` in `web/` (new: `@capgo/capacitor-native-biometric`); `npm run apk` adds the `USE_BIOMETRIC` permission itself.
+
+Local testing: `DEV_MINT_SESSIONS=1` lets the API sign the session with `SUPABASE_JWT_SECRET` (never in production).
 
 ## 2. MSG91
 

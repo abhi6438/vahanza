@@ -33,6 +33,13 @@ console.log(`\n▶ APK ${name} (versionCode ${code})\n`)
 run('node scripts/cap-config.mjs')
 run('npx tsc --noEmit')
 run('npx vite build --mode apk')
+// Android permissions the app needs (web/android is not in git, so make sure on every machine)
+const manifestFile = path('android/app/src/main/AndroidManifest.xml')
+let manifest = readFileSync(manifestFile, 'utf8')
+for (const perm of ['android.permission.USE_BIOMETRIC']) {     // Sprint 11: fingerprint / face app lock
+  if (!manifest.includes(perm)) manifest = manifest.replace('</manifest>', `    <uses-permission android:name="${perm}" />\n</manifest>`)
+}
+writeFileSync(manifestFile, manifest)
 run('npx cap sync android')
 run(process.platform === 'win32' ? 'gradlew.bat assembleDebug' : './gradlew assembleDebug', path('android'))
 

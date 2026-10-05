@@ -275,6 +275,7 @@ def daily(db, today: date) -> dict:
     out["still_looking"] = notify.safe(db, still_looking) or 0
     out["come_back"] = notify.safe(db, come_back) or 0
     notify.safe(db, refresh_fast_reply)
+    notify.safe(db, lambda d: d.execute("select public.prune_pin_events()") and 1)   # Sprint 11: old MPIN events
     if today.weekday() == 0:   # Monday
         out["views"] = notify.safe(db, weekly_views) or 0
         out["weekly_jobs"] = notify.safe(db, weekly_jobs) or 0

@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { PushAsk } from '../components/notify'
 import { AppShell } from '../components/shell'
 import { useToast } from '../components/toast'
@@ -8,13 +8,15 @@ import { Button, ConfirmDialog, Icon, Segmented, Switch } from '../components/ui
 import { notifications, type NotifyPrefs } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { brand } from '../lib/brand'
+import { bioAvailable, bioEnabled, lockEnabled, pinApi, setBioEnabled, setLockEnabled, type MyPin } from '../lib/pin'
+import { isNative } from '../lib/platform'
 import { useIsDesktop } from '../lib/layout'
 import { loadTheme, saveTheme, type ThemePref } from '../lib/theme'
 import { track, trackScreen } from '../lib/track'
 
-type Key = 'language' | 'appearance' | 'notifications' | 'account' | 'privacy' | 'help'
+type Key = 'language' | 'appearance' | 'notifications' | 'security' | 'account' | 'privacy' | 'help'
 const ICONS: Record<Key, ReactNode> = {
-  language: Icon.globe, appearance: Icon.palette, notifications: Icon.bell, account: Icon.user, privacy: Icon.shield, help: Icon.help,
+  language: Icon.globe, appearance: Icon.palette, notifications: Icon.bell, security: Icon.lock, account: Icon.user, privacy: Icon.shield, help: Icon.help,
 }
 
 /**
@@ -29,7 +31,7 @@ export default function Settings() {
   const [params, setParams] = useSearchParams()
   useEffect(() => { trackScreen('settings') }, [])
   const isUser = profile?.role === 'driver' || profile?.role === 'owner'
-  const keys: Key[] = ['language', 'appearance', ...(isUser ? (['notifications'] as Key[]) : []), 'account', 'privacy', 'help']
+  const keys: Key[] = ['language', 'appearance', ...(isUser ? (['notifications'] as Key[]) : []), 'security', 'account', 'privacy', 'help']
   const current = (keys.includes(params.get('s') as Key) ? params.get('s') : 'language') as Key
 
   const body = (k: Key) => {
@@ -37,6 +39,7 @@ export default function Settings() {
       case 'language': return <LanguageSection />
       case 'appearance': return <AppearanceSection />
       case 'notifications': return isUser ? <NotifySection role={profile!.role as 'driver' | 'owner'} /> : null
+      case 'security': return <SecuritySection />
       case 'account': return <AccountSection />
       case 'privacy': return <PrivacySection isUser={isUser} />
       case 'help': return <HelpSection />
@@ -139,6 +142,57 @@ function NotifySection({ role }: { role: 'driver' | 'owner' }) {
         ))}
       </div>
       <p className="text-sm text-text-2">{t('settings.alwaysNotified')}</p>
+    </div>
+  )
+}
+
+/** Sprint 11: MPIN (log in without OTP) and, in the APK, the fingerprint / MPIN app lock. */
+function SecuritySection() {
+  const { t } = useTranslation()
+  const { profile, sendOtp } = useAuth()
+  const nav = useNavigate()
+  const toast = useToast()
+  const [mine, setMine] = useState<MyPin | null>(null)
+  const [lock, setLock] = useState(true)
+  const [bio, setBio] = useState(true)
+  const [hasBio, setHasBio] = useState(false)
+  useEffect(() => {
+    pinApi.mine().then(setMine).catch(() => {})
+    if (!isNative) return
+    void lockEnabled().then(setLock)
+    void bioEnabled().then(setBio)
+    void bioAvailable().then(setHasBio)
+  }, [])
+  const phone = (profile?.phone || '').replace(/^91/, '')
+  async function forgot() {
+    try {
+      await sendOtp(phone)
+      nav('/otp', { state: { phone, resetPin: true } })
+    } catch {
+      toast(t('error.generic'), { tone: 'error' })
+    }
+  }
+  return (
+    <div>
+      <SettingRow label={t('pin.mpin')} sub={mine?.has_pin ? t('pin.mpinOn') : t('pin.mpinOff')}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant={mine?.has_pin ? 'outline' : 'primary'} icon={Icon.lock} disabled={!mine} onClick={() => nav('/pin')}>
+            {mine?.has_pin ? t('pin.change') : t('pin.create')}
+          </Button>
+          {mine?.has_pin && <Button variant="ghost" onClick={() => void forgot()}>{t('pin.forgotShort')}</Button>}
+        </div>
+      </SettingRow>
+      {isNative && (
+        <div className="divide-y divide-border border-t border-border">
+          <Switch checked={lock && !!mine?.has_pin} disabled={!mine?.has_pin} label={t('lock.setting')}
+            sub={mine?.has_pin ? t('lock.settingSub') : t('lock.needPin')}
+            onChange={(v) => { setLock(v); void setLockEnabled(v); track('lock_setting', { on: v }) }} />
+          {hasBio && (
+            <Switch checked={bio} disabled={!lock || !mine?.has_pin} label={t('lock.bioSetting')} sub={t('lock.bioSettingSub')}
+              onChange={(v) => { setBio(v); void setBioEnabled(v); track('lock_bio_setting', { on: v }) }} />
+          )}
+        </div>
+      )}
     </div>
   )
 }

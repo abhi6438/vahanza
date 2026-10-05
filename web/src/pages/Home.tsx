@@ -16,7 +16,7 @@ import { placeName } from '../lib/catalog'
 import { driverCompletion, ownerCompletion } from '../lib/completion'
 import { useIsDesktop } from '../lib/layout'
 import { track, trackScreen } from '../lib/track'
-import { CompleteCard } from '../components/nudges'
+import { CompleteCard, PinNudge } from '../components/nudges'
 
 /**
  * Home = what the user came for.
@@ -146,9 +146,10 @@ function OwnerHome() {
           <ButtonLink to={postTo} onClick={onPost} variant="action" size="lg" block icon={Icon.plus}>{t('home.post')}</ButtonLink>
         </>
       }>
-      <WithRail main={main} mobileTop={<RatePrompt />}
+      <WithRail main={main} mobileTop={<><PinNudge /><RatePrompt /></>}
         rail={
           <>
+            <PinNudge />
             <RatePrompt />
             {done && done.missing.length > 0 && <CompleteCard role="owner" percent={done.percent} missing={done.missing} listable={done.listable} compact />}
             <GrowthCard />
@@ -251,10 +252,11 @@ function DriverHome() {
         </>
       }>
       <WithRail main={main}
-        mobileTop={<>{hidden}<PendingHires /><RatePrompt /><GrowthCard /></>}
+        mobileTop={<>{hidden}<PinNudge /><PendingHires /><RatePrompt /><GrowthCard /></>}
         rail={
           <>
             <AvailabilitySwitch />
+            <PinNudge />
             <PendingHires />
             <RatePrompt />
             <GrowthCard />

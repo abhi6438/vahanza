@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { clearPinSkipped, pinApi, pinSkipped } from '../lib/pin'
 import { storage } from '../lib/storage'
 import type { Completion } from '../lib/completion'
 import { track } from '../lib/track'
@@ -61,5 +62,32 @@ export function CompleteCard({ role, percent, missing, listable, compact }: { ro
         {t('complete.cta')}
       </ButtonLink>
     </section>
+  )
+}
+
+/** Sprint 11: "make an MPIN" — only for people who skipped it after login. Hidden for 3 days after ✕. */
+export function PinNudge() {
+  const { t } = useTranslation()
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    void (async () => {
+      const snoozed = Number(await storage.getItem('vz-pin-nudge-off') || 0)
+      if (!(await pinSkipped()) || Date.now() - snoozed < SNOOZE_DAYS * 86_400_000) return
+      const m = await pinApi.mine().catch(() => null)
+      if (m?.has_pin) return void clearPinSkipped()
+      setShow(!!m)
+    })()
+  }, [])
+  if (!show) return null
+  return (
+    <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary-soft p-card">
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold">{t('pin.nudgeTitle')}</p>
+        <p className="text-sm text-text-2">{t('pin.nudgeSub')}</p>
+        <ButtonLink to="/pin" variant="primary" size="sm" className="mt-2" onClick={() => track('pin_nudge_tap')}>{t('pin.create')}</ButtonLink>
+      </div>
+      <button type="button" aria-label={t('close')} className="grid size-ctl-sm shrink-0 place-items-center rounded-md text-text-2 hover:bg-surface"
+        onClick={() => { setShow(false); void storage.setItem('vz-pin-nudge-off', String(Date.now())) }}>✕</button>
+    </div>
   )
 }

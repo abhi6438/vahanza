@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { TextField } from '../../components/form'
 import { admin, type AdminUser } from '../../lib/api'
+import { useToast } from '../../components/toast'
 import { placeName } from '../../lib/catalog'
+import { pinApi } from '../../lib/pin'
 import { track, trackScreen } from '../../lib/track'
 import { AdminLayout, ago, nf } from './AdminLayout'
 
@@ -56,6 +58,7 @@ export default function AdminUsers() {
 
 function UserRow({ u, onChange }: { u: AdminUser; onChange: (u: AdminUser) => void }) {
   const { t, i18n } = useTranslation()
+  const toast = useToast()
   const [busy, setBusy] = useState(false)
   async function patch(p: { verified?: boolean; blocked?: boolean }) {
     if (p.blocked && !window.confirm(t('admin.confirmBlock'))) return
@@ -64,6 +67,19 @@ function UserRow({ u, onChange }: { u: AdminUser; onChange: (u: AdminUser) => vo
       const r = await admin.patchUser(u.id, p)
       track('admin_user_patch', p)
       onChange({ ...u, ...r })
+    } finally {
+      setBusy(false)
+    }
+  }
+  async function resetPin() {
+    if (!window.confirm(t('pin.adminResetQ'))) return
+    setBusy(true)
+    try {
+      await pinApi.adminReset(u.id)
+      track('admin_pin_reset')
+      toast(t('pin.adminResetDone'), { tone: 'success' })
+    } catch {
+      toast(t('error.generic'), { tone: 'error' })
     } finally {
       setBusy(false)
     }
@@ -95,6 +111,10 @@ function UserRow({ u, onChange }: { u: AdminUser; onChange: (u: AdminUser) => vo
         <button type="button" disabled={busy} onClick={() => void patch({ blocked: !u.blocked })}
           className="min-h-ctl-sm flex-1 rounded-md border border-border text-sm font-bold text-error disabled:opacity-50">
           {u.blocked ? t('admin.u.unblock') : t('admin.block')}
+        </button>
+        <button type="button" disabled={busy} onClick={() => void resetPin()} title={t('pin.adminResetSub')}
+          className="min-h-ctl-sm shrink-0 rounded-md border border-border px-3 text-sm font-bold text-text-2 disabled:opacity-50">
+          {t('pin.adminReset')}
         </button>
       </div>
     </div>

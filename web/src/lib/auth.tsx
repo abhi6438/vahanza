@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import i18n from '../i18n'
 import { ApiError, getMe, heartbeat, startMe, type DriverDetails, type FleetGroup, type Me, type Profile } from './api'
+import { clearLocalPin, clearPinAsk, LAST_PHONE, pinApi, saveLocalPin, setPinAsk } from './pin'
 import { clearInvite, clearSource, getSource } from './share'
 import { storage } from './storage'
 import { isValidIndianMobile, supabase, toE164 } from './supabase'
@@ -26,7 +27,10 @@ interface AuthState {
   setLang: (l: Lang) => Promise<void>
   setPendingRole: (r: Role) => void
   sendOtp: (phone10: string) => Promise<void>
-  verifyOtp: (phone10: string, code: string) => Promise<void>
+  /** resetPin: "forgot MPIN" — after the OTP, ask for a new MPIN. */
+  verifyOtp: (phone10: string, code: string, resetPin?: boolean) => Promise<void>
+  /** Sprint 11: log in with the 6-digit MPIN instead of an OTP. */
+  loginWithPin: (phone10: string, pin: string) => Promise<void>
   chooseRole: (r: Role) => Promise<void>
   logout: (everywhere?: boolean) => Promise<void>
   /** Puts a fresh /me response (e.g. after saving the profile) into app state. */
@@ -143,12 +147,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     track('otp_requested')
   }, [])
 
-  const verifyOtp = useCallback(
-    async (phone10: string, code: string) => {
-      const { data, error } = await supabase.auth.verifyOtp({ phone: toE164(phone10), token: code, type: 'sms' })
-      if (error || !data.session) throw error || new Error('no-session')
-      setSession(data.session)
-      track('otp_verified')
+  /** After any login (OTP or MPIN): load the profile, or ask "who are you?" for a new number. */
+  const finishLogin = useCallback(
+    async (s: Session, phone10: string) => {
+      setSession(s)
+      void storage.setItem(LAST_PHONE, phone10)
       const me = await getMe()
       if (me.exists && me.profile?.role) {
         applyMe(me)
@@ -161,6 +164,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStatus('needsRole')
     },
     [applyMe],
+  )
+
+  const verifyOtp = useCallback(
+    async (phone10: string, code: string, resetPin = false) => {
+      const { data, error } = await supabase.auth.verifyOtp({ phone: toE164(phone10), token: code, type: 'sms' })
+      if (error || !data.session) throw error || new Error('no-session')
+      track('otp_verified')
+      // no MPIN yet: offer one after login (so next time no OTP is needed); forgot MPIN: a new one
+      if (resetPin) await setPinAsk('reset')
+      else await pinApi.check(phone10).then((r) => (r.has_pin ? clearPinAsk() : setPinAsk('new'))).catch(() => {})
+      await finishLogin(data.session, phone10)
+    },
+    [finishLogin],
+  )
+
+  const loginWithPin = useCallback(
+    async (phone10: string, pin: string) => {
+      const res = await pinApi.login(phone10, pin)
+      const { data, error } = await supabase.auth.setSession({ access_token: res.access_token, refresh_token: res.refresh_token })
+      if (error || !data.session) throw error || new Error('no-session')
+      track('pin_login')
+      await clearPinAsk()
+      if (data.session.user?.id) await saveLocalPin(data.session.user.id, pin)
+      await finishLogin(data.session, phone10)
+    },
+    [finishLogin],
   )
 
   const chooseRole = useCallback(
@@ -180,14 +209,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     track(everywhere ? 'logout_all' : 'logout')
     // this phone should stop getting this person's alerts
     await (await import('./push')).disablePush()
+    // the next person on this phone must not unlock with this MPIN
+    await clearLocalPin()
+    await clearPinAsk()
     await supabase.auth.signOut({ scope: everywhere ? 'global' : 'local' })
     applyMe({ exists: false, profile: null })
     setStatus('signedOut')
   }, [applyMe])
 
   const value = useMemo(
-    () => ({ status, session, profile, driver, fleet, lang, langChosen, pendingRole, suggestedRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout, applyMe, setPhotoUrl }),
-    [status, session, profile, driver, fleet, lang, langChosen, pendingRole, suggestedRole, setLang, setPendingRole, sendOtp, verifyOtp, chooseRole, logout, applyMe, setPhotoUrl],
+    () => ({ status, session, profile, driver, fleet, lang, langChosen, pendingRole, suggestedRole, setLang, setPendingRole, sendOtp, verifyOtp, loginWithPin, chooseRole, logout, applyMe, setPhotoUrl }),
+    [status, session, profile, driver, fleet, lang, langChosen, pendingRole, suggestedRole, setLang, setPendingRole, sendOtp, verifyOtp, loginWithPin, chooseRole, logout, applyMe, setPhotoUrl],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

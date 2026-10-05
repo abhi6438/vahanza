@@ -1,4 +1,8 @@
 import { useEffect } from 'react'
+import { AppLock } from './components/app-lock'
+import { getPinAsk, pinApi, setPinAsk } from './lib/pin'
+import MpinLogin from './pages/MpinLogin'
+import PinSetup from './pages/PinSetup'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './lib/auth'
@@ -31,12 +35,22 @@ import Soon from './pages/Soon'
 import Setup from './pages/Setup'
 import Splash from './pages/Splash'
 
-const PUBLIC = ['/language', '/login', '/otp']
+const PUBLIC = ['/language', '/login', '/otp', '/mpin']
 // no login needed: live jobs and one shared job (Sprint 8)
 const isPublicJobs = (p: string) => ['/start', '/jobs', '/drivers', '/mechanics'].includes(p) || /^\/jobs\/[A-Za-z0-9]{4,16}$/.test(p)
 const OPEN = ['/legal'] // reachable in any state
 
+/** Sprint 11: the APK lock screen sits on top of every screen. */
 export default function App() {
+  return (
+    <>
+      <AppRoutes />
+      {isNative && <AppLock />}
+    </>
+  )
+}
+
+function AppRoutes() {
   const { status, profile, langChosen } = useAuth()
   const { t } = useTranslation()
   const loc = useLocation()
@@ -75,6 +89,24 @@ export default function App() {
     if (next && next !== loc.pathname) nav(next, { replace: true })
   }, [status, profile?.setup_done]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sprint 11: right after logging in with an OTP, offer an MPIN (next time: no OTP). Admins must have one.
+  useEffect(() => {
+    if (status !== 'ready' || !profile) return
+    const admin = profile.role === 'admin' || profile.role === 'super_admin'
+    if (!admin && !profile.setup_done) return
+    let alive = true
+    ;(async () => {
+      if (await getPinAsk()) {
+        if (alive && window.location.pathname !== '/pin') nav('/pin', { replace: true })
+        return
+      }
+      if (!admin) return
+      const m = await pinApi.mine().catch(() => null)
+      if (alive && m && !m.has_pin) { await setPinAsk('new'); nav('/pin', { replace: true }) }
+    })()
+    return () => { alive = false }
+  }, [status, profile?.setup_done, profile?.role]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (status === 'loading') return <Splash />
   if (status === 'blocked') return <div className="grid h-full place-items-center p-6 text-center text-lg">{t('error.blocked')}</div>
   if (OPEN.includes(loc.pathname)) return <Routes><Route path="/legal" element={<Legal />} /></Routes>
@@ -93,7 +125,8 @@ export default function App() {
     if (!PUBLIC.includes(loc.pathname)) return <Navigate to={!langChosen ? '/language' : inviteCode() ? '/login' : seekPath(getSeeking())} replace />
   }
   if (status === 'ready' && loc.pathname === '/role') return <Navigate to="/home" replace />
-  if (status === 'ready' && PUBLIC.includes(loc.pathname)) return <Navigate to="/home" replace />
+  // (logged in + "forgot MPIN": the OTP screen is allowed, to make a new MPIN)
+  if (status === 'ready' && PUBLIC.includes(loc.pathname) && !(loc.pathname === '/otp' && (loc.state as { resetPin?: boolean } | null)?.resetPin)) return <Navigate to="/home" replace />
   // Admins get the admin panel only (and settings, to log out).
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
   if (status === 'ready' && isAdmin) {
@@ -105,6 +138,8 @@ export default function App() {
         <Route path="/admin/import" element={<AdminImport />} />
         <Route path="/admin/posters" element={<AdminPosters />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/pin" element={<PinSetup />} />
+        <Route path="/otp" element={<Otp />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     )
@@ -118,6 +153,8 @@ export default function App() {
       <Route path="/role" element={<Role />} />
       <Route path="/login" element={<Login />} />
       <Route path="/otp" element={<Otp />} />
+      <Route path="/mpin" element={<MpinLogin />} />
+      <Route path="/pin" element={<PinSetup />} />
       <Route path="/home" element={<Home />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/setup" element={<Setup />} />
