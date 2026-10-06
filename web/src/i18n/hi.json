@@ -1424,5 +1424,17 @@
   "arw.err.bad_value": "कोई संख्या सीमा से बाहर है {{field}}",
   "arw.err.bad_kind": "चुनौती {{field}}: काम ग़लत है",
   "arw.err.bad_dates": "चुनौती {{field}}: \"कब तक\" बाद की तारीख़ हो",
-  "arw.err.dup_id": "दो चुनौतियों का एक ही ID है"
+  "arw.err.dup_id": "दो चुनौतियों का एक ही ID है",
+  "rw.home.streakAria": "{{n}} दिन लगातार",
+  "rw.home.on": "प्रीमियम चालू · {{date}} तक",
+  "rw.home.onDriver": "आप मालिकों की लिस्ट में सबसे ऊपर हैं",
+  "rw.home.onOwner": "पूरी हिस्ट्री, टिक फ़िल्टर और ज़्यादा पोस्ट चालू",
+  "rw.home.titleDriver": "प्रीमियम: मालिकों को सबसे पहले दिखें",
+  "rw.home.titleOwner": "प्रीमियम: ड्राइवर की पूरी हिस्ट्री देखें",
+  "rw.home.need": "{{n}} अंक और — फिर {{days}} दिन मुफ़्त",
+  "rw.home.ready": "आपके अंक पूरे — {{days}} दिन प्रीमियम लें",
+  "rw.home.free": "अंक कमाएँ, प्रीमियम पाएँ",
+  "rw.home.earn": "+{{n}} कमाएँ",
+  "rw.home.take": "लें",
+  "growth.inviteShort": "बुलाओ"
 }

@@ -1432,5 +1432,17 @@
   "arw.err.bad_value": "A number is out of range {{field}}",
   "arw.err.bad_kind": "Challenge {{field}}: wrong action",
   "arw.err.bad_dates": "Challenge {{field}}: \"till\" must be after \"from\"",
-  "arw.err.dup_id": "Two challenges have the same ID"
+  "arw.err.dup_id": "Two challenges have the same ID",
+  "rw.home.streakAria": "{{n}} days in a row",
+  "rw.home.on": "Premium on · till {{date}}",
+  "rw.home.onDriver": "You're at the top of owners' lists",
+  "rw.home.onOwner": "Full history, tick filter and more posts are on",
+  "rw.home.titleDriver": "Premium: owners see you first",
+  "rw.home.titleOwner": "Premium: see drivers' full history",
+  "rw.home.need": "{{n}} more points — then {{days}} days free",
+  "rw.home.ready": "You have enough — take {{days}} days Premium",
+  "rw.home.free": "Earn points, get Premium",
+  "rw.home.earn": "Earn +{{n}}",
+  "rw.home.take": "Take",
+  "growth.inviteShort": "Invite"
 }

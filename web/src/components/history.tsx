@@ -130,10 +130,10 @@ export function HistoryNudge({ s, compact }: { s: HistorySummary | null; compact
   const none = s.count === 0
   return (
     <Link to={none ? '/history/new' : '/history'} onClick={() => track('history_nudge_tap', { count: s.count, confirmed: s.confirmed })}
-      className="press card-lift flex items-center gap-3 rounded-lg border border-primary/40 bg-[linear-gradient(135deg,var(--c-primary-subtle),var(--c-card)_70%)] p-card shadow-sm">
-      <span className="icon-tile size-12 bg-primary text-on-primary [&>svg]:size-icon-lg">{Icon.history}</span>
+      className={`press card-lift flex items-center gap-3 rounded-lg border border-primary/40 bg-[linear-gradient(135deg,var(--c-primary-subtle),var(--c-card)_70%)] shadow-sm ${compact ? 'px-3 py-2.5' : 'p-card'}`}>
+      <span className={`icon-tile shrink-0 bg-primary text-on-primary ${compact ? 'size-9 [&>svg]:size-icon-sm' : 'size-12 [&>svg]:size-icon-lg'}`}>{Icon.history}</span>
       <span className="min-w-0 flex-1">
-        <strong className="block font-display text-base font-semibold leading-snug">{none ? t('hist.nudgeTitle') : t('hist.nudgeMore')}</strong>
+        <strong className={`block font-semibold leading-snug ${compact ? 'text-[0.9375rem]' : 'font-display text-base'}`}>{none ? t('hist.nudgeTitle') : t('hist.nudgeMore')}</strong>
         {!compact && <span className="mt-0.5 block text-sm text-text-2">{none ? t('hist.nudgeBody') : t('hist.nudgeMoreBody', { n: s.confirmed })}</span>}
         <span className="mt-1.5 flex gap-1" aria-hidden>
           {[0, 1].map((i) => <span key={i} className={`h-1.5 w-10 rounded-full ${i < s.confirmed ? 'bg-success' : i < s.count ? 'bg-action' : 'bg-border'}`} />)}

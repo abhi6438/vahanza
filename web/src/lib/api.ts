@@ -540,6 +540,7 @@ export interface Rewards {
 export interface Viewer { id: string; name: string | null; firm?: string | null; district: string | null; state: string | null; photo_url: string | null; tick: Tick | null; day: string; vehicles?: string[]; experience_years?: number | null }
 export const rewards = {
   get: () => api<Rewards>('/me/rewards'),
+  summary: () => api<RewardsSummary>('/me/rewards/summary'),
   buyWithPoints: (plan: Plan['id']) => api<{ premium: boolean; premium_until: string }>('/me/premium/points', { method: 'POST', json: { plan } }),
   profileViewers: () => api<{ week: number; month: number; premium: boolean; items: Viewer[] }>('/me/profile-viewers'),
   postViewers: (postId: string) => api<{ count: number; premium: boolean; items: Viewer[] }>(`/posts/${postId}/viewers`),
@@ -562,3 +563,4 @@ export interface RewardsConfig {
   challenges: ChallengeCfg[]
 }
 export interface RewardsStats { given_30d: number; spent_30d: number; earners_30d: number; premium: Record<string, number>; top_inviters: { id: string; name: string | null; business_name: string | null; role: string; district: string | null; friends: number }[] }
+export interface RewardsSummary { points: number; streak: number; streak_today: boolean; streak_on: boolean; streak_every: number; premium: boolean; premium_until: string | null; plan_points: number; plan_days: number; per_friend: number }

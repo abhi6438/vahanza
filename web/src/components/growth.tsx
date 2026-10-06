@@ -73,14 +73,36 @@ export function inviteText(code: string, lang: string, role: string | null | und
 }
 
 /** Driver home: "8 owners saw your profile this week" + the invite / card shortcuts. */
-export function GrowthCard() {
+export function GrowthCard({ compact }: { compact?: boolean } = {}) {
   const { t, i18n } = useTranslation()
   const { profile } = useAuth()
   const { g, error } = useGrowth()
   const [card, setCard] = useState(false)
   if (error) return null
-  if (!g) return <Skeleton className="h-36" />
+  if (!g) return <Skeleton className={compact ? 'h-16' : 'h-36'} />
   const isDriver = profile?.role === 'driver'
+  if (compact) {
+    // phone home: one slim row — who looked at me + card / invite as small buttons
+    return (
+      <>
+      {isDriver && <LookingCard due={!!g.looking_due} />}
+      <div className="flex items-center gap-2.5 rounded-lg border border-border bg-surface px-3 py-2.5 shadow-sm">
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-warning-soft text-warning [&>svg]:size-icon-sm">{Icon.eye}</span>
+        <Link to={g.views_total > 0 ? '/viewers' : '/profile'} className="min-w-0 flex-1">
+          <strong className="block truncate text-[0.9375rem] font-semibold leading-snug">{g.views_week > 0 ? t('growth.viewsWeek', { n: g.views_week }) : t('growth.viewsNone')}</strong>
+          <span className="block truncate text-xs text-text-2">{g.views_total > 0 ? t('rw.viewers.whoSaw') + ' →' : t('growth.viewsNoneSub')}</span>
+        </Link>
+        {isDriver && (
+          <button type="button" aria-label={t('card.mine')} title={t('card.mine')} onClick={() => { setCard(true); track('card_open', { from: 'home' }) }}
+            className="press grid size-9 shrink-0 place-items-center rounded-full border border-border bg-surface text-text [&>svg]:size-icon-sm">{Icon.idcard}</button>
+        )}
+        <Link to="/invite" onClick={() => track('invite_open', { from: 'home' })}
+          className="press inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-action px-3 text-sm font-semibold text-on-action [&>svg]:size-icon-sm">{Icon.gift}{t('growth.inviteShort')}</Link>
+        {isDriver && <DigitalCardDialog open={card} onClose={() => setCard(false)} code={g.ref_code} />}
+      </div>
+      </>
+    )
+  }
   return (
     <>
     {isDriver && <LookingCard due={!!g.looking_due} />}

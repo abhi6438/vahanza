@@ -21,6 +21,7 @@ import { useIsDesktop } from '../lib/layout'
 import { track, trackScreen } from '../lib/track'
 import { CompleteCard, PinNudge } from '../components/nudges'
 import { HistoryNudge, RequestsCard, useHistoryRequests, useMyHistory } from '../components/history'
+import { HeroRewardChips, HomeRewardsCard } from '../components/rewards'
 
 /**
  * Home = what the user came for.
@@ -153,13 +154,14 @@ function OwnerHome() {
       heroTop={<HeroBar title={greeting} badge={<TestBadge />} />}
       hero={
         <>
-          <p className="mb-4 pt-0.5"><CityLine city={city} onDark /></p>
+          <div className="mb-4 flex items-center justify-between gap-2 pt-0.5"><span className="min-w-0"><CityLine city={city} onDark /></span><HeroRewardChips /></div>
           <ButtonLink to={postTo} onClick={onPost} variant="action" size="lg" block icon={Icon.plus}>{t('home.post')}</ButtonLink>
         </>
       }>
-      <WithRail main={main} mobileTop={<><RequestsCard n={reqs} /><PinNudge /><RatePrompt /></>}
+      <WithRail main={main} mobileTop={<><HomeRewardsCard /><RequestsCard n={reqs} /><PinNudge /><RatePrompt /></>}
         rail={
           <>
+            <HomeRewardsCard />
             <RequestsCard n={reqs} />
             <PinNudge />
             <RatePrompt />
@@ -227,8 +229,8 @@ function DriverHome() {
 
   const hidden = blocker && (
     <Link to={`/setup?step=${blocker.step}`} onClick={() => track('hidden_banner_tap')}
-      className="press flex items-center gap-3 rounded-lg border border-action/40 bg-warning-soft px-3 py-2.5 font-medium text-warning shadow-sm">
-      <span className="icon-tile size-9 bg-action text-on-action [&>svg]:size-icon-md">{Icon.alert}</span>
+      className="press flex items-center gap-2.5 rounded-lg border border-action/40 bg-warning-soft px-3 py-2 text-sm font-medium leading-snug text-warning shadow-sm">
+      <span className="icon-tile size-8 shrink-0 bg-action text-on-action [&>svg]:size-icon-sm">{Icon.alert}</span>
       <span className="flex-1">{t('home.hiddenBanner')}</span>
       {Icon.chevron}
     </Link>
@@ -260,15 +262,16 @@ function DriverHome() {
       heroTop={<HeroBar title={greeting} badge={<TestBadge />} />}
       hero={
         <>
-          <p className="mb-3 pt-0.5"><CityLine city={city} onDark /></p>
+          <div className="mb-3 flex items-center justify-between gap-2 pt-0.5"><span className="min-w-0"><CityLine city={city} onDark /></span><HeroRewardChips /></div>
           <AvailabilitySwitch onDark />
         </>
       }>
       <WithRail main={main}
-        mobileTop={<>{hidden}<HistoryNudge s={histSum} compact /><PinNudge /><PendingHires /><RatePrompt /><GrowthCard /></>}
+        mobileTop={<>{hidden}<HomeRewardsCard /><HistoryNudge s={histSum} compact /><PinNudge /><PendingHires /><RatePrompt /><GrowthCard compact /></>}
         rail={
           <>
             <AvailabilitySwitch />
+            <HomeRewardsCard />
             <HistoryNudge s={histSum} />
             <PinNudge />
             <PendingHires />

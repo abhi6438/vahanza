@@ -30,6 +30,10 @@ export default function Rewards() {
   const load = () => rewards.get().then(setR).catch(() => setError(true))
   useEffect(() => { trackScreen('rewards'); track('rewards_open', { from: params.get('from') || '' }); void load() }, [params])
 
+  useEffect(() => {
+    const go = params.get('go')
+    if (r && go) setTimeout(() => document.getElementById(go)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
+  }, [r, params])
   const refreshMe = () => api<Me>('/me').then(applyMe).catch(() => {})
   async function withPoints(p: Plan) {
     setBusy(`pts-${p.id}`)
@@ -220,7 +224,7 @@ function InviteCard({ inv, role }: { inv: RewardsData['invite']; role: 'driver' 
 function StreakCard({ s }: { s: RewardsData['streak'] }) {
   const { t } = useTranslation()
   return (
-    <section className="rounded-xl border border-border bg-surface p-card shadow-sm">
+    <section id="streak" className="scroll-mt-4 rounded-xl border border-border bg-surface p-card shadow-sm">
       <div className="flex items-center gap-3">
         <span className="grid size-11 shrink-0 place-items-center rounded-full bg-warning-soft text-2xl" aria-hidden>🔥</span>
         <div className="min-w-0 flex-1">

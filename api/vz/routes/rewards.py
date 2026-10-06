@@ -42,6 +42,19 @@ def _iso(v):
     return v.isoformat() if v is not None else None
 
 
+@router.get("/me/rewards/summary")
+def my_rewards_summary(user: AuthUser = Depends(current_user), db=Depends(get_db), tenant: str = Depends(tenant_id)):
+    """Small, for the Home screen: points, days in a row, Premium, the cheapest plan."""
+    me = _me(db, user, tenant)
+    st = R.streak_status(db, tenant, user.id)
+    plans = R.plans(db, tenant, me["role"])
+    inv = R.config(db, tenant)["earn"].get("referral") or {}
+    return {"points": me["points"] or 0, "streak": st["days"], "streak_today": st["today"], "streak_on": st["on"],
+            "streak_every": st["every"], "premium": R.is_premium(me["premium_until"]), "premium_until": _iso(me["premium_until"]),
+            "plan_points": min((p["points"] for p in plans), default=0), "plan_days": next((p["days"] for p in plans if p["points"] == min(x["points"] for x in plans)), 0) if plans else 0,
+            "per_friend": int(inv.get("points") or 0) if inv.get("on", True) else 0}
+
+
 @router.get("/me/rewards")
 def my_rewards(user: AuthUser = Depends(current_user), db=Depends(get_db), tenant: str = Depends(tenant_id)):
     me = _me(db, user, tenant)
