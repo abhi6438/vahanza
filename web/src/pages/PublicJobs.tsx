@@ -144,7 +144,7 @@ function PublicJobCard({ job, onContact, full }: { job: PublicJob; onContact: ()
   )
   return (
     <JobCard full={full}
-      data={{ title: job.owner_verified ? t('pub.ownerVerified') : t('pub.owner'), verified: job.owner_verified, place, rating_avg: job.owner_rating_avg, rating_count: job.owner_rating_count, jobsDone: job.owner_jobs_done, fastReply: job.owner_fast_reply, post: { ...job, check_flags: [] } }}
+      data={{ title: job.owner_verified ? t('pub.ownerVerified') : t('pub.owner'), verified: job.owner_verified, tick: job.owner_tick, premium: job.owner_premium, place, rating_avg: job.owner_rating_avg, rating_count: job.owner_rating_count, jobsDone: job.owner_jobs_done, fastReply: job.owner_fast_reply, post: { ...job, check_flags: [] } }}
       actions={actions} />
   )
 }
@@ -268,7 +268,7 @@ function DriverList() {
         {items === null && !error && <CardSkeletons count={4} height="h-64" />}
         {items?.map((d, i) => (
           <DriverCard key={`${d.name}-${i}`}
-            data={{ history: d.history_count ? { count: d.history_count, confirmed: d.history_confirmed || 0, rehire: d.history_rehire || 0 } : undefined, lastWork: d.last_work, onLoginForMore: () => askLogin('history'), name: d.name || t('role.driver'), photo_url: null, verified: d.verified, rating_avg: d.rating_avg, rating_count: d.rating_count, top: d.top, jobs_done: d.jobs_done, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
+            data={{ history: d.history_count ? { count: d.history_count, confirmed: d.history_confirmed || 0, rehire: d.history_rehire || 0 } : undefined, lastWork: d.last_work, onLoginForMore: () => askLogin('history'), name: d.name || t('role.driver'), photo_url: null, verified: d.verified, tick: d.tick, premium: d.premium, rating_avg: d.rating_avg, rating_count: d.rating_count, top: d.top, jobs_done: d.jobs_done, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
             actions={<Button variant="success" block icon={Icon.phone} className="mt-3" onClick={() => askLogin('list')}>{t('pub.callDriver')}</Button>} />
         ))}
       </CardGrid>

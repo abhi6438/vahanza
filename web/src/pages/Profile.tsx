@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { DriverCard, FleetRow, RatingBadge, VerifiedBadge } from '../components/cards'
+import { DriverCard, FleetRow, RatingBadge } from '../components/cards'
+import { PremiumBadge, RewardsStrip, TickBadge, TickDot, tickOf } from '../components/rewards'
 import { ProfileNudges } from '../components/nudges'
 import { Avatar } from '../components/photo'
 import { placeText } from '../components/places'
@@ -31,6 +32,8 @@ export default function Profile() {
   const phone = (profile.phone || '').replace(/^91/, '')
   const place = profile.district && profile.state ? placeText({ district: profile.district, state: profile.state }, i18n.language) : ''
   const vehicles = fleet.reduce((s, g) => s + g.vehicle_count, 0)
+  const tick = tickOf(profile.tick, profile.verified)
+  const premium = !!profile.premium_until && new Date(profile.premium_until) > new Date()
 
   const identity = (
     <Card pad={false} className="overflow-hidden">
@@ -38,12 +41,13 @@ export default function Profile() {
       <div className="-mt-10 flex flex-col items-center px-card pb-card text-center lg:items-start lg:text-left">
         <span className="relative rounded-full ring-4 ring-surface">
           <Avatar url={profile.photo_url} name={profile.name} size={80} />
-          {profile.verified && <span className="absolute bottom-0.5 right-0.5 grid size-6 place-items-center rounded-full bg-success text-on-success ring-2 ring-surface [&>svg]:size-3.5">{Icon.check}</span>}
+          <TickDot tick={tick} size={24} className="absolute bottom-0.5 right-0.5" />
         </span>
         <p className="mt-2 max-w-full truncate font-display text-xl font-semibold tracking-[-0.01em]">{profile.name}</p>
         <p className="text-sm text-text-2">{isDriver ? t('role.driver') : profile.business_name || t('role.owner')}</p>
         <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-          <VerifiedBadge verified={profile.verified} />
+          <TickBadge tick={tick} />
+          <PremiumBadge on={premium} />
           <RatingBadge />
         </div>
         <dl className="mt-4 w-full divide-y divide-border rounded-md bg-surface-2 text-sm ring-1 ring-inset ring-border">
@@ -63,6 +67,7 @@ export default function Profile() {
 
   const links = (
     <nav aria-label={t('profile.more')} className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
+      <Row to="/rewards" icon={Icon.crown} label={t('rw.title')} />
       {!isDriver && <Row to="/setup?step=fleet" icon={Icon.truck} label={t('profile.vehicles', { n: vehicles })} />}
       {isDriver && <Row to="/history" icon={Icon.history} label={t('hist.title')} />}
       {!isDriver && <Row to="/history-requests" icon={Icon.history} label={reqs ? `${t('hist.reqTitle')} (${reqs})` : t('hist.reqTitle')} />}
@@ -80,7 +85,7 @@ export default function Profile() {
     <section>
       <SectionTitle className="mb-3" title={t('profile.ownersSee')} sub={t('profile.ownersSeeSub')}
         right={<Link to="/setup?edit" className="shrink-0 font-semibold text-primary hover:underline">{t('home.edit')}</Link>} />
-      <div className="max-w-xl"><DriverCard self data={{ history: histSum && histSum.count ? histSum : undefined, name: profile.name || '', photo_url: profile.photo_url, place: place.replace(/ · \d+$/, ''), verified: profile.verified, d: driver }} /></div>
+      <div className="max-w-xl"><DriverCard self data={{ history: histSum && histSum.count ? histSum : undefined, name: profile.name || '', photo_url: profile.photo_url, place: place.replace(/ · \d+$/, ''), verified: profile.verified, tick, premium, d: driver }} /></div>
     </section>
   ) : !isDriver && fleet.length > 0 ? (
     <section>
@@ -96,6 +101,7 @@ export default function Profile() {
         <div className="grid grid-cols-[320px_minmax(0,1fr)] items-start gap-8">
           <div className="flex flex-col gap-4">{identity}{links}</div>
           <div className="flex min-w-0 flex-col gap-6">
+            <RewardsStrip points={profile.points || 0} tick={tick} premium={premium} />
             <ProfileNudges role={isDriver ? 'driver' : 'owner'} done={done} />
             {isDriver && <HistoryNudge s={histSum} />}
             {preview}
@@ -104,6 +110,7 @@ export default function Profile() {
       ) : (
         <div className="flex flex-col gap-4">
           {identity}
+          <RewardsStrip points={profile.points || 0} tick={tick} premium={premium} />
           <ProfileNudges role={isDriver ? 'driver' : 'owner'} done={done} />
           {isDriver && <HistoryNudge s={histSum} />}
           {preview}

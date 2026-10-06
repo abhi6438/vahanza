@@ -10,7 +10,7 @@ import logging
 import secrets
 from datetime import date
 
-from . import notify
+from . import notify, rewards
 
 log = logging.getLogger("vz.growth")
 BOOST_DAYS = 7
@@ -276,6 +276,7 @@ def daily(db, today: date) -> dict:
     out["come_back"] = notify.safe(db, come_back) or 0
     notify.safe(db, refresh_fast_reply)
     notify.safe(db, lambda d: d.execute("select public.prune_pin_events()") and 1)   # Sprint 11: old MPIN events
+    out["rewards"] = notify.safe(db, rewards.daily, today) or {}
     if today.weekday() == 0:   # Monday
         out["views"] = notify.safe(db, weekly_views) or 0
         out["weekly_jobs"] = notify.safe(db, weekly_jobs) or 0

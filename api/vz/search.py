@@ -198,9 +198,11 @@ class DriverFilters:
     available: Optional[str]
     rating_min: Optional[float]
     langs: list[str]
+    tick: Optional[str] = None         # Premium: only blue-or-better / gold-or-better
 
     def params(self) -> dict:
         return {
+            "ticks": {"blue": ["blue", "gold", "black"], "gold": ["gold", "black"]}.get(self.tick or ""),
             "lic_ok": LICENCE_OK[self.licence] if self.licence else None,
             "exp_min": self.exp_min, "savings_max": self.savings_max,
             "avail": AVAILABLE_ORDER[: AVAILABLE_ORDER.index(self.available) + 1] if self.available else None,
@@ -215,8 +217,9 @@ def driver_filters(
     available: Optional[Literal["now", "w1", "d15", "m1"]] = Query(None),
     rating_min: Optional[float] = Query(None, ge=1, le=5),
     langs: Optional[str] = Query(None, max_length=80),
+    tick: Optional[Literal["blue", "gold"]] = Query(None),
 ) -> DriverFilters:
-    return DriverFilters(licence, exp_min, savings_max, available, rating_min, _list(langs, LANGS, "language"))
+    return DriverFilters(licence, exp_min, savings_max, available, rating_min, _list(langs, LANGS, "language"), tick)
 
 
 def driver_where(public: bool = False) -> str:
@@ -233,6 +236,7 @@ def driver_where(public: bool = False) -> str:
           and (%(avail)s::text[] is null or d.available_from = any(%(avail)s::text[]))
           and (%(rating_min)s::numeric is null or coalesce(p.rating_avg, 0) >= %(rating_min)s)
           and (%(langs)s::text[] is null or d.languages && %(langs)s::text[])
+          and (%(ticks)s::text[] is null or p.tick = any(%(ticks)s::text[]))
           and (not %(place_filter)s or lower(p.district) = lower(%(district)s)
                or (p.location is not null and %(loc)s::extensions.geography is not null
                    and extensions.st_dwithin(p.location, %(loc)s::extensions.geography, %(radius_m)s)))

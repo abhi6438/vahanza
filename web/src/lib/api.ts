@@ -75,6 +75,10 @@ export interface Profile {
   setup_done: boolean
   /** Number is in the test list: hidden from real users, left out of analytics. */
   is_test?: boolean
+  /** Rewards: trust tick, points balance, Premium end */
+  tick?: Tick | null
+  points?: number
+  premium_until?: string | null
 }
 
 export interface DriverDetails {
@@ -142,6 +146,8 @@ export interface DriverListItem extends DriverDetails {
   district: string | null
   state: string | null
   verified: boolean
+  tick?: Tick | null
+  premium?: boolean
   distance_km: number | null
   last_seen_at: string | null
   rating_avg: number | null
@@ -194,6 +200,8 @@ export interface Job extends Post {
   owner_district: string | null
   owner_state: string | null
   owner_verified: boolean
+  owner_tick?: Tick | null
+  owner_premium?: boolean
   owner_rating_avg?: number | null
   owner_rating_count?: number
   owner_jobs_done?: number
@@ -232,6 +240,8 @@ export interface PublicJob extends Omit<Post, 'check_flags'> {
   owner_district: string | null
   owner_state: string | null
   owner_verified: boolean
+  owner_tick?: Tick | null
+  owner_premium?: boolean
   owner_rating_avg: number | null
   owner_rating_count: number
   owner_jobs_done?: number
@@ -242,6 +252,7 @@ export interface PublicJob extends Omit<Post, 'check_flags'> {
 /** A listed driver as an owner sees them before login: first name + initial, no photo / number / id. */
 export interface PublicDriver extends DriverDetails {
   name: string | null; district: string | null; state: string | null; verified: boolean
+  tick?: Tick | null; premium?: boolean
   rating_avg: number | null; rating_count: number; jobs_done: number; top: boolean
   history_count?: number; history_confirmed?: number; history_rehire?: number
   last_work?: { firm: string | null; district: string | null; vehicle: string; confirmed: boolean } | null
@@ -313,7 +324,7 @@ export interface Poster { id: number; code: string; place: string; district: str
 export interface QueuePost { id: string; check_flags: string[]; savings_monthly: number; base_cities: string[]; created_at: string; owner_id: string; owner_name: string | null; business_name: string | null; owner_phone: string | null; district: string | null; state: string | null; drivers_needed: number }
 export interface QueueProfile { id: string; name: string | null; business_name: string | null; phone: string | null; role: string; district: string | null; state: string | null; check_flags: string[]; created_at: string }
 export interface QueueReport { id: string; target_type: 'profile' | 'post'; target_id: string; reason: string; note: string | null; created_at: string; reporter_name: string | null; target_name: string | null; target_business: string | null; target_phone: string | null; target_profile_id: string | null; open_reports: number }
-export interface AdminUser { id: string; name: string | null; business_name: string | null; phone: string | null; role: 'driver' | 'owner'; district: string | null; state: string | null; verified: boolean; blocked: boolean; is_test: boolean; setup_done: boolean; created_at: string; last_seen_at: string | null; posts: number; interests: number }
+export interface AdminUser { id: string; name: string | null; business_name: string | null; phone: string | null; role: 'driver' | 'owner'; district: string | null; state: string | null; verified: boolean; blocked: boolean; is_test: boolean; setup_done: boolean; created_at: string; last_seen_at: string | null; posts: number; interests: number; tick?: Tick | null; tick_black?: boolean; points?: number; premium_until?: string | null }
 
 export const admin = {
   stats: (days: number) => api<AdminStats>(`/admin/stats?days=${days}`),
@@ -392,11 +403,11 @@ export const ratePerson = (ratee_id: string, stars: number, tags: string[]) => a
 // ---------------------------------------------------------------- notifications (Sprint 6)
 export type NotifKind = 'new_post' | 'new_interest' | 'interest_seen' | 'post_live' | 'post_rejected' | 'profile_views' | 'licence_expiry' | 'referral_joined'
   | 'hire_confirm' | 'hire_done' | 'verify_result' | 'weekly_jobs' | 'post_views' | 'come_back' | 'still_looking'
-  | 'history_request' | 'history_answered'
+  | 'history_request' | 'history_answered' | 'reward'
 export interface Notif {
   id: number
   kind: NotifKind
-  data: { post_id?: string; owner?: string; driver?: string; driver_id?: string; vehicles_raw?: string[]; n?: number; savings?: string; days?: number; date?: string; name?: string; ok?: boolean; reason?: string; hire_id?: number; answer?: 'yes' | 'no' | 'dates' | 'admin_ok' | 'admin_rejected'; id?: string }
+  data: { post_id?: string; owner?: string; driver?: string; driver_id?: string; vehicles_raw?: string[]; n?: number; savings?: string; days?: number; date?: string; name?: string; ok?: boolean; reason?: string; hire_id?: number; answer?: 'yes' | 'no' | 'dates' | 'admin_ok' | 'admin_rejected'; id?: string; what?: 'tick' | 'premium' | 'points'; tick?: Tick; kind?: string; points?: number; source?: string }
   read_at: string | null
   created_at: string
 }
@@ -491,9 +502,63 @@ export const history = {
   owners: (q: string) => api<{ items: OwnerHit[] }>(`/history/owners?q=${encodeURIComponent(q)}`),
   requests: () => api<{ items: HistoryRequest[] }>('/me/history-requests'),
   answer: (id: string, b: HistoryAnswer) => api<{ status: HistoryStatus }>(`/history/${id}/answer`, { method: 'POST', json: b }),
-  ofDriver: (id: string) => api<{ items: HistoryEntry[]; summary: HistorySummary }>(`/drivers/${id}/history`),
+  ofDriver: (id: string) => api<{ items: HistoryEntry[]; summary: HistorySummary; locked?: boolean; more?: number }>(`/drivers/${id}/history`),
   publicGet: (token: string) => api<PublicHistory>(`/public/history/${encodeURIComponent(token)}`, { auth: false }),
   publicAnswer: (token: string, b: HistoryAnswer) => api<{ status: HistoryStatus }>(`/public/history/${encodeURIComponent(token)}/answer`, { method: 'POST', json: b, auth: false }),
   adminList: (status: 'todo' | 'disputed' | 'all' = 'todo') => api<{ items: AdminHistory[] }>(`/admin/history?status=${status}`),
   adminCheck: (id: string, action: 'ok' | 'keep' | 'reject', note?: string) => api<{ status: HistoryStatus }>(`/admin/history/${id}/check`, { method: 'POST', json: { action, note } }),
 }
+
+// ---- rewards: अंक (points), ticks, Premium ----
+export type Tick = 'gray' | 'blue' | 'gold' | 'black'
+export interface TickStep { key: string; done: boolean; have?: number; need?: number }
+export interface Plan { id: 'm1' | 'm3'; days: number; points: number }
+export interface InviteStatus { friends: number; per_friend: number; cross_role: number; friend_gets: number; milestones: { at: number; points: number; done: boolean }[]; next: { at: number; points: number } | null }
+export interface EarnRule { kind: string; points: number; once: boolean; cap: number | null; done: boolean; month: number }
+export interface LedgerRow { kind: string; points: number; note: string | null; at: string }
+export interface Rewards {
+  role: 'driver' | 'owner'
+  points: number
+  tick: Tick | null
+  premium: boolean
+  premium_until: string | null
+  gold_free_used: boolean
+  ladder: { tick: Tick; steps: TickStep[] }[]
+  earn: EarnRule[]
+  plans: Plan[]
+  invite: InviteStatus
+  premium_source: 'points' | 'gold' | 'admin' | 'trial' | 'prize' | null
+  gold_days: number
+  limits: { history: [number, number]; posts: [number, number] }
+  streak: { on: boolean; days: number; every: number; points: number; today: boolean; in_cycle: number }
+  challenges: { id: string; title_hi: string; title_en: string | null; kind: string; target: number; points: number; end: string | null; have: number; done: boolean }[]
+  leaderboard: { on: boolean; district: string | null; state: string | null; top: number; points: number; premium_days: number
+    items: { rank: number; name: string; photo_url: string | null; tick: Tick | null; friends: number; me: boolean }[]
+    me: { rank: number | null; friends: number } | null }
+  ledger: LedgerRow[]
+}
+export interface Viewer { id: string; name: string | null; firm?: string | null; district: string | null; state: string | null; photo_url: string | null; tick: Tick | null; day: string; vehicles?: string[]; experience_years?: number | null }
+export const rewards = {
+  get: () => api<Rewards>('/me/rewards'),
+  buyWithPoints: (plan: Plan['id']) => api<{ premium: boolean; premium_until: string }>('/me/premium/points', { method: 'POST', json: { plan } }),
+  profileViewers: () => api<{ week: number; month: number; premium: boolean; items: Viewer[] }>('/me/profile-viewers'),
+  postViewers: (postId: string) => api<{ count: number; premium: boolean; items: Viewer[] }>(`/posts/${postId}/viewers`),
+  adminConfig: () => api<{ config: RewardsConfig; defaults: RewardsConfig; kinds: string[]; roles: Record<string, string[]>; challenge_kinds: string[] }>('/admin/rewards/config'),
+  saveConfig: (c: RewardsConfig) => api<{ config: RewardsConfig }>('/admin/rewards/config', { method: 'PUT', json: c }),
+  stats: () => api<RewardsStats>('/admin/rewards/stats'),
+  admin: (id: string, b: { black?: boolean; premium_days?: number; premium_off?: boolean; points?: number; note?: string }) =>
+    api<{ tick: Tick | null; tick_black: boolean; points: number; premium: boolean; premium_until: string | null }>(`/admin/users/${id}/rewards`, { method: 'POST', json: b }),
+}
+export interface EarnCfg { points: number; cap: number | null; on: boolean }
+export interface ChallengeCfg { id: string; title_hi: string; title_en?: string | null; kind: string; target: number; points: number; roles: ('driver' | 'owner')[]; start: string; end: string; on: boolean }
+export interface RewardsConfig {
+  earn: Record<string, EarnCfg>
+  friends: { cross_role: number; milestones: [number, number][] }
+  plans: Record<'driver' | 'owner', Record<'m1' | 'm3', { days: number; points: number }>>
+  free: { trial_days: number; gold_days: number }
+  limits: { history: [number, number]; posts: [number, number] }
+  streak: { on: boolean; days: number; points: number }
+  leaderboard: { on: boolean; top: number; points: number; premium_days: number }
+  challenges: ChallengeCfg[]
+}
+export interface RewardsStats { given_30d: number; spent_30d: number; earners_30d: number; premium: Record<string, number>; top_inviters: { id: string; name: string | null; business_name: string | null; role: string; district: string | null; friends: number }[] }

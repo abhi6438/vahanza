@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { CommunityArt } from '../assets/illustrations'
 import { boosted, DigitalCardDialog, inviteText, useGrowth } from '../components/growth'
 import { AppShell } from '../components/shell'
@@ -49,6 +50,10 @@ export default function Invite() {
               </li>
             ))}
           </ol>
+          <Link to="/rewards" className="flex items-center gap-2 border-t border-border px-5 py-3 font-semibold text-primary [&>svg]:size-icon-sm">
+            <span className="premium-fill grid size-7 shrink-0 place-items-center rounded-full [&>svg]:size-icon-sm">{Icon.crown}</span>
+            <span className="flex-1">{t('invite.pointsLink')}</span>{Icon.chevron}
+          </Link>
         </Card>
 
         {error && <ErrorState onRetry={() => window.location.reload()} />}

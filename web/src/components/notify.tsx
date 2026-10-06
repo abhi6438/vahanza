@@ -85,6 +85,11 @@ export function notifText(n: Notif, t: (k: string, o?: Record<string, unknown>) 
     const key = d.ok ? 'notif.verify_result.ok' : 'notif.verify_result.no'
     return { title: t(`${key}.title`), body: t(`${key}.body`, { reason: d.reason ? t(`verify.reason.${d.reason}`) : '' }) }
   }
+  if (n.kind === 'reward') {
+    const w = d.what || 'points'
+    const o2 = { tick: d.tick ? t(`tick.name.${d.tick}`) : '', points: d.points ?? '', days: d.days ?? '', why: d.kind ? t(`rw.kind.${d.kind}`) : '' }
+    return { title: t(`notif.reward.${w}.title`, o2), body: t(`notif.reward.${w}.body`, o2) }
+  }
   if (n.kind === 'history_answered') {
     const a = d.answer || 'yes'
     return { title: t(`notif.history_answered.${a}.title`), body: t(`notif.history_answered.${a}.body`) }
@@ -106,6 +111,7 @@ export function notifLink(n: Notif) {
     case 'verify_result': return '/verify'
     case 'history_request': return '/history-requests'
     case 'history_answered': return '/history'
+    case 'reward': return '/rewards'
     default: return '/posts'
   }
 }

@@ -9,6 +9,7 @@ import { TextField, VehicleArt } from './form'
 import { STAR_WORDS, TAGS } from './trust'
 import { Avatar } from './photo'
 import { Badge, Button, Icon, Skeleton } from './ui'
+import { PremiumLock } from './rewards'
 
 // ---------------------------------------------------------------- one entry
 export function HistoryItem({ e, actions, compact }: { e: HistoryEntry; actions?: ReactNode; compact?: boolean }) {
@@ -72,13 +73,22 @@ export function HistoryLine({ s, className = '' }: { s: Pick<HistorySummary, 'co
 export function DriverHistory({ driverId }: { driverId: string }) {
   const { t } = useTranslation()
   const [items, setItems] = useState<HistoryEntry[] | null>(null)
-  useEffect(() => { api.ofDriver(driverId).then((r) => setItems(r.items)).catch(() => setItems([])) }, [driverId])
+  const [lock, setLock] = useState<{ more: number; confirmed: number } | null>(null)
+  useEffect(() => {
+    api.ofDriver(driverId).then((r) => { setItems(r.items); setLock(r.locked ? { more: r.more || 0, confirmed: r.summary.confirmed } : null) }).catch(() => setItems([]))
+  }, [driverId])
   return (
     <section className="mt-4">
       <h4 className="mb-2 flex items-center gap-2 font-display font-semibold [&>svg]:size-icon-sm">{Icon.history}{t('hist.title')}</h4>
       {items === null && <Skeleton className="h-20" />}
       {items?.length === 0 && <p className="text-sm text-text-2">{t('hist.noneOther')}</p>}
       <div className="flex flex-col gap-2">{items?.map((e) => <HistoryItem key={e.id} e={e} compact />)}</div>
+      {lock && (
+        <div className="mt-2">
+          <PremiumLock from="driver_history" title={lock.more ? t('rw.lock.historyMore', { n: lock.more }) : t('rw.lock.historyStars')}
+            body={t('rw.lock.historyBody')} />
+        </div>
+      )}
     </section>
   )
 }

@@ -1,5 +1,5 @@
 """Who am I: profile, first-time role choice, profile setup (driver details / owner fleet), heartbeat."""
-from datetime import date
+from datetime import date, datetime
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,14 +8,14 @@ from pydantic import BaseModel, Field, field_validator
 
 from ..auth import AuthUser, current_user
 from ..checks import clean_name, fleet_flags, name_error, profile_flags
-from .. import growth, prospects
+from .. import growth, notify, prospects, rewards
 from ..deps import get_db, tenant_id
 
 router = APIRouter(prefix="/me", tags=["me"])
 
 PROFILE_COLS = (
     "id, tenant_id, role, name, business_name, phone, photo_url, lang, city, district, state, pincode, "
-    "verified, blocked, setup_done, is_test, created_at"
+    "verified, blocked, setup_done, is_test, created_at, tick, points, premium_until"
 )
 DRIVER_COLS = (
     "vehicles, max_wheels, licence_type, licence_last4, experience_years, savings_wanted, savings_negotiable, "
@@ -42,6 +42,9 @@ class Profile(BaseModel):
     verified: bool = False
     setup_done: bool = False
     is_test: bool = False
+    tick: Optional[Literal["gray", "blue", "gold", "black"]] = None
+    points: int = 0
+    premium_until: Optional[datetime] = None
 
 
 class DriverDetails(BaseModel):
@@ -190,7 +193,9 @@ def get_me(user: AuthUser = Depends(current_user), db=Depends(get_db), tenant: s
         raise HTTPException(403, "Account blocked")
     if row["tenant_id"] != tenant:
         raise HTTPException(403, "This number is registered with another brand")
-    return _load(db, user.id, row)
+    out = _load(db, user.id, row)
+    notify.safe(db, rewards.checkin, tenant, user.id)        # streak: the app was opened today
+    return out
 
 
 @router.post("", response_model=MeResponse)
@@ -342,7 +347,10 @@ def save_profile(body: ProfileBody, user: AuthUser = Depends(current_user), db=D
         _sync_fleet(db, user.id, tenant, fleet)
     if first_finish:
         growth.reward_referrer(db, tenant, user.id)   # whoever invited them gets the "Top" boost
-    return _load(db, user.id, row)
+    out = _load(db, user.id, row)
+    if role in ("driver", "owner"):
+        notify.safe(db, rewards.check_profile, tenant, user.id, role)   # points + tick when the profile is complete
+    return out
 
 
 @router.post("/seen", status_code=204)

@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ..auth import AuthUser, current_user
 from ..deps import get_db, tenant_id
-from .. import notify
+from .. import notify, rewards
 from .. import search as S
 from .trust import is_blocked
 
@@ -150,7 +150,7 @@ def create_post(body: PostIn, user: AuthUser = Depends(current_user), db=Depends
         "select count(*) as n from public.posts where owner_id = %s and status in ('live', 'under_check', 'paused') and expires_at > now()",
         (user.id,),
     ).fetchone()
-    if live and live["n"] >= MAX_LIVE_POSTS:
+    if live and live["n"] >= rewards.limit(db, tenant, "posts", rewards.premium_of(db, user.id)):
         raise HTTPException(409, {"code": "too_many_posts"})
 
     flags = post_flags(body)
@@ -173,6 +173,7 @@ def create_post(body: PostIn, user: AuthUser = Depends(current_user), db=Depends
         )
     if row["status"] == "live":
         notify.safe(db, notify.new_post, str(row["id"]))
+        notify.safe(db, rewards.award, tenant, user.id, "post_live", str(row["id"]))
     return {"id": str(row["id"]), "status": row["status"], "check_flags": flags}
 
 
@@ -230,7 +231,7 @@ def post_interests(post_id: str, user: AuthUser = Depends(current_user), db=Depe
     rows = db.execute(
         """
         select i.id as interest_id, i.status as interest_status, i.created_at as interested_at,
-               p.id, p.name, p.photo_url, p.district, p.state, p.verified, p.rating_avg, p.rating_count, p.jobs_done,
+               p.id, p.name, p.photo_url, p.district, p.state, p.verified, p.tick, (coalesce(p.premium_until, now()) > now()) as premium, p.rating_avg, p.rating_count, p.jobs_done,
                d.vehicles, d.max_wheels, d.licence_type, d.experience_years, d.savings_wanted,
                d.savings_negotiable, d.pay_prefs, d.work_type, d.area, d.languages, d.available_from
         from public.interests i
@@ -281,7 +282,7 @@ def list_jobs(
     near = """
           (exists (select 1 from unnest(p.base_cities) c where lower(split_part(c, ',', 1)) = lower(%(district)s))) desc,
           -- owners who brought friends ("Top" boost) first, but only nearby ones
-          (coalesce(o.boost_until, now()) > now() and (lower(o.district) = lower(%(district)s)
+          ((coalesce(o.boost_until, now()) > now() or coalesce(o.premium_until, now()) > now()) and (lower(o.district) = lower(%(district)s)
              or (o.location is not null and %(loc)s::extensions.geography is not null
                  and extensions.st_dwithin(o.location, %(loc)s::extensions.geography, 150000)))) desc,
           o.location operator(extensions.<->) %(loc)s::extensions.geography nulls last,
@@ -291,6 +292,7 @@ def list_jobs(
         select {POST_SELECT},
           o.id as owner_id, o.name as owner_name, o.business_name, o.photo_url as owner_photo,
           o.district as owner_district, o.state as owner_state, o.verified as owner_verified,
+          o.tick as owner_tick, (coalesce(o.premium_until, now()) > now()) as owner_premium,
           o.rating_avg as owner_rating_avg, o.rating_count as owner_rating_count,
           o.jobs_done as owner_jobs_done, o.fast_reply as owner_fast_reply,
           case when o.location is not null and %(loc)s::extensions.geography is not null
@@ -390,7 +392,7 @@ def my_interests(user: AuthUser = Depends(current_user), db=Depends(get_db), ten
         select {POST_SELECT},
           i.status as interest_status, i.created_at as interested_at,
           o.id as owner_id, o.name as owner_name, o.photo_url as owner_photo, o.rating_avg as owner_rating_avg, o.rating_count as owner_rating_count, o.business_name, o.district as owner_district, o.state as owner_state,
-          o.verified as owner_verified, o.jobs_done as owner_jobs_done, o.fast_reply as owner_fast_reply,
+          o.verified as owner_verified, o.tick as owner_tick, (coalesce(o.premium_until, now()) > now()) as owner_premium, o.jobs_done as owner_jobs_done, o.fast_reply as owner_fast_reply,
           null::int as distance_km, true as interested
         from public.interests i
         join public.posts p on p.id = i.post_id

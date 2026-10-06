@@ -29,6 +29,7 @@ export function useNavItems(adminQueue?: number): NavItem[] {
       { to: '/admin/users', icon: Icon.users, label: t('admin.tab.users') },
       { to: '/admin/import', icon: Icon.upload, label: t('admin.tab.import') },
       { to: '/admin/posters', icon: Icon.qr, label: t('admin.tab.posters') },
+      { to: '/admin/rewards', icon: Icon.crown, label: t('admin.tab.rewards') },
     ]
   }
   return [
@@ -168,6 +169,12 @@ function Sidebar({ adminQueue }: { adminQueue?: number }) {
             <span className="text-[length:var(--icon-size-md)] [&>svg]:transition-transform group-hover:[&>svg]:scale-110">{Icon.bell}</span>
             <span className="flex-1">{t('notif.title')}</span>
             {unread > 0 && <CountDot n={unread} className="" />}
+          </NavLink>
+        )}
+        {!isAdmin && (
+          <NavLink to="/rewards" className={item}>
+            <span className="text-[length:var(--icon-size-md)] [&>svg]:transition-transform group-hover:[&>svg]:scale-110">{Icon.crown}</span>
+            <span className="flex-1">{t('rw.title')}</span>
           </NavLink>
         )}
         <NavLink to="/settings" className={item}>

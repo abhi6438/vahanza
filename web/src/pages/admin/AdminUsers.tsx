@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { TextField } from '../../components/form'
-import { admin, type AdminUser } from '../../lib/api'
+import { admin, rewards, type AdminUser } from '../../lib/api'
+import { PremiumBadge, TickBadge } from '../../components/rewards'
 import { useToast } from '../../components/toast'
-import { Icon } from '../../components/ui'
+import { Button, Chip, Dialog, Icon } from '../../components/ui'
 import { placeName } from '../../lib/catalog'
 import { pinApi } from '../../lib/pin'
 import { track, trackScreen } from '../../lib/track'
@@ -85,6 +86,27 @@ function UserRow({ u, onChange }: { u: AdminUser; onChange: (u: AdminUser) => vo
       setBusy(false)
     }
   }
+  const [prem, setPrem] = useState(false)
+  async function reward(b: { black?: boolean; premium_days?: number; premium_off?: boolean; points?: number }, givenNote?: string) {
+    let note: string | undefined = givenNote
+    if (b.points === 0) {
+      const v = window.prompt(t('admin.rw.pointsQ'))
+      const n = Number(v)
+      if (!v || !Number.isFinite(n) || !n) return
+      b = { points: Math.round(n) }
+      note = window.prompt(t('admin.rw.noteQ')) || undefined
+    }
+    setBusy(true)
+    try {
+      const r = await rewards.admin(u.id, { ...b, note })
+      track('admin_rewards', { black: b.black ?? null, days: b.premium_days || 0, points: b.points || 0 })
+      onChange({ ...u, tick: r.tick, tick_black: r.tick_black, points: r.points, premium_until: r.premium_until })
+      toast(t('admin.rw.done'), { tone: 'success' })
+    } catch {
+      toast(t('error.generic'), { tone: 'error' })
+    } finally { setBusy(false) }
+  }
+  const premium = !!u.premium_until && new Date(u.premium_until) > new Date()
   const phone = (u.phone || '').replace(/^91/, '')
   return (
     <div className={`rounded-lg border bg-surface p-4 ${u.blocked ? 'border-danger/40 opacity-75' : 'border-border'}`}>
@@ -95,7 +117,8 @@ function UserRow({ u, onChange }: { u: AdminUser; onChange: (u: AdminUser) => vo
           <p className="text-sm text-text-2">{u.district ? placeName(`${u.district}, ${u.state}`, i18n.language) : t('admin.u.noPlace')}</p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          {u.verified && <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-xs font-semibold text-success [&>svg]:size-3.5">{Icon.verified}{t('badge.verified')}</span>}
+          {u.tick ? <TickBadge tick={u.tick} compact /> : u.verified && <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-xs font-semibold text-success [&>svg]:size-3.5">{Icon.verified}{t('badge.verified')}</span>}
+          <PremiumBadge on={premium} />
           {u.blocked && <span className="rounded-full bg-danger/15 px-2 py-0.5 text-xs font-semibold text-error">{t('admin.u.blocked')}</span>}
           {u.is_test && <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent-ink">{t('home.testAccount')}</span>}
         </div>
@@ -118,6 +141,47 @@ function UserRow({ u, onChange }: { u: AdminUser; onChange: (u: AdminUser) => vo
           {t('pin.adminReset')}
         </button>
       </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md bg-surface-2 px-2.5 py-2 text-sm">
+        <span className="font-semibold">{t('admin.rw.points', { n: nf(u.points || 0) })}</span>
+        <span className="flex-1" />
+        <button type="button" disabled={busy} onClick={() => void reward({ black: !u.tick_black })}
+          className="min-h-ctl-sm rounded-md border border-border bg-surface px-2.5 font-semibold disabled:opacity-50">{u.tick_black ? t('admin.rw.blackOff') : t('admin.rw.blackOn')}</button>
+        <button type="button" disabled={busy} onClick={() => setPrem(true)}
+          className="premium-fill inline-flex min-h-ctl-sm items-center gap-1 rounded-md px-2.5 font-semibold disabled:opacity-50 [&>svg]:size-icon-sm">{Icon.crown}{t('admin.rw.premium')}</button>
+        <button type="button" disabled={busy} onClick={() => void reward({ points: 0 })}
+          className="min-h-ctl-sm rounded-md border border-border bg-surface px-2.5 font-semibold disabled:opacity-50">{t('admin.rw.givePoints')}</button>
+      </div>
+      {prem && <PremiumDialog name={u.business_name || u.name || ''} until={premium ? u.premium_until! : null} busy={busy}
+        onClose={() => setPrem(false)} onGive={(days, n) => { setPrem(false); void reward({ premium_days: days }, n) }}
+        onEnd={(n) => { setPrem(false); void reward({ premium_off: true }, n) }} />}
     </div>
+  )
+}
+
+/** Vahanza gives Premium to one person (days), or ends it. */
+function PremiumDialog({ name, until, busy, onClose, onGive, onEnd }: { name: string; until: string | null; busy: boolean; onClose: () => void; onGive: (days: number, note?: string) => void; onEnd: (note?: string) => void }) {
+  const { t, i18n } = useTranslation()
+  const [days, setDays] = useState(30)
+  const [note, setNote] = useState('')
+  return (
+    <Dialog open onClose={onClose} title={t('admin.rw.premiumFor', { name })}
+      footer={<div className="flex w-full flex-wrap gap-2">
+        {until && <Button variant="danger" disabled={busy} onClick={() => onEnd(note || undefined)}>{t('admin.rw.endPremium')}</Button>}
+        <span className="flex-1" />
+        <Button icon={Icon.crown} disabled={busy || days < 1} onClick={() => onGive(days, note || undefined)}>{t('admin.rw.giveN', { n: days })}</Button>
+      </div>}>
+      <p className="mb-3 text-sm text-text-2">{until ? t('admin.rw.activeUntil', { date: new Date(until).toLocaleDateString(i18n.language === 'en' ? 'en-IN' : 'hi-IN', { day: 'numeric', month: 'long', year: 'numeric' }) }) : t('admin.rw.notActive')}</p>
+      <p className="mb-2 font-semibold">{t('admin.rw.howLong')}</p>
+      <div className="flex flex-wrap gap-2">
+        {[7, 30, 90, 180, 365].map((d) => <Chip key={d} selected={days === d} onClick={() => setDays(d)}>{t('admin.rw.days', { n: d })}</Chip>)}
+        <label className="inline-flex items-center gap-1.5 text-sm">
+          <input type="number" min={1} max={3650} value={days} onChange={(e) => setDays(Math.max(0, Math.min(3650, Math.round(Number(e.target.value) || 0))))}
+            className="h-chip w-20 rounded-full border border-border bg-surface px-3 text-right font-semibold" aria-label={t('admin.rw.howLong')} />{t('arw.daysUnit')}
+        </label>
+      </div>
+      <p className="mt-2 text-xs text-text-3">{until ? t('admin.rw.addsOn') : ''}</p>
+      <label className="mt-4 block"><span className="mb-1 block text-sm font-semibold">{t('admin.rw.noteQ')}</span>
+        <input value={note} maxLength={200} onChange={(e) => setNote(e.target.value)} className="h-ctl-md w-full rounded-md border border-border bg-surface px-3" /></label>
+    </Dialog>
   )
 }

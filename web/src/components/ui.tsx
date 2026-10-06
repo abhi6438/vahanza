@@ -5,7 +5,7 @@
 import { useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  ArrowRight, Award, Ban, Banknote, BadgeCheck, Bell, Briefcase, Bus, Calendar, Car, Check, ChevronDown, ChevronLeft, ChevronRight,
+  ArrowRight, Award, Coins, Crown, Ban, Banknote, BadgeCheck, Bell, Briefcase, Bus, Calendar, Car, Check, ChevronDown, ChevronLeft, ChevronRight,
   CircleHelp, ClipboardList, Clock, Copy, Download, Eye, FileText, Fingerprint, Flag, Gift, Handshake, Heart, History, House, IdCard,
   Inbox, Info, Languages, LayoutDashboard, LocateFixed, Lock, LogOut, MapPin, MessageCircle, Mic, Moon, Navigation, Palette, Phone,
   Plus, Printer, QrCode, RefreshCw, Route, Search, Settings, Share2, ShieldCheck, SlidersHorizontal, Sparkles, Star, Sun, Truck,
@@ -97,6 +97,9 @@ export const Icon = {
   fingerprint: lu(Fingerprint),
   history: lu(History),
   flag: lu(Flag),
+  // rewards
+  crown: lu(Crown),
+  coins: lu(Coins),
 }
 
 // ---------------------------------------------------------------- buttons

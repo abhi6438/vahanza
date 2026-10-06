@@ -6,7 +6,10 @@ import {
   type AnyQuery, type DriverQuery, type JobQuery, type ListKind, type Radius, type Sort,
 } from '../lib/search'
 import { track } from '../lib/track'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../lib/auth'
 import { VehicleArt } from './form'
+import { TickDot } from './rewards'
 import { CityPicker } from './places'
 import { Button, Chip, Dialog, Icon, Switch } from './ui'
 import { canSpeak, MicButton } from './voice'
@@ -128,6 +131,7 @@ function useActiveChips(kind: ListKind, q: AnyQuery, set: (q: AnyQuery) => void)
     if (q.available) chip('avail', pick(WHEN.find((w) => w.key === q.available)?.label, lang), { available: null })
     if (q.rating_min) chip('rating', t('sf.ratingChip'), { rating_min: null })
     if (q.langs.length) chip('langs', list(LANGS, q.langs), { langs: [] })
+    if (q.tick) chip('tick', t(`sf.tick.${q.tick}`), { tick: null })
   } else {
     if (q.savings_min) chip('smin', t('sf.atLeast', { v: rupees(q.savings_min) }), { savings_min: null })
     if (q.work.length) chip('work', list(WORK, q.work), { work: [] })
@@ -242,8 +246,23 @@ type Toggle = (list: string[], k: string) => string[]
 function DriverGroups({ d, up, toggle }: { d: DriverQuery; up: Up; toggle: Toggle }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
+  const { profile } = useAuth()
+  const nav = useNavigate()
+  const owner = profile?.role === 'owner'
+  const premium = !!profile?.premium_until && new Date(profile.premium_until) > new Date()
   return (
     <>
+      {owner && (
+        <Group title={<span className="inline-flex items-center gap-1.5">{t('sf.tickTitle')}<span className="premium-fill inline-flex items-center gap-0.5 rounded-full px-1.5 text-[0.6875rem] font-bold [&>svg]:size-3">{Icon.crown}{t('rw.premium')}</span></span>}>
+          <Chip selected={!d.tick} onClick={() => up({ tick: null })}>{t('sf.any')}</Chip>
+          {(['blue', 'gold'] as const).map((k) => (
+            <Chip key={k} selected={d.tick === k} icon={<TickDot tick={k} size={16} ring={false} />}
+              onClick={() => { if (!premium) { track('premium_lock_tap', { from: 'tick_filter' }); nav('/rewards?from=tick_filter'); return } up({ tick: d.tick === k ? null : k }) }}>
+              {t(`sf.tick.${k}`)}{!premium && <span className="text-text-3 [&>svg]:size-3.5">{Icon.lock}</span>}
+            </Chip>
+          ))}
+        </Group>
+      )}
       <Group title={t('sf.licence')}>
         <Chip selected={!d.licence} onClick={() => up({ licence: null })}>{t('sf.any')}</Chip>
         {LICENCES.map((l) => <Chip key={l.key} selected={d.licence === l.key} onClick={() => up({ licence: d.licence === l.key ? null : l.key })}>{pick(l.label, lang)}</Chip>)}
@@ -289,7 +308,7 @@ function JobGroups({ d, up, toggle }: { d: JobQuery; up: Up; toggle: Toggle }) {
   )
 }
 
-function Group({ title, children }: { title: string; children: ReactNode }) {
+function Group({ title, children }: { title: ReactNode; children: ReactNode }) {
   return (
     <fieldset>
       <legend className="mb-2 font-display text-base font-semibold">{title}</legend>

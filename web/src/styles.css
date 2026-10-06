@@ -549,3 +549,28 @@ h1, h2, h3 { text-wrap: balance; }
 
 /* admin charts: drivers = brand teal, owners = saffron (same pairing as the illustrations) */
 :root, .theme-scope { --chart-1: var(--c-brand); --chart-2: var(--c-accent); --chart-grid: var(--c-line); }
+
+/* Rewards: the four trust ticks. Fixed colours (like the WhatsApp green) — they mean the same in every brand.
+   Each tick = a filled badge with its own fill + check colour; "soft" = the chip background. */
+:root, .theme-scope {
+  --tick-gray: #8a949c;   --tick-gray-on: #ffffff;   --tick-gray-soft: color-mix(in srgb, #8a949c 14%, var(--c-card));
+  --tick-blue: #1d6fe0;   --tick-blue-on: #ffffff;   --tick-blue-soft: color-mix(in srgb, #1d6fe0 12%, var(--c-card));
+  --tick-gold: linear-gradient(135deg, #f6d36b, #d49b16 55%, #b8780a); --tick-gold-solid: #c48a0f; --tick-gold-on: #3b2500;
+  --tick-gold-soft: color-mix(in srgb, #e3a92a 16%, var(--c-card));
+  --tick-black: linear-gradient(135deg, #3a3a3a, #0b0b0b); --tick-black-solid: #121212; --tick-black-on: #f3c74e;
+  --tick-black-soft: color-mix(in srgb, #121212 10%, var(--c-card));
+  --premium: linear-gradient(135deg, #ffb547, #f07f13); --premium-on: #3a1d00;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --tick-black: linear-gradient(135deg, #1a1a1a, #000); --tick-black-soft: color-mix(in srgb, #f3c74e 10%, var(--c-card)); --tick-blue: #4a8ff0; }
+}
+:root[data-theme="dark"], .theme-scope[data-theme="dark"] { --tick-black: linear-gradient(135deg, #1a1a1a, #000); --tick-black-soft: color-mix(in srgb, #f3c74e 10%, var(--c-card)); --tick-blue: #4a8ff0; }
+.tick-fill-gray { background: var(--tick-gray); color: var(--tick-gray-on); }
+.tick-fill-blue { background: var(--tick-blue); color: var(--tick-blue-on); }
+.tick-fill-gold { background: var(--tick-gold); color: var(--tick-gold-on); }
+.tick-fill-black { background: var(--tick-black); color: var(--tick-black-on); box-shadow: inset 0 0 0 1px #f3c74e66; }
+.tick-chip-gray { background: var(--tick-gray-soft); color: var(--c-ink); }
+.tick-chip-blue { background: var(--tick-blue-soft); color: var(--tick-blue); }
+.tick-chip-gold { background: var(--tick-gold-soft); color: var(--tick-gold-solid); }
+.tick-chip-black { background: var(--tick-black-soft); color: var(--c-ink); }
+.premium-fill { background: var(--premium); color: var(--premium-on); }

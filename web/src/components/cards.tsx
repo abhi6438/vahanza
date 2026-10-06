@@ -13,6 +13,8 @@ import { Avatar } from './photo'
 import { Badge, Dialog, Icon } from './ui'
 import { FastReplyBadge, JobsDoneBadge } from './work'
 import { DriverHistory, HistoryLine } from './history'
+import { PremiumBadge, TickBadge, TickDot, tickOf } from './rewards'
+import type { Tick } from '../lib/api'
 
 export function VerifiedBadge({ verified }: { verified: boolean }) {
   const { t } = useTranslation()
@@ -53,21 +55,23 @@ function Money({ prefix, amount, negotiable }: { prefix: string; amount: number;
 }
 
 /** Who: photo (with a tick when verified), name, the most useful line, then badges. */
-function CardHead({ photo, name, meta, verified, rating, extra, menu, status }: {
-  photo?: string | null; name: string; meta: ReactNode; verified: boolean; rating?: ReactNode; extra?: ReactNode; menu?: ReactNode; status?: ReactNode
+function CardHead({ photo, name, meta, verified, tick, premium, rating, extra, menu, status }: {
+  photo?: string | null; name: string; meta: ReactNode; verified: boolean; tick?: Tick | null; premium?: boolean; rating?: ReactNode; extra?: ReactNode; menu?: ReactNode; status?: ReactNode
 }) {
+  const tk = tickOf(tick, verified)
   return (
     <div className="flex items-start gap-3">
       <span className="relative shrink-0">
         <Avatar url={photo} name={name} size={48} />
-        {verified && <span className="absolute -bottom-0.5 -right-0.5 grid size-[1.125rem] place-items-center rounded-full bg-success text-on-success ring-2 ring-surface [&>svg]:size-3">{Icon.check}</span>}
+        <TickDot tick={tk} className="absolute -bottom-0.5 -right-0.5" />
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate font-display text-[1.0625rem] font-semibold leading-snug tracking-[-0.005em]">{name}</p>
         {status && <div className="mt-0.5">{status}</div>}
         <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5">{meta}</div>
         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <VerifiedBadge verified={verified} />
+          <TickBadge tick={tk} />
+          <PremiumBadge on={premium} />
           {rating}
           {extra}
         </div>
@@ -86,7 +90,7 @@ function DetailsLink({ onClick }: { onClick: () => void }) {
   )
 }
 
-const cardBox = (highlight: boolean) => `card-lift flex h-full flex-col rounded-lg border bg-surface p-card shadow-sm ${highlight ? 'border-action/60 ring-1 ring-action/30' : 'border-border'}`
+const cardBox = (highlight: boolean, premium?: boolean) => `card-lift flex h-full flex-col rounded-lg border bg-surface p-card shadow-sm ${highlight ? 'border-action/60 ring-1 ring-action/30' : premium ? 'border-action/45' : 'border-border'}`
 
 // ---------------------------------------------------------------- driver
 export interface DriverCardData {
@@ -94,6 +98,8 @@ export interface DriverCardData {
   photo_url?: string | null
   place: string
   verified: boolean
+  tick?: Tick | null
+  premium?: boolean
   distance_km?: number | null
   rating_avg?: number | null
   rating_count?: number | null
@@ -128,7 +134,7 @@ export function DriverCard({ data, self, actions, menu, full, onOpen }: { data: 
     : undefined
   const body = (
     <>
-      <CardHead photo={data.photo_url} name={data.name || t('setup.yourName')} meta={meta} verified={data.verified} menu={menu} status={status}
+      <CardHead photo={data.photo_url} name={data.name || t('setup.yourName')} meta={meta} verified={data.verified} tick={data.tick} premium={data.premium} menu={menu} status={status}
         rating={<RatingBadge avg={data.rating_avg} count={data.rating_count} />}
         extra={<>{data.top && <Badge tone="action" icon={Icon.sparkle}>{t('card.top')}</Badge>}<JobsDoneBadge n={data.jobs_done} /></>} />
       {d.vehicles.length > 0 && (
@@ -162,7 +168,7 @@ export function DriverCard({ data, self, actions, menu, full, onOpen }: { data: 
     </>
   )
   return (
-    <article className={full && !self ? 'flex flex-col' : cardBox(!!self)}>
+    <article className={full && !self ? 'flex flex-col' : cardBox(!!self, data.premium)}>
       {body}
       {!showAll && <DetailsLink onClick={() => { setOpen(true); onOpen?.() }} />}
       {actions && <div className="mt-auto pt-1">{actions}</div>}
@@ -205,6 +211,8 @@ export interface JobCardData {
   photo_url?: string | null
   place: string
   verified: boolean
+  tick?: Tick | null
+  premium?: boolean
   distance_km?: number | null
   rating_avg?: number | null
   rating_count?: number | null
@@ -235,7 +243,7 @@ export function JobCard({ data, status, actions, self, menu, full, onOpen }: { d
   const meta = data.place ? <Fact icon={Icon.pin}>{data.place}{data.distance_km != null ? ` · ${t('card.km', { n: data.distance_km })}` : ''}</Fact> : null
   const groups = showAll ? p.groups : p.groups.slice(0, 2)
   return (
-    <article className={full && !self ? 'flex flex-col' : cardBox(!!self && !status)}>
+    <article className={full && !self ? 'flex flex-col' : cardBox(!!self && !status, data.premium)}>
       {self && status ? (
         // the owner's own post: no need to repeat their own name / photo
         <div className="flex items-center gap-2">
@@ -243,7 +251,7 @@ export function JobCard({ data, status, actions, self, menu, full, onOpen }: { d
           {menu}
         </div>
       ) : (
-        <CardHead photo={data.photo_url} name={data.title} meta={meta} verified={data.verified} menu={menu}
+        <CardHead photo={data.photo_url} name={data.title} meta={meta} verified={data.verified} tick={data.tick} premium={data.premium} menu={menu}
           rating={!self ? <RatingBadge avg={data.rating_avg} count={data.rating_count} /> : undefined}
           extra={status ? <PostStatus status={p.status} /> : (data.jobsDone || data.fastReply) ? <><FastReplyBadge on={data.fastReply} /><JobsDoneBadge n={data.jobsDone} /></> : undefined} />
       )}

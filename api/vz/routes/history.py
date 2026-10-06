@@ -17,7 +17,7 @@ from typing import Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field, model_validator
 
-from .. import notify
+from .. import notify, rewards
 from ..auth import AuthUser, current_user
 from ..deps import get_db, tenant_id
 from ..importer import clean_phone
@@ -193,7 +193,7 @@ def my_history(user: AuthUser = Depends(current_user), db=Depends(get_db), tenan
     ).fetchall() or []
     items = [_entry(dict(r), mine=True) for r in rows]
     shown = [e for e in items if not e["hidden"] and e["status"] in VISIBLE]
-    return {"items": items, "summary": summary(shown), "max": MAX_ENTRIES}
+    return {"items": items, "summary": summary(shown), "max": rewards.limit(db, tenant, "history", rewards.premium_of(db, user.id))}
 
 
 def _phone_capped(db, phone: Optional[str]) -> bool:
@@ -230,7 +230,7 @@ def add_entry(body: EntryIn, user: AuthUser = Depends(current_user), db=Depends(
     if me["role"] != "driver":
         raise HTTPException(403, "Drivers only")
     n = db.execute("select count(*) as n from public.work_history where driver_id = %s", (user.id,)).fetchone()
-    if n and n["n"] >= MAX_ENTRIES:
+    if n and n["n"] >= rewards.limit(db, tenant, "history", rewards.premium_of(db, user.id)):
         raise HTTPException(422, {"code": "too_many"})
     v = _clean_entry(db, body, me, tenant)
     row = db.execute(
@@ -242,6 +242,7 @@ def add_entry(body: EntryIn, user: AuthUser = Depends(current_user), db=Depends(
         v | {"t": tenant, "d": user.id},
     ).fetchone()
     eid = str(row["id"])
+    notify.safe(db, rewards.award, tenant, user.id, "history_add", eid)
     ask = _ask_owner(db, tenant, me, eid, v["owner_id"], v["owner_phone"]) if (v["owner_id"] or v["owner_phone"]) else {"sent": "none"}
     return {"id": eid, "status": "pending"} | ask
 
@@ -377,6 +378,11 @@ def _apply_answer(db, tenant: str, entry: dict, body: AnswerIn, rater_id: Option
             (rater_id, str(entry["driver_id"]), tenant, body.stars, tags),
         )
     notify.safe(db, notify.to_user, tenant, str(entry["driver_id"]), "history_answered", {"answer": answer, "id": str(entry["id"])})
+    if status == "confirmed":
+        notify.safe(db, rewards.award, tenant, str(entry["driver_id"]), "history_confirmed", str(entry["id"]))
+        notify.safe(db, rewards.refresh_tick, tenant, str(entry["driver_id"]))
+    if rater_id:      # an owner on the app answered: points for helping
+        notify.safe(db, rewards.award, tenant, rater_id, "history_answered", str(entry["id"]))
     return {"id": str(entry["id"]), "status": status}
 
 
@@ -448,6 +454,8 @@ def driver_history(driver_id: str, user: AuthUser = Depends(current_user), db=De
     me = _me(db, user, tenant)
     if me["role"] == "driver" and str(me["id"]) != driver_id:
         raise HTTPException(403, "Owners only")
+    # owners: the latest job + counts are free; every owner's stars / tags / "would hire again" = Premium
+    locked = me["role"] == "owner" and not rewards.premium_of(db, user.id)
     rows = db.execute(
         f"""select {ENTRY_COLS} from public.work_history h join public.profiles d on d.id = h.driver_id
             left join public.profiles o on o.id = h.owner_id
@@ -456,7 +464,11 @@ def driver_history(driver_id: str, user: AuthUser = Depends(current_user), db=De
         (driver_id, tenant, list(VISIBLE)),
     ).fetchall() or []
     items = [_entry(dict(r)) for r in rows]
-    return {"items": items, "summary": summary(items)}
+    out = {"items": items, "summary": summary(items), "locked": False, "more": 0}
+    if locked and items:
+        first = items[0] | {"owner_stars": None, "owner_tags": [], "rehire": None}
+        out |= {"items": [first], "locked": True, "more": len(items) - 1}
+    return out
 
 
 # summary columns for driver lists (p = driver profile)
@@ -520,6 +532,9 @@ def admin_check(entry_id: str, body: CheckIn, ctx: dict = Depends(admin_ctx), db
     _audit(db, ctx, f"history_{body.action}", "history", entry_id, body.note)
     notify.safe(db, notify.to_user, ctx["tenant"], str(row["driver_id"]), "history_answered",
                 {"answer": status, "id": entry_id})
+    if status == "admin_ok":
+        notify.safe(db, rewards.award, ctx["tenant"], str(row["driver_id"]), "history_confirmed", entry_id)
+        notify.safe(db, rewards.refresh_tick, ctx["tenant"], str(row["driver_id"]))
     return {"id": entry_id, "status": status}
 
 

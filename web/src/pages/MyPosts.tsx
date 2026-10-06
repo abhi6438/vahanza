@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DriverArt, FleetArt } from '../assets/illustrations'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { DriverCard, JobCard, PostStatus } from '../components/cards'
 import { ShareJobButton } from '../components/growth'
 import { HireDialog } from '../components/work'
@@ -153,7 +153,7 @@ function StatusActions({ post, onChange }: { post: MyPost; onChange: () => void 
       <HireDialog postId={post.id} open={hire} onClose={() => setHire(false)} onDone={onChange} />
       {(!!post.views || !!post.hired) && (
         <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-text-2">
-          {!!post.views && <span className="inline-flex items-center gap-1">{Icon.eye}{t('work.postViews', { n: post.views })}</span>}
+          {!!post.views && <Link to={`/posts/${post.id}/viewers`} className="inline-flex items-center gap-1 font-medium text-primary underline-offset-2 hover:underline">{Icon.eye}{t('work.postViews', { n: post.views })}<span className="premium-fill ml-0.5 inline-grid size-4 place-items-center rounded-full [&>svg]:size-2.5">{Icon.crown}</span></Link>}
           {!!post.hired && <span className="inline-flex items-center gap-1 font-medium text-success">{Icon.check}{t('work.hiredN', { n: post.hired })}</span>}
         </p>
       )}
@@ -183,7 +183,7 @@ function InterestedList({ drivers, setDrivers, error, retry }: { drivers: Intere
     <CardGrid>
       {drivers.map((d) => (
         <DriverCard key={d.id} onOpen={() => void recordView(d.id).catch(() => {})}
-          data={{ name: d.name || '', photo_url: d.photo_url, verified: d.verified, rating_avg: d.rating_avg, rating_count: d.rating_count, jobs_done: d.jobs_done, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
+          data={{ name: d.name || '', photo_url: d.photo_url, verified: d.verified, tick: d.tick, premium: d.premium, rating_avg: d.rating_avg, rating_count: d.rating_count, jobs_done: d.jobs_done, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
           menu={<CardMenu target={{ type: 'profile', id: d.id }} personId={d.id} name={d.name || ''} onBlocked={() => setDrivers((cur) => cur?.filter((x) => x.id !== d.id) || null)} />}
           actions={<DriverContact driverId={d.id} name={(d.name || '').split(' ')[0]} />} />
       ))}

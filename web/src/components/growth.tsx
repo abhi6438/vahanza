@@ -88,9 +88,14 @@ export function GrowthCard() {
       {isDriver && (
         <div className="flex items-center gap-3">
           <span className="grid size-avatar shrink-0 place-items-center rounded-full bg-warning-soft text-[length:var(--icon-size-md)] text-warning">{Icon.eye}</span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="font-semibold leading-snug">{g.views_week > 0 ? t('growth.viewsWeek', { n: g.views_week }) : t('growth.viewsNone')}</p>
             <p className="text-sm text-text-2">{g.views_week > 0 ? t('growth.viewsSub') : t('growth.viewsNoneSub')}</p>
+            {g.views_total > 0 && (
+              <Link to="/viewers" className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary [&>svg]:size-icon-sm">
+                <span className="premium-fill inline-grid size-4 place-items-center rounded-full [&>svg]:!size-2.5">{Icon.crown}</span>{t('rw.viewers.whoSaw')}{Icon.chevron}
+              </Link>
+            )}
           </div>
         </div>
       )}

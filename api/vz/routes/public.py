@@ -18,6 +18,7 @@ router = APIRouter(prefix="/public", tags=["public"])
 _PUBLIC_DROP = ("check_flags", "owner_id")
 _OWNER_COLS = """
     p.share_code, o.district as owner_district, o.state as owner_state, o.verified as owner_verified,
+    o.tick as owner_tick, (coalesce(o.premium_until, now()) > now()) as owner_premium,
     o.rating_avg as owner_rating_avg, o.rating_count as owner_rating_count,
     o.jobs_done as owner_jobs_done, o.fast_reply as owner_fast_reply
 """
@@ -149,6 +150,7 @@ def public_drivers(
     """Listed drivers for an owner who has not logged in yet: first name + initial, place, vehicles, licence,
     experience, badges. No photo, no number, no id: "Call" asks the owner to log in first.
     Same search + filters as the logged-in list (names: first name only)."""
+    df.tick = None                      # tick filter is Premium (logged in) only
     f.resolve(db)
     near = """(%(district)s <> '' and lower(p.district) = lower(%(district)s)) desc,
                  (exists (select 1 from public.work_history wh where wh.driver_id = p.id and not wh.hidden and wh.status in ('confirmed', 'admin_ok'))) desc,
@@ -157,7 +159,7 @@ def public_drivers(
                  p.verified desc, (d.available_from = 'now') desc, p.last_seen_at desc nulls last"""
     rows = db.execute(
         f"""
-        select p.name, p.district, p.state, p.verified, p.rating_avg, p.rating_count, p.jobs_done,
+        select p.name, p.district, p.state, p.verified, p.tick, (coalesce(p.premium_until, now()) > now()) as premium, p.rating_avg, p.rating_count, p.jobs_done,
                (coalesce(p.boost_until, now()) > now()) as top,
                d.vehicles, d.max_wheels, d.licence_type, d.experience_years, d.savings_wanted, d.savings_negotiable,
                d.pay_prefs, d.work_type, d.area, d.languages, d.available_from,

@@ -50,12 +50,14 @@ TEXT = {
                         "en": ("Did this driver work for you?", "{driver} says they drove for you. Tell us yes or no.")},
     "history_answered": {"hi": ("काम के अनुभव पर जवाब आया", "मालिक / Vahanza ने आपके काम के अनुभव का जवाब दिया। देखने के लिए खोलें।"),
                          "en": ("Your work history was answered", "The owner / Vahanza answered your work history. Open to see.")},
+    "reward": {"hi": ("आपको इनाम मिला", "नया टिक, प्रीमियम या अंक — खोलकर देखें।"),
+               "en": ("You got a reward", "A new tick, Premium or points — open to see.")},
 }
 URL = {"new_post": "/home", "new_interest": "/posts", "interest_seen": "/interests", "post_live": "/posts", "post_rejected": "/posts",
        "profile_views": "/home", "licence_expiry": "/setup?step=licence", "referral_joined": "/invite",
        "hire_confirm": "/home", "hire_done": "/posts", "verify_result": "/verify", "weekly_jobs": "/home",
        "post_views": "/posts", "come_back": "/home", "still_looking": "/home",
-       "history_request": "/history-requests", "history_answered": "/history"}
+       "history_request": "/history-requests", "history_answered": "/history", "reward": "/rewards"}
 VEHICLE_HI = {"truck": "ट्रक", "trailer": "ट्रेलर", "bus": "बस", "car": "कार", "jcb": "जेसीबी", "tractor": "ट्रैक्टर", "auto": "ऑटो", "pickup": "पिकअप"}
 
 

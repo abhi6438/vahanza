@@ -9,7 +9,7 @@ from typing import Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
-from .. import blob, notify
+from .. import blob, notify, rewards
 from ..auth import AuthUser, current_user
 from ..deps import get_db, tenant_id
 from .admin import _audit, admin_ctx
@@ -140,6 +140,8 @@ def review(vid: int, body: Review, ctx: dict = Depends(admin_ctx), db=Depends(ge
         raise HTTPException(404, "Not pending")
     if ok:
         db.execute("update public.profiles set verified = true where id = %s", (row["profile_id"],))
+        notify.safe(db, rewards.award, ctx["tenant"], str(row["profile_id"]), "verified")
+        notify.safe(db, rewards.refresh_tick, ctx["tenant"], str(row["profile_id"]))
     # photos are not kept after the check
     blob.delete(old["doc_url"])
     blob.delete(old["selfie_url"])

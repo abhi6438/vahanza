@@ -26,6 +26,8 @@ export interface DriverQuery extends Base {
   available: 'now' | 'w1' | 'd15' | 'm1' | null
   rating_min: number | null
   langs: string[]
+  /** Premium: only blue-or-better / gold-or-better tick */
+  tick?: 'blue' | 'gold' | null
 }
 export interface JobQuery extends Base {
   savings_min: number | null
@@ -66,7 +68,7 @@ export function toParams(q: AnyQuery, extra: { offset?: number; limit?: number }
   set('verified', q.verified)
   if ('licence' in q) {
     set('licence', q.licence); set('exp_min', q.exp_min); set('savings_max', q.savings_max)
-    set('available', q.available); set('rating_min', q.rating_min); set('langs', q.langs)
+    set('available', q.available); set('rating_min', q.rating_min); set('langs', q.langs); set('tick', q.tick)
   } else {
     set('savings_min', q.savings_min); set('work', q.work); set('coverage', q.coverage)
     set('facilities', q.facilities); set('new_days', q.new_days)
@@ -84,7 +86,7 @@ export function sheetCount(q: AnyQuery): number {
   if (q.wheels) n++
   if (q.verified) n++
   if ('licence' in q) {
-    n += [q.licence, q.exp_min, q.savings_max, q.available, q.rating_min].filter((v) => v !== null).length + (q.langs.length ? 1 : 0)
+    n += [q.licence, q.exp_min, q.savings_max, q.available, q.rating_min].filter((v) => v !== null).length + (q.langs.length ? 1 : 0) + (q.tick ? 1 : 0)
   } else {
     n += [q.savings_min, q.new_days].filter((v) => v !== null).length + [q.work, q.coverage, q.facilities].filter((v) => v.length).length
   }

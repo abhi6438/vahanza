@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from ..auth import AuthUser, current_user
 from .. import search as S
 from .history import LIST_SUMMARY_SQL
+from .. import rewards
 from ..deps import get_db, tenant_id
 from .trust import is_blocked
 
@@ -45,10 +46,13 @@ def list_drivers(
     me = _viewer(db, user, tenant)
     if me["role"] not in ("owner", "admin", "super_admin"):
         raise HTTPException(403, "Only vehicle owners can see the driver list")
+    if df.tick and me["role"] == "owner" and not rewards.premium_of(db, user.id):
+        raise HTTPException(402, {"code": "premium"})          # "only blue / gold tick" is a Premium filter
     f.resolve(db, me["district"], me["location"])
     near = """
           -- drivers who brought friends ("Top" boost) first, but only nearby ones
-          (coalesce(p.boost_until, now()) > now() and (lower(p.district) = lower(%(district)s)
+          -- and Premium drivers (both only nearby)
+          ((coalesce(p.boost_until, now()) > now() or coalesce(p.premium_until, now()) > now()) and (lower(p.district) = lower(%(district)s)
              or (p.location is not null and %(loc)s::extensions.geography is not null
                  and extensions.st_dwithin(p.location, %(loc)s::extensions.geography, 150000)))) desc,
           -- work history confirmed by an owner goes first among nearby drivers (the reason to fill it)
@@ -63,7 +67,7 @@ def list_drivers(
           (d.available_from = 'now') desc, p.last_seen_at desc nulls last"""
     rows = db.execute(
         f"""
-        select p.id, p.name, p.photo_url, p.district, p.state, p.verified, p.last_seen_at, p.rating_avg, p.rating_count,
+        select p.id, p.name, p.photo_url, p.district, p.state, p.verified, p.tick, (coalesce(p.premium_until, now()) > now()) as premium, p.last_seen_at, p.rating_avg, p.rating_count,
                (coalesce(p.boost_until, now()) > now()) as top, p.jobs_done,
                case when p.location is not null and %(loc)s::extensions.geography is not null
                     then round((extensions.st_distance(p.location, %(loc)s::extensions.geography) / 1000)::numeric)::int end

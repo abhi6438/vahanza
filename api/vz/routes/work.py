@@ -9,7 +9,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from .. import notify
+from .. import notify, rewards
 from ..auth import AuthUser, current_user
 from ..deps import get_db, tenant_id
 from .history import add_from_hire
@@ -141,6 +141,9 @@ def answer(hire_id: int, body: Answer, user: AuthUser = Depends(current_user), d
         db.execute("update public.driver_details set is_available = false, looking_checked_at = now() where profile_id = %s", (user.id,))
         notify.safe(db, notify.to_user, tenant, str(row["owner_id"]), "hire_done", {"driver": (me.get("name") or "").split(" ")[0]})
         add_from_hire(db, tenant, hire_id, user.id, str(row["owner_id"]))      # shows as confirmed work history
+        for uid in (user.id, str(row["owner_id"])):
+            notify.safe(db, rewards.award, tenant, uid, "hire_confirmed", str(hire_id))
+            notify.safe(db, rewards.refresh_tick, tenant, uid)
     return {"id": hire_id, "status": "confirmed" if body.confirm else "declined", "available": not body.confirm}
 
 

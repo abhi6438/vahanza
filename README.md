@@ -37,7 +37,7 @@ A white-label app for vehicle owners and drivers. One codebase serves the web/PW
 ## 1. Supabase setup (one time)
 
 1. Create a project in region **Mumbai (ap-south-1)**.
-2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql` → `0009_trust.sql` → `0010_mpin.sql` → `0011_search.sql` → `0012_theme.sql` → `0013_work_history.sql` → `0014_history_owner_dates.sql`).
+2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql` → `0009_trust.sql` → `0010_mpin.sql` → `0011_search.sql` → `0012_theme.sql` → `0013_work_history.sql` → `0014_history_owner_dates.sql` → `0015_rewards.sql`).
 3. Auth → Providers → **Phone**: enable it. You can pick any SMS provider here because the hook below replaces it.
 4. Auth → Hooks → **Send SMS hook** → HTTPS:
    `https://<your-domain>/api/v1/hooks/send-sms`. Generate the secret and copy it into `SEND_SMS_HOOK_SECRET` (format `v1,whsec_...`).
@@ -181,6 +181,17 @@ Drivers add where they drove before, and that owner confirms it. Confirmed histo
 - **What owners see:** "✓ 3 मालिकों ने पुष्टि की · 4 साल पक्का अनुभव · 2 दोबारा रखेंगे" on the card, the full list in "पूरी जानकारी". Overlapping jobs count once. The no-login driver list shows only the counts and the latest job ("पिछला काम: श्री ट्रांसपोर्ट, रीवा ✓") with "पूरा अनुभव देखने के लिए लॉगिन करें".
 - **Why drivers fill it:** drivers with a confirmed job rank first among nearby drivers in the owners' list; the Home / Profile card says so and shows progress towards 2 confirmations.
 - Go-live: run `0013_work_history.sql`, then `0014_history_owner_dates.sql`.
+
+## Rewards: अंक, ticks and Premium (Profile → इनाम और प्रीमियम, `/rewards`)
+**Nobody pays money, and the app never mentions money** — Premium is earned with points, or given free.
+- **Tick = trust, never bought** (rule in SQL `public.vz_tick()`): ⚪ gray = profile complete · 🔵 blue = ID checked · 🟡 gold = blue + proven work (driver: 2 confirmed history entries + rating 4+; owner: 3 hires + "जल्दी जवाब" or rating 4+) · ⚫ black = chosen by Vahanza. Shown on every card, photo, profile and in admin.
+- **Points (अंक)** for: profile complete, ID check, history added / confirmed, owner answers a history, job confirmed, post live, rating, active this week, (optional) every day the app opens — and most of all **inviting friends**: per friend who completes the profile, more when a driver brings an owner (or the other way), a welcome bonus for the friend, extra at 3 / 10 / 25 friends. One reward per thing (`reward_ledger` unique user + kind + ref).
+- **Premium** — 30 / 90 days with points, or free: **new member trial** (7 days when the profile is complete), **gold / black tick** every month, **monthly top inviters** per district (prize on the 1st), or **given by Vahanza** (Admin → Users → "प्रीमियम" → days, or end it). What's free stays free; Premium adds: owners — every driver's full history, "only blue / gold tick" filter, posts first for nearby drivers, more live posts, who viewed the post; drivers — first in nearby owners' lists, who viewed my profile, more history entries. Premium badge on cards.
+- **Streak** 🔥 — open the app N days in a row → bonus. **Challenges** — e.g. "invite 3 friends this month, +300", shown only between their dates, progress bar on the Rewards page.
+- **Admin → इनाम (`/admin/rewards`)**: every number is editable and live at once (no new build): points per action + monthly limit + on/off, friends bonus and milestones, Premium plans (days = points), free Premium days, free vs Premium limits, streak, top inviters prize, challenges (add / edit / switch off). Saved per brand in `tenants.rewards_config`; empty = defaults in `api/vz/rewards.py` (`DEFAULTS`). The page also shows points given / spent, Premium by source and this month's top inviters. Per person (Admin → Users): black tick, give / end Premium, add / take points — all in the audit log.
+- Daily job: recomputes ticks, monthly gold Premium, Monday "active this week", on the 1st the top-inviter prizes.
+- Later as new ledger kinds: partner coupons, cashback, cash rewards (given by Vahanza / partners, never paid by users).
+- Go-live: run `0015_rewards.sql` (also gives existing users the points for what they already did).
 
 ## Brand theme at runtime (Admin → Settings → Appearance)
 

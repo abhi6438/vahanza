@@ -11,7 +11,7 @@ from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field
 
 from ..auth import AuthUser, current_user
-from .. import notify
+from .. import notify, rewards
 from ..deps import get_db, tenant_id
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -335,7 +335,7 @@ def users(
     digits = "".join(ch for ch in q if ch.isdigit())
     rows = _rows(db, """
         select id, name, business_name, phone, role, district, state, verified, blocked, is_test, setup_done,
-               created_at, last_seen_at,
+               created_at, last_seen_at, tick, tick_black, points, premium_until,
                (select count(*) from public.posts p where p.owner_id = profiles.id) as posts,
                (select count(*) from public.interests i where i.driver_id = profiles.id) as interests
         from public.profiles
@@ -373,6 +373,9 @@ def patch_user(profile_id: str, body: UserPatch, ctx: dict = Depends(admin_ctx),
         raise HTTPException(404, "User not found")
     if body.verified is not None:
         _audit(db, ctx, "verify" if body.verified else "unverify", "profile", profile_id, body.note)
+        if body.verified:
+            notify.safe(db, rewards.award, ctx["tenant"], profile_id, "verified")
+        notify.safe(db, rewards.refresh_tick, ctx["tenant"], profile_id)
     if body.blocked is not None:
         _audit(db, ctx, "block" if body.blocked else "unblock", "profile", profile_id, body.note)
     return dict(row)

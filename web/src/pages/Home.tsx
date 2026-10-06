@@ -137,7 +137,7 @@ function OwnerHome() {
           {list.items === null && !list.error && <CardSkeletons count={desktop ? 4 : 2} />}
           {list.items?.map((d) => (
             <DriverCard key={d.id} onOpen={() => void recordView(d.id).catch(() => {})}
-              data={{ id: d.id, history: d.history_count ? { count: d.history_count, confirmed: d.history_confirmed || 0, rehire: d.history_rehire || 0 } : undefined, name: d.name || '', photo_url: d.photo_url, verified: d.verified, distance_km: d.distance_km, rating_avg: d.rating_avg, rating_count: d.rating_count, top: d.top, jobs_done: d.jobs_done, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
+              data={{ id: d.id, history: d.history_count ? { count: d.history_count, confirmed: d.history_confirmed || 0, rehire: d.history_rehire || 0 } : undefined, name: d.name || '', photo_url: d.photo_url, verified: d.verified, tick: d.tick, premium: d.premium, distance_km: d.distance_km, rating_avg: d.rating_avg, rating_count: d.rating_count, top: d.top, jobs_done: d.jobs_done, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
               menu={<CardMenu target={{ type: 'profile', id: d.id }} personId={d.id} name={d.name || ''} onBlocked={() => list.setItems((cur) => cur?.filter((x) => x.id !== d.id) || null)} />}
               actions={<DriverContact driverId={d.id} name={(d.name || '').split(' ')[0]} />} />
           ))}

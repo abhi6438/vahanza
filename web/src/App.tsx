@@ -22,7 +22,10 @@ import AdminUsers from './pages/admin/AdminUsers'
 import AdminImport from './pages/admin/AdminImport'
 import AdminPosters from './pages/admin/AdminPosters'
 import AdminAppearance from './pages/admin/AdminAppearance'
+import AdminRewards from './pages/admin/AdminRewards'
 import History from './pages/History'
+import Rewards from './pages/Rewards'
+import Viewers from './pages/Viewers'
 import HistoryAdd from './pages/HistoryAdd'
 import HistoryLink from './pages/HistoryLink'
 import HistoryRequests from './pages/HistoryRequests'
@@ -156,6 +159,7 @@ function AppRoutes() {
         <Route path="/admin/import" element={<AdminImport />} />
         <Route path="/admin/posters" element={<AdminPosters />} />
         <Route path="/admin/appearance" element={<AdminAppearance />} />
+        <Route path="/admin/rewards" element={<AdminRewards />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/pin" element={<PinSetup />} />
         <Route path="/otp" element={<Otp />} />
@@ -190,6 +194,9 @@ function AppRoutes() {
       <Route path="/history/new" element={<HistoryAdd />} />
       <Route path="/history/:id/edit" element={<HistoryAdd />} />
       <Route path="/history-requests" element={<HistoryRequests />} />
+      <Route path="/rewards" element={<Rewards />} />
+      <Route path="/viewers" element={<Viewers />} />
+      <Route path="/posts/:id/viewers" element={<Viewers />} />
       {['/jobs', '/start', '/drivers', '/mechanics'].map((p) => <Route key={p} path={p} element={<Navigate to="/home" replace />} />)}
       <Route path="/jobs/:code" element={<PublicJobs />} />
       <Route path="*" element={<Navigate to="/home" replace />} />

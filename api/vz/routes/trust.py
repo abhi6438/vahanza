@@ -4,6 +4,7 @@ from typing import Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
+from .. import notify, rewards
 from ..auth import AuthUser, current_user
 from ..deps import get_db, tenant_id
 
@@ -161,6 +162,8 @@ def rate(body: RatingIn, user: AuthUser = Depends(current_user), db=Depends(get_
            on conflict (rater_id, ratee_id) do update set stars = excluded.stars, tags = excluded.tags, worked = excluded.worked""",
         (user.id, body.ratee_id, tenant, body.stars, body.tags, bool(touch.get("worked"))),
     )
+    notify.safe(db, rewards.award, tenant, user.id, "rating_given", body.ratee_id)
+    notify.safe(db, rewards.refresh_tick, tenant, body.ratee_id)     # the rating can lift them to gold
     return {"rated": True}
 
 
