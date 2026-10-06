@@ -45,14 +45,13 @@ export function JobItem({ job, showStatus, onBlocked }: { job: Job; showStatus?:
         <p className="mt-3 rounded-md bg-surface-2 px-3 py-2.5 text-center text-sm font-medium text-text-2">{t('job.closed')}</p>
       ) : (
         <>
-          <ContactButtons target="owner" message={msg} reveal={(via) => contactOwner(job.id, via)} />
-          <div className="mt-2 flex gap-2">
-            <Button variant={interested ? 'outline' : 'ghost'} block className={interested ? '!border-primary !bg-primary-soft !text-primary' : 'border border-primary/40'}
-              aria-pressed={interested} loading={busy} icon={interested ? Icon.check : Icon.heart} onClick={() => void toggle()}>
-              {interested ? t('job.interestSent') : t('job.interest')}
+          <ContactButtons target="owner" message={msg} reveal={(via) => contactOwner(job.id, via)} extra={<>
+            <Button variant="outline" className={`min-w-0 flex-1 !px-2.5 ${interested ? '!border-primary !bg-primary-soft !text-primary' : '!border-primary/40 !text-primary'}`}
+              aria-pressed={interested} aria-label={interested ? t('job.interestSent') : t('job.interest')} loading={busy} icon={interested ? Icon.check : Icon.heart} onClick={() => void toggle()}>
+              {interested ? t('job.interestSentShort') : t('job.interestShort')}
             </Button>
             <ShareJobButton post={job} from="job_list" iconOnly fallbackCity={job.owner_district ? placeName(`${job.owner_district}, ${job.owner_state}`, lang) : ''} />
-          </div>
+          </>} />
           {showStatus && interested && (
             <p className={`mt-2 text-center text-sm ${job.interest_status === 'seen' ? 'font-medium text-success' : 'text-text-2'}`}>{job.interest_status === 'seen' ? t('job.seen') : t('job.notSeen')}</p>
           )}

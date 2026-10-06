@@ -1440,5 +1440,12 @@
   "home.hideCard": "छिपाएँ",
   "home.hiddenN": "{{n}} छिपे · दिखाएँ",
   "home.availableShort": "मालिक देख सकते हैं",
-  "home.notAvailableShort": "छिपे हुए"
+  "home.notAvailableShort": "छिपे हुए",
+  "card.negShort": "बात हो सकती",
+  "card.wantsShort": "चाहिए/माह",
+  "card.savingsShort": "बचत/माह",
+  "card.moreVehicles": "+{{n}} गाड़ी",
+  "card.detailsShort": "पूरी जानकारी",
+  "job.interestShort": "रुचि",
+  "job.interestSentShort": "भेजी ✓"
 }

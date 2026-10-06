@@ -19,9 +19,9 @@ export function TickDot({ tick, size = 18, ring = true, className = '' }: { tick
   if (!tick) return null
   return (
     <span role="img" aria-label={t(`tick.name.${tick}`)} title={t(`tick.name.${tick}`)}
-      className={`tick-fill-${tick} grid shrink-0 place-items-center rounded-full ${ring ? 'ring-2 ring-surface' : ''} ${className}`}
+      className={`tick-fill-${tick} grid shrink-0 place-items-center overflow-hidden rounded-full ${ring ? 'ring-2 ring-surface' : ''} ${className}`}
       style={{ width: size, height: size }}>
-      <span className="grid place-items-center [&>svg]:stroke-[3]" style={{ width: size * 0.62, height: size * 0.62 }}>{Icon.check}</span>
+      <span className="grid place-items-center [&>svg]:!h-full [&>svg]:!w-full [&>svg]:stroke-[3.25]" style={{ width: Math.round(size * 0.6), height: Math.round(size * 0.6) }}>{Icon.check}</span>
     </span>
   )
 }

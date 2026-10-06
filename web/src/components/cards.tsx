@@ -81,6 +81,75 @@ function CardHead({ photo, name, meta, verified, tick, premium, rating, extra, m
   )
 }
 
+
+// ---------------------------------------------------------------- compact list card pieces
+/** Facts in ONE line, separated by dots; whatever doesn't fit is cut (the full card has everything). */
+function FactLine({ items, className = '' }: { items: ReactNode[]; className?: string }) {
+  const xs = items.filter(Boolean)
+  return (
+    <p className={`flex min-w-0 items-center gap-x-1.5 overflow-hidden whitespace-nowrap text-[0.8125rem] text-text-2 [mask-image:linear-gradient(to_right,#000_calc(100%-1.5rem),transparent)] ${className}`}>
+      {xs.map((x, i) => <span key={i} className="inline-flex shrink-0 items-center gap-1 [&>svg]:size-3.5">{i > 0 && <span aria-hidden className="text-text-3">·</span>}{x}</span>)}
+    </p>
+  )
+}
+
+/** List card top: photo with tick, name (+ Premium crown), one line of facts, menu. */
+function CompactHead({ photo, name, verified, tick, premium, facts, menu, status }: {
+  photo?: string | null; name: string; verified: boolean; tick?: Tick | null; premium?: boolean; facts: ReactNode[]; menu?: ReactNode; status?: ReactNode
+}) {
+  const { t } = useTranslation()
+  const tk = tickOf(tick, verified)
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="relative shrink-0">
+        <Avatar url={photo} name={name} size={42} />
+        <TickDot tick={tk} size={16} className="absolute -bottom-0.5 -right-0.5" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="flex min-w-0 items-center gap-1.5">
+          <span className="truncate font-display text-base font-semibold leading-snug">{name}</span>
+          {premium && <span className="premium-fill grid size-5 shrink-0 place-items-center rounded-full [&>svg]:size-3" title={t('rw.premium')} aria-label={t('rw.premium')}>{Icon.crown}</span>}
+          {status && <span className="ml-auto shrink-0">{status}</span>}
+        </p>
+        <FactLine items={[
+          ...facts,
+          tk ? <span className={`font-semibold ${tk === 'blue' ? 'text-[var(--tick-blue)]' : tk === 'gold' ? 'text-[var(--tick-gold-solid)]' : tk === 'black' ? 'text-text' : 'text-text-2'}`}>{t(`tick.short.${tk}`)}</span> : null,
+        ]} />
+      </div>
+      {menu}
+    </div>
+  )
+}
+
+/** The panel every list card has: what (vehicle) on the left, the money on the right. */
+function WhatAndMoney({ left, label: moneyLabel, amount, negotiable }: { left: ReactNode; label: string; amount?: number | null; negotiable?: boolean }) {
+  const { t } = useTranslation()
+  return (
+    <div className="mt-2.5 flex items-stretch overflow-hidden rounded-md ring-1 ring-inset ring-border">
+      <div className="flex min-w-0 flex-1 items-center gap-2 bg-surface-2 px-2.5 py-2">{left}</div>
+      {amount != null && (
+        <div className="flex shrink-0 flex-col items-end justify-center bg-[linear-gradient(135deg,var(--c-accent-soft),color-mix(in_srgb,var(--c-accent-soft)_45%,var(--c-card)))] px-3 py-1.5 text-right">
+          <span className="text-[0.6875rem] font-medium leading-none text-warning">{moneyLabel}</span>
+          <span className="font-display text-lg font-semibold leading-tight tracking-[-0.01em]">{rupees(amount)}</span>
+          {negotiable && <span className="text-[0.6875rem] font-semibold leading-none text-success">{t('card.negShort')}</span>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function InfoLine({ items, onDetails }: { items: ReactNode[]; onDetails: () => void }) {
+  const { t } = useTranslation()
+  return (
+    <div className="mt-2 flex items-center gap-2">
+      <FactLine items={items} className="flex-1 text-xs" />
+      <button type="button" onClick={onDetails} className="press inline-flex shrink-0 items-center gap-0.5 rounded-sm text-[0.8125rem] font-semibold text-primary [&>svg]:size-3.5">
+        {t('card.detailsShort')}{Icon.chevron}
+      </button>
+    </div>
+  )
+}
+
 function DetailsLink({ onClick }: { onClick: () => void }) {
   const { t } = useTranslation()
   return (
@@ -132,6 +201,42 @@ export function DriverCard({ data, self, actions, menu, full, onOpen }: { data: 
   const status = d.available_from
     ? <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${now ? 'text-success' : 'text-text-2'}`}>{now ? <span className="live-dot" /> : <span className="[&>svg]:size-icon-sm">{Icon.clock}</span>}{t(`card.when.${d.available_from}`)}</span>
     : undefined
+  if (!showAll) {
+    const openFull = () => { setOpen(true); onOpen?.() }
+    const wheeled = d.max_wheels && d.vehicles.some((v) => WHEELED.includes(v as never))
+    return (
+      <article className={cardBox(false, data.premium)}>
+        <CompactHead photo={data.photo_url} name={data.name || t('setup.yourName')} verified={data.verified} tick={data.tick} premium={data.premium} menu={menu}
+          facts={[
+            d.available_from ? <span className={now ? 'font-semibold text-success' : ''}>{now && <span className="live-dot mr-1 inline-block" />}{t(`card.when.${d.available_from}`)}</span> : null,
+            data.place ? <>{data.place}{data.distance_km != null ? ` ${t('card.km', { n: data.distance_km })}` : ''}</> : null,
+            d.experience_years != null ? t('card.exp', { n: d.experience_years }) : null,
+            data.rating_count && data.rating_avg != null ? <span className="font-semibold text-text"><span className="text-action">★</span> {data.rating_avg.toFixed(1)}</span> : null,
+            data.top ? <span className="font-semibold text-warning">{t('card.top')}</span> : null,
+            data.jobs_done ? t('work.jobsDone', { n: data.jobs_done }) : null,
+          ]} />
+        <WhatAndMoney label={t('card.wantsShort')} amount={d.savings_wanted} negotiable={d.savings_negotiable}
+          left={<>
+            <span className="flex shrink-0 -space-x-2">{d.vehicles.slice(0, 2).map((v) => <span key={v} className="grid h-7 w-10 place-items-center rounded-md bg-surface shadow-xs ring-1 ring-border"><VehicleArt kind={v} className="h-4 w-7" /></span>)}</span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold">{vehicles || '—'}</span>
+              {wheeled ? <span className="block truncate text-xs text-text-2">{t('card.wheelsMax', { n: d.max_wheels })}</span> : null}
+            </span>
+          </>} />
+        <InfoLine onDetails={openFull} items={[
+          data.history && data.history.confirmed ? <span className="font-semibold text-success">✓ {t('hist.lineConfirmed', { count: data.history.confirmed, n: data.history.confirmed })}</span> : null,
+          d.licence_type ? <span className="font-semibold text-primary">{d.licence_type}</span> : null,
+          d.languages.length ? d.languages.map((k) => label(LANGS, k, lang)).join(', ') : null,
+          data.lastWork ? <>{t('hist.lastWork')}: {data.lastWork.firm || t('hist.anOwner')}</> : null,
+        ]} />
+        {data.onLoginForMore && data.lastWork && <button type="button" onClick={data.onLoginForMore} className="mt-1 self-start text-xs font-semibold text-primary underline underline-offset-2">{t('hist.loginForMore')}</button>}
+        {actions && <div className="mt-auto">{actions}</div>}
+        <Dialog open={open} onClose={() => setOpen(false)} title={t('card.details')} size="lg" footer={actions}>
+          <DriverCard data={data} full menu={undefined} />
+        </Dialog>
+      </article>
+    )
+  }
   const body = (
     <>
       <CardHead photo={data.photo_url} name={data.name || t('setup.yourName')} meta={meta} verified={data.verified} tick={data.tick} premium={data.premium} menu={menu} status={status}
@@ -242,6 +347,40 @@ export function JobCard({ data, status, actions, self, menu, full, onOpen }: { d
   const cities = p.base_cities.map((c) => placeName(c, lang)).join(', ')
   const meta = data.place ? <Fact icon={Icon.pin}>{data.place}{data.distance_km != null ? ` · ${t('card.km', { n: data.distance_km })}` : ''}</Fact> : null
   const groups = showAll ? p.groups : p.groups.slice(0, 2)
+  if (!showAll) {
+    const openFull = () => { setOpen(true); onOpen?.() }
+    const g0 = p.groups[0]
+    return (
+      <article className={cardBox(false, data.premium)}>
+        <CompactHead photo={data.photo_url} name={data.title} verified={data.verified} tick={data.tick} premium={data.premium} menu={menu}
+          status={status ? <PostStatus status={p.status} /> : undefined}
+          facts={[
+            data.place ? <>{data.place}{data.distance_km != null ? ` ${t('card.km', { n: data.distance_km })}` : ''}</> : null,
+            <RatingBadge avg={data.rating_avg} count={data.rating_count} />,
+            data.fastReply ? <span className="font-semibold text-primary">{t('work.fastReply')}</span> : null,
+            data.jobsDone ? t('work.jobsDone', { n: data.jobsDone }) : null,
+          ]} />
+        <WhatAndMoney label={t('card.savingsShort')} amount={p.savings_monthly} negotiable={p.savings_negotiable}
+          left={g0 ? <>
+            <span className="grid h-8 w-11 shrink-0 place-items-center rounded-md bg-surface shadow-xs ring-1 ring-border"><VehicleArt kind={g0.vehicle_type} className="h-5 w-8" /></span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold">{label(VEHICLES, g0.vehicle_type as never, lang)}{g0.wheels ? <span className="font-normal text-text-2"> · {t('wheels', { n: g0.wheels })}</span> : ''}</span>
+              <span className="block truncate text-xs font-semibold text-primary">{t('post.needN', { n: p.groups.length > 1 ? total : g0.drivers_needed })}{p.groups.length > 1 ? <span className="font-normal text-text-2"> · {t('card.moreVehicles', { n: p.groups.length - 1 })}</span> : null}</span>
+            </span>
+          </> : null} />
+        <InfoLine onDetails={openFull} items={[
+          p.licence_type ? <span className="font-semibold text-primary">{p.licence_type}</span> : null,
+          cities ? t('fleet.from', { cities }) : null,
+          p.coverage ? label(COVERAGE, p.coverage, lang) : null,
+          p.facilities.length ? <span className="text-success">✓ {t('post.facilitiesN', { n: p.facilities.length })}</span> : null,
+        ]} />
+        {actions && <div className="mt-auto">{actions}</div>}
+        <Dialog open={open} onClose={() => setOpen(false)} title={t('card.details')} size="lg" footer={actions}>
+          <JobCard data={data} full status={status} />
+        </Dialog>
+      </article>
+    )
+  }
   return (
     <article className={full && !self ? 'flex flex-col' : cardBox(!!self && !status, data.premium)}>
       {self && status ? (

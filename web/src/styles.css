@@ -553,7 +553,7 @@ body {
 /* Rewards: the four trust ticks. Fixed colours (like the WhatsApp green) — they mean the same in every brand.
    Each tick = a filled badge with its own fill + check colour; "soft" = the chip background. */
 :root, .theme-scope {
-  --tick-gray: #8a949c;   --tick-gray-on: #ffffff;   --tick-gray-soft: color-mix(in srgb, #8a949c 14%, var(--c-card));
+  --tick-gray: #6f7a84;   --tick-gray-on: #ffffff;   --tick-gray-soft: color-mix(in srgb, #6f7a84 14%, var(--c-card));
   --tick-blue: #1d6fe0;   --tick-blue-on: #ffffff;   --tick-blue-soft: color-mix(in srgb, #1d6fe0 12%, var(--c-card));
   --tick-gold: linear-gradient(135deg, #f6d36b, #d49b16 55%, #b8780a); --tick-gold-solid: #c48a0f; --tick-gold-on: #3b2500;
   --tick-gold-soft: color-mix(in srgb, #e3a92a 16%, var(--c-card));

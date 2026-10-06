@@ -29,9 +29,9 @@ export function ShareJobButton({ post, from, fallbackCity, compact, iconOnly }: 
   const text = jobShareText(post, i18n.language, fallbackCity)
   // iconOnly: sits in the same row as another button (job lists), so the card stays short
   if (iconOnly) return (
-    <Button variant="outline" aria-label={t('share.job')} title={t('share.job')} className="shrink-0 !border-whatsapp/50 !px-3 !text-whatsapp"
+    <Button variant="outline" aria-label={t('share.job')} title={t('share.job')} className="shrink-0 !px-3 !text-text-2 max-[359px]:!hidden"
       onClick={() => shareWhatsApp(text, 'job_share', { from })}>
-      {Icon.whatsapp}
+      {Icon.share}
     </Button>
   )
   return (

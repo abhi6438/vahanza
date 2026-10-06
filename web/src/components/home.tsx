@@ -1,5 +1,5 @@
 /** Pieces shared by the home / list screens: city name and contact buttons (search + filter: components/search.tsx). */
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiError, contactDriver } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -19,7 +19,7 @@ export function usePlaceName() {
  * Phones: one row that scrolls sideways (thumb-friendly). Desktop: chips wrap, nothing hidden.
  */
 /** Call / WhatsApp. The number is fetched only on tap (and recorded), never shown in a list. */
-export function ContactButtons({ reveal, message, target }: { reveal: (via: 'call' | 'whatsapp') => Promise<{ phone: string }>; message: string; target: 'driver' | 'owner' }) {
+export function ContactButtons({ reveal, message, target, extra }: { reveal: (via: 'call' | 'whatsapp') => Promise<{ phone: string }>; message: string; target: 'driver' | 'owner'; /** more buttons in the same row (WhatsApp becomes an icon) */ extra?: ReactNode }) {
   const { t } = useTranslation()
   const [busy, setBusy] = useState<'' | 'call' | 'whatsapp'>('')
   const [error, setError] = useState('')
@@ -38,11 +38,19 @@ export function ContactButtons({ reveal, message, target }: { reveal: (via: 'cal
     }
   }
   return (
-    <div className="mt-3">
-      <div className="grid grid-cols-2 gap-2">
-        <Button variant="success" icon={Icon.phone} loading={busy === 'call'} disabled={busy !== ''} onClick={() => void go('call')}>{t('card.call')}</Button>
-        <Button variant="whatsapp" icon={Icon.whatsapp} loading={busy === 'whatsapp'} disabled={busy !== ''} onClick={() => void go('whatsapp')}>WhatsApp</Button>
-      </div>
+    <div className="mt-2.5">
+      {extra ? (
+        <div className="flex gap-2">
+          <Button variant="success" icon={Icon.phone} className="min-w-0 flex-1 whitespace-nowrap" loading={busy === 'call'} disabled={busy !== ''} onClick={() => void go('call')}>{t('card.call')}</Button>
+          <Button variant="whatsapp" aria-label="WhatsApp" title="WhatsApp" className="shrink-0 !px-3" loading={busy === 'whatsapp'} disabled={busy !== ''} onClick={() => void go('whatsapp')}>{Icon.whatsapp}</Button>
+          {extra}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="success" icon={Icon.phone} loading={busy === 'call'} disabled={busy !== ''} onClick={() => void go('call')}>{t('card.call')}</Button>
+          <Button variant="whatsapp" icon={Icon.whatsapp} loading={busy === 'whatsapp'} disabled={busy !== ''} onClick={() => void go('whatsapp')}>WhatsApp</Button>
+        </div>
+      )}
       {error && <p role="alert" className="mt-2 text-sm text-error">{error}</p>}
     </div>
   )

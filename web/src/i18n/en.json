@@ -1448,5 +1448,12 @@
   "home.hideCard": "Hide",
   "home.hiddenN": "{{n}} hidden · show",
   "home.availableShort": "owners can see you",
-  "home.notAvailableShort": "hidden"
+  "home.notAvailableShort": "hidden",
+  "card.negShort": "negotiable",
+  "card.wantsShort": "wants/month",
+  "card.savingsShort": "saves/month",
+  "card.moreVehicles": "+{{n}} more",
+  "card.detailsShort": "Details",
+  "job.interestShort": "Interested",
+  "job.interestSentShort": "Sent ✓"
 }
