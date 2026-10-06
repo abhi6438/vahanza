@@ -7,6 +7,7 @@ import { Avatar } from '../components/photo'
 import { placeText } from '../components/places'
 import { AppShell } from '../components/shell'
 import { ButtonLink, Card, ConfirmDialog, Icon, SectionTitle } from '../components/ui'
+import { HistoryNudge, useHistoryRequests, useMyHistory } from '../components/history'
 import { useAuth } from '../lib/auth'
 import { brand } from '../lib/brand'
 import { driverCompletion, ownerCompletion } from '../lib/completion'
@@ -25,6 +26,8 @@ export default function Profile() {
   if (!profile) return null
   const isDriver = profile.role === 'driver'
   const done = isDriver ? driverCompletion(profile, driver) : ownerCompletion(profile, fleet)
+  const histSum = useMyHistory(isDriver)
+  const reqs = useHistoryRequests(!isDriver)
   const phone = (profile.phone || '').replace(/^91/, '')
   const place = profile.district && profile.state ? placeText({ district: profile.district, state: profile.state }, i18n.language) : ''
   const vehicles = fleet.reduce((s, g) => s + g.vehicle_count, 0)
@@ -61,6 +64,8 @@ export default function Profile() {
   const links = (
     <nav aria-label={t('profile.more')} className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
       {!isDriver && <Row to="/setup?step=fleet" icon={Icon.truck} label={t('profile.vehicles', { n: vehicles })} />}
+      {isDriver && <Row to="/history" icon={Icon.history} label={t('hist.title')} />}
+      {!isDriver && <Row to="/history-requests" icon={Icon.history} label={reqs ? `${t('hist.reqTitle')} (${reqs})` : t('hist.reqTitle')} />}
       {isDriver && <Row onClick={() => { setCard(true); track('card_open', { from: 'profile' }) }} icon={Icon.idcard} label={t('card.mine')} />}
       <Row to="/invite" icon={Icon.gift} label={t('growth.invite')} />
       <Row to="/blocked" icon={Icon.ban} label={t('trust.blockedList')} />
@@ -75,7 +80,7 @@ export default function Profile() {
     <section>
       <SectionTitle className="mb-3" title={t('profile.ownersSee')} sub={t('profile.ownersSeeSub')}
         right={<Link to="/setup?edit" className="shrink-0 font-semibold text-primary hover:underline">{t('home.edit')}</Link>} />
-      <div className="max-w-xl"><DriverCard self data={{ name: profile.name || '', photo_url: profile.photo_url, place: place.replace(/ · \d+$/, ''), verified: profile.verified, d: driver }} /></div>
+      <div className="max-w-xl"><DriverCard self data={{ history: histSum && histSum.count ? histSum : undefined, name: profile.name || '', photo_url: profile.photo_url, place: place.replace(/ · \d+$/, ''), verified: profile.verified, d: driver }} /></div>
     </section>
   ) : !isDriver && fleet.length > 0 ? (
     <section>
@@ -92,6 +97,7 @@ export default function Profile() {
           <div className="flex flex-col gap-4">{identity}{links}</div>
           <div className="flex min-w-0 flex-col gap-6">
             <ProfileNudges role={isDriver ? 'driver' : 'owner'} done={done} />
+            {isDriver && <HistoryNudge s={histSum} />}
             {preview}
           </div>
         </div>
@@ -99,6 +105,7 @@ export default function Profile() {
         <div className="flex flex-col gap-4">
           {identity}
           <ProfileNudges role={isDriver ? 'driver' : 'owner'} done={done} />
+          {isDriver && <HistoryNudge s={histSum} />}
           {preview}
           {links}
         </div>

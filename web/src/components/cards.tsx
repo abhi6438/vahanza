@@ -6,12 +6,13 @@
  */
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AREA, COVERAGE, FACILITIES, label, LANGS, PAY, PAY_UNIT, placeName, rupees, VEHICLES, WHEELED, WORK } from '../lib/catalog'
+import { AREA, COVERAGE, districtName, FACILITIES, label, LANGS, PAY, PAY_UNIT, placeName, rupees, VEHICLES, WHEELED, WORK } from '../lib/catalog'
 import type { DriverDetails, FleetGroup, Post } from '../lib/api'
 import { VehicleArt } from './form'
 import { Avatar } from './photo'
 import { Badge, Dialog, Icon } from './ui'
 import { FastReplyBadge, JobsDoneBadge } from './work'
+import { DriverHistory, HistoryLine } from './history'
 
 export function VerifiedBadge({ verified }: { verified: boolean }) {
   const { t } = useTranslation()
@@ -101,6 +102,13 @@ export interface DriverCardData {
   /** confirmed jobs through the app */
   jobs_done?: number
   d: DriverDetails
+  /** logged-in owners: the driver's id (full details load the work history) */
+  id?: string
+  /** work history counts ("✓ 3 owners confirmed") */
+  history?: { count: number; confirmed: number; rehire: number }
+  /** no-login list: the latest job only, the rest after login */
+  lastWork?: { firm: string | null; district: string | null; vehicle: string; confirmed: boolean } | null
+  onLoginForMore?: () => void
 }
 
 export function DriverCard({ data, self, actions, menu, full, onOpen }: { data: DriverCardData; self?: boolean; actions?: ReactNode; menu?: ReactNode; full?: boolean; onOpen?: () => void }) {
@@ -130,6 +138,17 @@ export function DriverCard({ data, self, actions, menu, full, onOpen }: { data: 
           {d.max_wheels && d.vehicles.some((v) => WHEELED.includes(v as never)) && <span className="shrink-0 text-xs font-medium text-text-2">{t('card.wheelsMax', { n: d.max_wheels })}</span>}
         </div>
       )}
+      {data.history && <HistoryLine s={data.history} className="mt-3" />}
+      {data.lastWork && (
+        <div className="mt-3 rounded-md border border-border px-3 py-2 text-sm">
+          <p className="flex flex-wrap items-center gap-x-1.5">
+            <span className="text-text-2">{t('hist.lastWork')}:</span>
+            <span className="font-semibold">{data.lastWork.firm || t('hist.anOwner')}{data.lastWork.district ? `, ${districtName(data.lastWork.district, lang)}` : ''}</span>
+            {data.lastWork.confirmed && <span className="inline-flex items-center gap-0.5 font-semibold text-success [&>svg]:size-icon-sm">{Icon.verified}{t('hist.status.confirmedShort')}</span>}
+          </p>
+          {data.onLoginForMore && <button type="button" onClick={data.onLoginForMore} className="mt-1 font-semibold text-primary underline underline-offset-2">{t('hist.loginForMore')}</button>}
+        </div>
+      )}
       {d.savings_wanted != null && <Money prefix={t('card.wants')} amount={d.savings_wanted} negotiable={d.savings_negotiable} />}
       <div className="mt-3 flex flex-wrap gap-1.5">
         {d.licence_type && <Tag strong>{t('card.licence')}: {d.licence_type}</Tag>}
@@ -138,6 +157,7 @@ export function DriverCard({ data, self, actions, menu, full, onOpen }: { data: 
         {showAll && d.work_type && <Tag>{label(WORK, d.work_type, lang)}</Tag>}
       </div>
       {showAll && d.pay_prefs.length > 0 && <p className="mt-2 text-sm text-text-2">{t('card.prefers')}: <span className="text-text">{d.pay_prefs.map((k) => label(PAY, k as never, lang)).join(', ')}</span></p>}
+      {full && !self && data.id && <DriverHistory driverId={data.id} />}
       {self && <p className="mt-3 flex items-center gap-1.5 text-sm text-text-2">{Icon.shield}{t('card.numberHidden')}</p>}
     </>
   )

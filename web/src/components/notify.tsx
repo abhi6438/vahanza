@@ -85,6 +85,10 @@ export function notifText(n: Notif, t: (k: string, o?: Record<string, unknown>) 
     const key = d.ok ? 'notif.verify_result.ok' : 'notif.verify_result.no'
     return { title: t(`${key}.title`), body: t(`${key}.body`, { reason: d.reason ? t(`verify.reason.${d.reason}`) : '' }) }
   }
+  if (n.kind === 'history_answered') {
+    const a = d.answer || 'yes'
+    return { title: t(`notif.history_answered.${a}.title`), body: t(`notif.history_answered.${a}.body`) }
+  }
   return { title: t(`notif.${n.kind}.title`, o), body: t(`notif.${n.kind}.body`, o) }
 }
 
@@ -100,6 +104,8 @@ export function notifLink(n: Notif) {
     case 'hire_confirm': case 'weekly_jobs': case 'come_back': case 'still_looking': return '/home'
     case 'hire_done': case 'post_views': return '/posts'
     case 'verify_result': return '/verify'
+    case 'history_request': return '/history-requests'
+    case 'history_answered': return '/history'
     default: return '/posts'
   }
 }

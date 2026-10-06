@@ -26,8 +26,10 @@ IN_TOUCH_SQL = """
     or exists (select 1 from public.hires h where h.status = 'confirmed'
                 and ((h.driver_id = %(a)s::uuid and h.owner_id = %(b)s::uuid) or (h.driver_id = %(b)s::uuid and h.owner_id = %(a)s::uuid)))
 """
-WORKED_SQL = """exists (select 1 from public.hires h where h.status = 'confirmed'
-                and ((h.driver_id = %(a)s::uuid and h.owner_id = %(b)s::uuid) or (h.driver_id = %(b)s::uuid and h.owner_id = %(a)s::uuid)))"""
+WORKED_SQL = """(exists (select 1 from public.hires h where h.status = 'confirmed'
+                and ((h.driver_id = %(a)s::uuid and h.owner_id = %(b)s::uuid) or (h.driver_id = %(b)s::uuid and h.owner_id = %(a)s::uuid)))
+              or exists (select 1 from public.work_history wh where wh.status in ('confirmed', 'admin_ok')
+                and ((wh.driver_id = %(a)s::uuid and wh.owner_id = %(b)s::uuid) or (wh.driver_id = %(b)s::uuid and wh.owner_id = %(a)s::uuid))))"""
 
 # Used by list queries elsewhere: hide people blocked in either direction.
 NOT_BLOCKED = """not exists (select 1 from public.blocks bl
@@ -152,7 +154,7 @@ def rate(body: RatingIn, user: AuthUser = Depends(current_user), db=Depends(get_
     if not set(body.tags) <= allowed:
         raise HTTPException(422, {"code": "bad_tag"})
     touch = db.execute(f"select ({IN_TOUCH_SQL}) as ok, ({WORKED_SQL}) as worked", {"a": user.id, "b": body.ratee_id}).fetchone()
-    if not touch or not touch["ok"]:
+    if not touch or not (touch["ok"] or touch.get("worked")):
         raise HTTPException(403, {"code": "not_in_touch"})
     db.execute(
         """insert into public.ratings (rater_id, ratee_id, tenant_id, stars, tags, worked) values (%s, %s, %s, %s, %s, %s)

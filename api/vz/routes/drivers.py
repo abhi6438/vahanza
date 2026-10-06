@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from ..auth import AuthUser, current_user
 from .. import search as S
+from .history import LIST_SUMMARY_SQL
 from ..deps import get_db, tenant_id
 from .trust import is_blocked
 
@@ -50,6 +51,10 @@ def list_drivers(
           (coalesce(p.boost_until, now()) > now() and (lower(p.district) = lower(%(district)s)
              or (p.location is not null and %(loc)s::extensions.geography is not null
                  and extensions.st_dwithin(p.location, %(loc)s::extensions.geography, 150000)))) desc,
+          -- work history confirmed by an owner goes first among nearby drivers (the reason to fill it)
+          (exists (select 1 from public.work_history wh where wh.driver_id = p.id and not wh.hidden and wh.status in ('confirmed', 'admin_ok'))
+             and (lower(p.district) = lower(%(district)s) or (p.location is not null and %(loc)s::extensions.geography is not null
+                  and extensions.st_dwithin(p.location, %(loc)s::extensions.geography, 100000)))) desc,
           -- drivers who have not said "still looking" for 3 weeks go lower (keeps the list fresh)
           (coalesce(d.looking_checked_at, d.updated_at, p.created_at) > now() - interval '21 days') desc,
           case when %(loc)s::extensions.geography is null then
@@ -65,6 +70,7 @@ def list_drivers(
                  as distance_km,
                d.vehicles, d.max_wheels, d.licence_type, d.experience_years, d.savings_wanted,
                d.savings_negotiable, d.pay_prefs, d.work_type, d.area, d.languages, d.available_from,
+               {LIST_SUMMARY_SQL},
                count(*) over () as total
         from public.profiles p
         join public.driver_details d on d.profile_id = p.id

@@ -20,6 +20,7 @@ import { driverCompletion, ownerCompletion } from '../lib/completion'
 import { useIsDesktop } from '../lib/layout'
 import { track, trackScreen } from '../lib/track'
 import { CompleteCard, PinNudge } from '../components/nudges'
+import { HistoryNudge, RequestsCard, useHistoryRequests, useMyHistory } from '../components/history'
 
 /**
  * Home = what the user came for.
@@ -109,6 +110,7 @@ function OwnerHome() {
   const greeting = useGreeting()
   const desktop = useIsDesktop()
   const [query, setQuery] = useListQuery('owner-drivers', EMPTY_DRIVERS)
+  const reqs = useHistoryRequests(true)
   useEffect(() => { trackScreen('owner_home') }, [])
   const list = usePaged<DriverListItem>((offset) => listDrivers(query, { offset }), [JSON.stringify(query)])
   const lang = i18n.language
@@ -135,7 +137,7 @@ function OwnerHome() {
           {list.items === null && !list.error && <CardSkeletons count={desktop ? 4 : 2} />}
           {list.items?.map((d) => (
             <DriverCard key={d.id} onOpen={() => void recordView(d.id).catch(() => {})}
-              data={{ name: d.name || '', photo_url: d.photo_url, verified: d.verified, distance_km: d.distance_km, rating_avg: d.rating_avg, rating_count: d.rating_count, top: d.top, jobs_done: d.jobs_done, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
+              data={{ id: d.id, history: d.history_count ? { count: d.history_count, confirmed: d.history_confirmed || 0, rehire: d.history_rehire || 0 } : undefined, name: d.name || '', photo_url: d.photo_url, verified: d.verified, distance_km: d.distance_km, rating_avg: d.rating_avg, rating_count: d.rating_count, top: d.top, jobs_done: d.jobs_done, place: d.district && d.state ? placeName(`${d.district}, ${d.state}`, lang) : '', d }}
               menu={<CardMenu target={{ type: 'profile', id: d.id }} personId={d.id} name={d.name || ''} onBlocked={() => list.setItems((cur) => cur?.filter((x) => x.id !== d.id) || null)} />}
               actions={<DriverContact driverId={d.id} name={(d.name || '').split(' ')[0]} />} />
           ))}
@@ -155,9 +157,10 @@ function OwnerHome() {
           <ButtonLink to={postTo} onClick={onPost} variant="action" size="lg" block icon={Icon.plus}>{t('home.post')}</ButtonLink>
         </>
       }>
-      <WithRail main={main} mobileTop={<><PinNudge /><RatePrompt /></>}
+      <WithRail main={main} mobileTop={<><RequestsCard n={reqs} /><PinNudge /><RatePrompt /></>}
         rail={
           <>
+            <RequestsCard n={reqs} />
             <PinNudge />
             <RatePrompt />
             {done && done.missing.length > 0 && <CompleteCard role="owner" percent={done.percent} missing={done.missing} listable={done.listable} compact />}
@@ -213,6 +216,7 @@ function DriverHome() {
   const desktop = useIsDesktop()
   const { i18n } = useTranslation()
   const [query, setQuery] = useListQuery('driver-jobs', EMPTY_JOBS)
+  const histSum = useMyHistory(true)
   useEffect(() => { trackScreen('driver_home') }, [])
   const list = usePaged<Job>((offset) => listJobs(query, { offset }), [JSON.stringify(query)])
   const done = driverCompletion(profile, driver)
@@ -261,10 +265,11 @@ function DriverHome() {
         </>
       }>
       <WithRail main={main}
-        mobileTop={<>{hidden}<PinNudge /><PendingHires /><RatePrompt /><GrowthCard /></>}
+        mobileTop={<>{hidden}<HistoryNudge s={histSum} compact /><PinNudge /><PendingHires /><RatePrompt /><GrowthCard /></>}
         rail={
           <>
             <AvailabilitySwitch />
+            <HistoryNudge s={histSum} />
             <PinNudge />
             <PendingHires />
             <RatePrompt />

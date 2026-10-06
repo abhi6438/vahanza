@@ -1,22 +1,24 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { admin, photoSrc, type QueuePost, type QueueProfile, type QueueReport, type VerifyItem, type VerifyReason } from '../../lib/api'
+import { admin, history, photoSrc, type AdminHistory, type QueuePost, type QueueProfile, type QueueReport, type VerifyItem, type VerifyReason } from '../../lib/api'
+import { HistoryItem } from '../../components/history'
 import { placeName, rupees } from '../../lib/catalog'
+import { period } from '../../lib/history'
 import { track, trackScreen } from '../../lib/track'
 import { AdminLayout, ago } from './AdminLayout'
 
 /** Only what needs a human: posts under check, profiles flagged by automatic checks, open reports. */
 export default function AdminQueue() {
   const { t } = useTranslation()
-  const [data, setData] = useState<{ posts: QueuePost[]; profiles: QueueProfile[]; reports: QueueReport[]; verifications: VerifyItem[] } | null>(null)
+  const [data, setData] = useState<{ posts: QueuePost[]; profiles: QueueProfile[]; reports: QueueReport[]; verifications: VerifyItem[]; history: AdminHistory[] } | null>(null)
   const [error, setError] = useState(false)
   const load = useCallback(() => {
     setError(false)
-    Promise.all([admin.queue(), admin.verifications().catch(() => ({ items: [] as VerifyItem[] }))])
-      .then(([q, v]) => setData({ ...q, verifications: v.items })).catch(() => setError(true))
+    Promise.all([admin.queue(), admin.verifications().catch(() => ({ items: [] as VerifyItem[] })), history.adminList('todo').catch(() => ({ items: [] as AdminHistory[] }))])
+      .then(([q, v, h]) => setData({ ...q, verifications: v.items, history: h.items })).catch(() => setError(true))
   }, [])
   useEffect(() => { trackScreen('admin_queue'); load() }, [load])
-  const total = data ? data.posts.length + data.profiles.length + data.reports.length + data.verifications.length : undefined
+  const total = data ? data.posts.length + data.profiles.length + data.reports.length + data.verifications.length + data.history.length : undefined
 
   return (
     <AdminLayout queue={total}>
@@ -29,6 +31,11 @@ export default function AdminQueue() {
           {data.verifications.length > 0 && (
             <Section title={t('admin.q.verify', { n: data.verifications.length })}>
               {data.verifications.map((v) => <VerifyRow key={v.id} v={v} onDone={load} />)}
+            </Section>
+          )}
+          {data.history.length > 0 && (
+            <Section title={t('admin.q.history', { n: data.history.length })}>
+              {data.history.map((h) => <HistoryRow key={h.id} h={h} onDone={load} />)}
             </Section>
           )}
           {data.posts.length > 0 && (
@@ -203,6 +210,38 @@ function VerifyRow({ v, onDone }: { v: VerifyItem; onDone: () => void }) {
         </div>
       )}
       <p className="mt-2 text-xs text-text-2">{t('admin.v.deleted')}</p>
+    </div>
+  )
+}
+
+/** Work history no owner answered (7 days) or the owner said "not true": call and decide. */
+function HistoryRow({ h, onDone }: { h: AdminHistory; onDone: () => void }) {
+  const { t, i18n } = useTranslation()
+  const [busy, setBusy] = useState(false)
+  const fixed = h.status === 'owner_fixed' && !!h.owner_start_month
+  async function act(action: 'ok' | 'keep' | 'reject') {
+    setBusy(true)
+    try { await history.adminCheck(h.id, action); track('admin_history_check', { action }); onDone() } finally { setBusy(false) }
+  }
+  return (
+    <div className="rounded-lg border border-border bg-surface p-3 shadow-sm">
+      <p className="mb-2 text-sm"><span className="font-semibold">{h.driver_name}</span>{h.driver_phone && <a className="ml-2 text-primary underline" href={`tel:+${h.driver_phone}`}>{t('admin.hist.callDriver')}</a>}</p>
+      <HistoryItem e={h} compact />
+      <p className="mt-2 text-sm text-text-2">
+        {fixed ? t('admin.hist.ownerFixed') : h.status === 'disputed' ? t('admin.hist.disputed') : t('admin.hist.noAnswer', { n: h.invite_count || 0 })}
+        {h.owner_phone && <a className="ml-2 font-semibold text-primary underline" href={`tel:+${h.owner_phone}`}>{t('admin.hist.callOwner')} (+{h.owner_phone})</a>}
+      </p>
+      {fixed && (
+        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+          <div className="rounded-md bg-surface-2 px-3 py-2"><p className="text-text-2">{t('admin.hist.driverDates')}</p><p className="font-semibold">{period(h.start_month, h.end_month, i18n.language)}</p></div>
+          <div className="rounded-md bg-primary-soft px-3 py-2 text-primary"><p>{t('admin.hist.ownerDates')}</p><p className="font-semibold">{period(h.owner_start_month!, h.owner_end_month ?? null, i18n.language)}</p></div>
+        </div>
+      )}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" disabled={busy} onClick={() => void act('ok')} className="min-h-ctl-md flex-1 rounded-md bg-success px-3 font-semibold text-on-success disabled:opacity-50">{t(fixed ? 'admin.hist.useOwner' : 'admin.hist.ok')}</button>
+        {fixed && <button type="button" disabled={busy} onClick={() => void act('keep')} className="min-h-ctl-md flex-1 rounded-md border border-success px-3 font-semibold text-success disabled:opacity-50">{t('admin.hist.keepDriver')}</button>}
+        <button type="button" disabled={busy} onClick={() => void act('reject')} className="min-h-ctl-md flex-1 rounded-md border border-border px-3 font-semibold text-error disabled:opacity-50">{t('admin.hist.reject')}</button>
+      </div>
     </div>
   )
 }

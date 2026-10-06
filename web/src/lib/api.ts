@@ -150,6 +150,9 @@ export interface DriverListItem extends DriverDetails {
   top?: boolean
   /** confirmed jobs through the app */
   jobs_done?: number
+  history_count?: number
+  history_confirmed?: number
+  history_rehire?: number
 }
 /** A list page with search + filters: `total` = all matches, `place` = the city the list is centred on. */
 export interface ListPage<T> { items: T[]; has_more: boolean; total?: number; place?: string | null }
@@ -240,6 +243,8 @@ export interface PublicJob extends Omit<Post, 'check_flags'> {
 export interface PublicDriver extends DriverDetails {
   name: string | null; district: string | null; state: string | null; verified: boolean
   rating_avg: number | null; rating_count: number; jobs_done: number; top: boolean
+  history_count?: number; history_confirmed?: number; history_rehire?: number
+  last_work?: { firm: string | null; district: string | null; vehicle: string; confirmed: boolean } | null
 }
 export interface PublicStats { posts: number; drivers: number; posts_here: number; drivers_here: number; hired?: number; hired_here?: number; district: string | null }
 export const pub = {
@@ -387,10 +392,11 @@ export const ratePerson = (ratee_id: string, stars: number, tags: string[]) => a
 // ---------------------------------------------------------------- notifications (Sprint 6)
 export type NotifKind = 'new_post' | 'new_interest' | 'interest_seen' | 'post_live' | 'post_rejected' | 'profile_views' | 'licence_expiry' | 'referral_joined'
   | 'hire_confirm' | 'hire_done' | 'verify_result' | 'weekly_jobs' | 'post_views' | 'come_back' | 'still_looking'
+  | 'history_request' | 'history_answered'
 export interface Notif {
   id: number
   kind: NotifKind
-  data: { post_id?: string; owner?: string; driver?: string; driver_id?: string; vehicles_raw?: string[]; n?: number; savings?: string; days?: number; date?: string; name?: string; ok?: boolean; reason?: string; hire_id?: number }
+  data: { post_id?: string; owner?: string; driver?: string; driver_id?: string; vehicles_raw?: string[]; n?: number; savings?: string; days?: number; date?: string; name?: string; ok?: boolean; reason?: string; hire_id?: number; answer?: 'yes' | 'no' | 'dates' | 'admin_ok' | 'admin_rejected'; id?: string }
   read_at: string | null
   created_at: string
 }
@@ -416,4 +422,78 @@ export const adminTheme = {
   publish: (theme: ThemeConfig) => api<ThemeState>('/admin/theme/publish', { method: 'POST', json: theme }),
   /** back to the brand's own colours (brands/<id>.json) */
   reset: () => api<ThemeState>('/admin/theme/published', { method: 'DELETE' }),
+}
+
+// ---- driver work history ("काम का अनुभव") ----
+export type HistoryStatus = 'pending' | 'confirmed' | 'needs_fix' | 'owner_fixed' | 'disputed' | 'admin_ok' | 'admin_rejected'
+export interface HistoryEntry {
+  id: string
+  owner_on_app: boolean
+  owner_name: string | null
+  firm_name: string | null
+  district: string | null
+  state: string | null
+  owner_verified: boolean
+  vehicle: string
+  wheels: number | null
+  start_month: string
+  end_month: string | null
+  work_type: 'full' | 'day' | 'trip' | null
+  area: 'local' | 'dist' | 'state' | 'india' | null
+  source: 'driver' | 'hire'
+  status: HistoryStatus
+  owner_stars: number | null
+  owner_tags: string[]
+  rehire: boolean | null
+  /** owner_fixed: the months the owner says (waiting for Vahanza) */
+  owner_start_month?: string | null
+  owner_end_month?: string | null
+  // the driver's own view
+  note?: string | null
+  hidden?: boolean
+  invite_count?: number
+  invited_at?: string | null
+  answered_at?: string | null
+  owner_answer?: 'yes' | 'no' | 'dates' | null
+  owner_id?: string | null
+  owner_phone?: string | null
+  typed_owner_name?: string | null
+  typed_firm_name?: string | null
+}
+export interface HistorySummary { count: number; confirmed: number; confirmed_years: number; rehire: number }
+export interface HistoryIn {
+  owner_id?: string | null
+  owner_name?: string | null
+  firm_name?: string | null
+  owner_place?: string | null
+  owner_phone?: string | null
+  vehicle: string
+  wheels?: number | null
+  start_month: string
+  end_month?: string | null
+  work_type?: string | null
+  area?: string | null
+  note?: string | null
+}
+export interface HistorySent { id: string; status: HistoryStatus; sent: 'app' | 'link' | 'capped' | 'none'; token?: string; phone?: string }
+export interface OwnerHit { id: string; name: string | null; firm_name: string | null; district: string | null; state: string | null; verified: boolean }
+export interface HistoryRequest extends HistoryEntry { driver_id: string; driver_name: string | null; driver_photo: string | null; driver_district: string | null }
+export interface HistoryAnswer { answer: 'yes' | 'no' | 'dates'; stars?: number | null; tags?: string[]; rehire?: boolean | null; start_month?: string; end_month?: string | null }
+export interface PublicHistory { vehicle: string; wheels: number | null; start_month: string; end_month: string | null; work_type: string | null; firm_name: string | null; owner_name: string | null; district: string | null; status: HistoryStatus; driver: string | null; driver_photo: string | null }
+export interface AdminHistory extends HistoryEntry { driver_id: string; driver_name: string | null; driver_phone: string | null; owner_phone: string | null }
+export const history = {
+  mine: () => api<{ items: HistoryEntry[]; summary: HistorySummary; max: number }>('/me/history'),
+  add: (b: HistoryIn) => api<HistorySent>('/me/history', { method: 'POST', json: b }),
+  edit: (id: string, b: HistoryIn) => api<HistorySent>(`/me/history/${id}`, { method: 'PATCH', json: b }),
+  hide: (id: string, hidden: boolean) => api<{ hidden: boolean }>(`/me/history/${id}/hide`, { method: 'POST', json: { hidden } }),
+  remove: (id: string) => api<void>(`/me/history/${id}`, { method: 'DELETE' }),
+  remind: (id: string) => api<HistorySent>(`/me/history/${id}/remind`, { method: 'POST' }),
+  owners: (q: string) => api<{ items: OwnerHit[] }>(`/history/owners?q=${encodeURIComponent(q)}`),
+  requests: () => api<{ items: HistoryRequest[] }>('/me/history-requests'),
+  answer: (id: string, b: HistoryAnswer) => api<{ status: HistoryStatus }>(`/history/${id}/answer`, { method: 'POST', json: b }),
+  ofDriver: (id: string) => api<{ items: HistoryEntry[]; summary: HistorySummary }>(`/drivers/${id}/history`),
+  publicGet: (token: string) => api<PublicHistory>(`/public/history/${encodeURIComponent(token)}`, { auth: false }),
+  publicAnswer: (token: string, b: HistoryAnswer) => api<{ status: HistoryStatus }>(`/public/history/${encodeURIComponent(token)}/answer`, { method: 'POST', json: b, auth: false }),
+  adminList: (status: 'todo' | 'disputed' | 'all' = 'todo') => api<{ items: AdminHistory[] }>(`/admin/history?status=${status}`),
+  adminCheck: (id: string, action: 'ok' | 'keep' | 'reject', note?: string) => api<{ status: HistoryStatus }>(`/admin/history/${id}/check`, { method: 'POST', json: { action, note } }),
 }

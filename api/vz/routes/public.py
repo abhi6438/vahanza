@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from .. import search as S
 from ..deps import get_db, tenant_id
 from ..growth import clean_code
+from .history import LAST_WORK_SQL, LIST_SUMMARY_SQL
 from .posts import POST_SELECT, _clean
 
 router = APIRouter(prefix="/public", tags=["public"])
@@ -150,6 +151,7 @@ def public_drivers(
     Same search + filters as the logged-in list (names: first name only)."""
     f.resolve(db)
     near = """(%(district)s <> '' and lower(p.district) = lower(%(district)s)) desc,
+                 (exists (select 1 from public.work_history wh where wh.driver_id = p.id and not wh.hidden and wh.status in ('confirmed', 'admin_ok'))) desc,
                  (coalesce(d.looking_checked_at, d.updated_at, p.created_at) > now() - interval '21 days') desc,
                  p.location operator(extensions.<->) %(loc)s::extensions.geography nulls last,
                  p.verified desc, (d.available_from = 'now') desc, p.last_seen_at desc nulls last"""
@@ -159,6 +161,7 @@ def public_drivers(
                (coalesce(p.boost_until, now()) > now()) as top,
                d.vehicles, d.max_wheels, d.licence_type, d.experience_years, d.savings_wanted, d.savings_negotiable,
                d.pay_prefs, d.work_type, d.area, d.languages, d.available_from,
+               {LIST_SUMMARY_SQL}, {LAST_WORK_SQL},
                count(*) over () as total
         from public.profiles p join public.driver_details d on d.profile_id = p.id
         where p.tenant_id = %(tenant)s and p.role = 'driver' and p.setup_done and not p.blocked and not p.is_test

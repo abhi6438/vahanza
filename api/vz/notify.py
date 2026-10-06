@@ -46,11 +46,16 @@ TEXT = {
                   "en": ("New for you", "{n} new near you since your last visit. Take a look.")},
     "still_looking": {"hi": ("क्या अभी भी काम ढूंढ रहे हैं?", "एक टैप में बताएँ, ताकि मालिकों को सही लोग दिखें।"),
                       "en": ("Still looking for work?", "Tell us in one tap, so owners see the right people.")},
+    "history_request": {"hi": ("क्या ये ड्राइवर आपके यहाँ काम करते थे?", "{driver} ने बताया कि उन्होंने आपके यहाँ गाड़ी चलाई। हाँ या ना बताएँ।"),
+                        "en": ("Did this driver work for you?", "{driver} says they drove for you. Tell us yes or no.")},
+    "history_answered": {"hi": ("काम के अनुभव पर जवाब आया", "मालिक / Vahanza ने आपके काम के अनुभव का जवाब दिया। देखने के लिए खोलें।"),
+                         "en": ("Your work history was answered", "The owner / Vahanza answered your work history. Open to see.")},
 }
 URL = {"new_post": "/home", "new_interest": "/posts", "interest_seen": "/interests", "post_live": "/posts", "post_rejected": "/posts",
        "profile_views": "/home", "licence_expiry": "/setup?step=licence", "referral_joined": "/invite",
        "hire_confirm": "/home", "hire_done": "/posts", "verify_result": "/verify", "weekly_jobs": "/home",
-       "post_views": "/posts", "come_back": "/home", "still_looking": "/home"}
+       "post_views": "/posts", "come_back": "/home", "still_looking": "/home",
+       "history_request": "/history-requests", "history_answered": "/history"}
 VEHICLE_HI = {"truck": "ट्रक", "trailer": "ट्रेलर", "bus": "बस", "car": "कार", "jcb": "जेसीबी", "tractor": "ट्रैक्टर", "auto": "ऑटो", "pickup": "पिकअप"}
 
 

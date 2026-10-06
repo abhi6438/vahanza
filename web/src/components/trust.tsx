@@ -121,7 +121,7 @@ export function CardMenu({ target, personId, name, onBlocked }: {
   )
 }
 
-const TAGS: Record<'driver' | 'owner', { key: string; label: Pair }[]> = {
+export const TAGS: Record<'driver' | 'owner', { key: string; label: Pair }[]> = {
   // tags an owner gives a driver
   driver: [
     { key: 'time', label: ['समय पर आता है', 'On time'] },
@@ -139,7 +139,7 @@ const TAGS: Record<'driver' | 'owner', { key: string; label: Pair }[]> = {
     { key: 'vehicle', label: ['गाड़ी ठीक हालत में', 'Vehicle in good shape'] },
   ],
 }
-const STAR_WORDS: Pair[] = [['', ''], ['बहुत खराब', 'Very bad'], ['खराब', 'Bad'], ['ठीक', 'Okay'], ['अच्छा', 'Good'], ['बहुत अच्छा', 'Very good']]
+export const STAR_WORDS: Pair[] = [['', ''], ['बहुत खराब', 'Very bad'], ['खराब', 'Bad'], ['ठीक', 'Okay'], ['अच्छा', 'Good'], ['बहुत अच्छा', 'Very good']]
 
 /** "How was Ramesh?" — shown on home after a call / interest, one person at a time. */
 export function RatePrompt() {

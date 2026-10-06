@@ -22,6 +22,10 @@ import AdminUsers from './pages/admin/AdminUsers'
 import AdminImport from './pages/admin/AdminImport'
 import AdminPosters from './pages/admin/AdminPosters'
 import AdminAppearance from './pages/admin/AdminAppearance'
+import History from './pages/History'
+import HistoryAdd from './pages/HistoryAdd'
+import HistoryLink from './pages/HistoryLink'
+import HistoryRequests from './pages/HistoryRequests'
 import Invite from './pages/Invite'
 import Verify from './pages/Verify'
 import PublicJobs from './pages/PublicJobs'
@@ -116,6 +120,8 @@ function AppRoutes() {
   if (status === 'loading') return <Splash />
   if (status === 'blocked') return <div className="grid h-full place-items-center p-6 text-center text-lg">{t('error.blocked')}</div>
   if (OPEN.includes(loc.pathname)) return <Routes><Route path="/legal" element={<Legal />} /></Routes>
+  // owner's one-tap confirmation link from a driver (WhatsApp / SMS): any state, no language step
+  if (/^\/h\/[A-Za-z0-9_-]{6,40}$/.test(loc.pathname)) return <Routes><Route path="/h/:token" element={<HistoryLink />} /></Routes>
   if (status === 'needsRole' && loc.pathname !== '/role') return <Navigate to="/role" replace />
   // signed out: language first only the very first time; then the live jobs (no login), or the
   // number straight away when they came from a personal invite
@@ -180,6 +186,10 @@ function AppRoutes() {
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/invite" element={<Invite />} />
       <Route path="/verify" element={<Verify />} />
+      <Route path="/history" element={<History />} />
+      <Route path="/history/new" element={<HistoryAdd />} />
+      <Route path="/history/:id/edit" element={<HistoryAdd />} />
+      <Route path="/history-requests" element={<HistoryRequests />} />
       {['/jobs', '/start', '/drivers', '/mechanics'].map((p) => <Route key={p} path={p} element={<Navigate to="/home" replace />} />)}
       <Route path="/jobs/:code" element={<PublicJobs />} />
       <Route path="*" element={<Navigate to="/home" replace />} />

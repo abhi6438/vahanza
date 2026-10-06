@@ -37,7 +37,7 @@ A white-label app for vehicle owners and drivers. One codebase serves the web/PW
 ## 1. Supabase setup (one time)
 
 1. Create a project in region **Mumbai (ap-south-1)**.
-2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql` → `0009_trust.sql` → `0010_mpin.sql` → `0011_search.sql` → `0012_theme.sql`).
+2. SQL Editor: run the files in `supabase/migrations/` in order (`0001_init.sql` → `0002_profile_setup.sql` → `0003_test_accounts.sql` → `0004_admin.sql` → `0005_trust.sql` → `0006_notifications.sql` → `0007_imports.sql` → `0008_growth.sql` → `0009_trust.sql` → `0010_mpin.sql` → `0011_search.sql` → `0012_theme.sql` → `0013_work_history.sql` → `0014_history_owner_dates.sql`).
 3. Auth → Providers → **Phone**: enable it. You can pick any SMS provider here because the hook below replaces it.
 4. Auth → Hooks → **Send SMS hook** → HTTPS:
    `https://<your-domain>/api/v1/hooks/send-sms`. Generate the secret and copy it into `SEND_SMS_HOOK_SECRET` (format `v1,whsec_...`).
@@ -166,6 +166,21 @@ The same bar sits on the owner's driver list, the driver's job list and the no-l
 - What is on shows as removable chips with "सब हटाएँ". The vehicle row stays. Filters are remembered on the device per list; the search text is not.
 - The API answers with `total` (all matches), which drives "N मिले" and the live button. A typed city with no distance chosen = within 50 km. The public city chip still only puts that city first and hides nothing.
 - Go-live: run `0011_search.sql` (adds `pg_trgm` and indexes; safe to run again).
+
+## Driver work history ("काम का अनुभव")
+
+Drivers add where they drove before, and that owner confirms it. Confirmed history is what owners trust most.
+
+- **Adding (driver → Profile → काम का अनुभव, or the card on Home):** one question per screen with big buttons — owner (search Vahanza owners by firm / name, owners already in touch shown first; never searchable by phone) or **"मालिक लिस्ट में नहीं है"** (name, firm, city, mobile; voice typing works) → vehicle + wheels → from (year, then month) → until / "अभी भी यहीं" → kind of work (optional) → check → send. At most 15 entries.
+- **Confirmation:**
+  - Owner on the app: bell + push → *Profile → ड्राइवरों के अनुरोध* (and a card on Home): **हाँ, सही है / तारीख़ अलग है / नहीं**. After yes: stars, quick tags and **"दोबारा रखेंगे?"**. The stars also count in the driver's rating as "worked together".
+  - Owner not on the app: the driver sends a one-tap link (`/h/<token>`, 30 days) on WhatsApp from their own phone. The owner answers without logging in, then sees "Do you also need drivers? Free". Automatic SMS can be added once MSG91 DLT is live.
+  - Jobs confirmed in the app ("काम मिल गया") are added as confirmed history automatically (old ones too, by the migration).
+  - **"तारीख़ अलग है" → the owner fixes it himself**: two big month/year pickers (from → till, with "अभी भी मेरे यहाँ काम करते हैं"), already set to the driver's months so he only taps what's wrong, then optional stars / "hire again?". It goes to the admin queue as *owner_fixed* ("मालिक ने तारीख़ ठीक की · Vahanza जाँच रहा है"); the driver does nothing. Admin sees both periods side by side → **मालिक की तारीख़ सही** (owner's months replace the driver's, confirmed) / **ड्राइवर की तारीख़ सही** (confirmed, months kept) / **गलत है**. If the owner picks the same months, it simply counts as yes. "Not true" → hidden, goes to the admin queue. No answer in 7 days → admin queue (admin sees both numbers, can call, then marks correct / wrong).
+- **Rules:** not the driver's own number, not another driver's number; at most 3 messages per entry (3 days apart) and 3 per owner number per week; confirmed entries can't be edited (only hidden); the owner's number is never shown to anyone but admins.
+- **What owners see:** "✓ 3 मालिकों ने पुष्टि की · 4 साल पक्का अनुभव · 2 दोबारा रखेंगे" on the card, the full list in "पूरी जानकारी". Overlapping jobs count once. The no-login driver list shows only the counts and the latest job ("पिछला काम: श्री ट्रांसपोर्ट, रीवा ✓") with "पूरा अनुभव देखने के लिए लॉगिन करें".
+- **Why drivers fill it:** drivers with a confirmed job rank first among nearby drivers in the owners' list; the Home / Profile card says so and shows progress towards 2 confirmations.
+- Go-live: run `0013_work_history.sql`, then `0014_history_owner_dates.sql`.
 
 ## Brand theme at runtime (Admin → Settings → Appearance)
 
