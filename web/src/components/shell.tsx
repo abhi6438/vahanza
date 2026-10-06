@@ -330,7 +330,7 @@ export function ProfileButton({ tone = 'plain' }: { tone?: 'plain' | 'onDark' })
  */
 export function WithRail({ main, rail, mobileTop }: { main: ReactNode; rail: ReactNode; mobileTop?: ReactNode }) {
   const layout = useLayout()
-  if (layout !== 'desktop') return <>{mobileTop && <div className="mb-4 flex flex-col gap-3">{mobileTop}</div>}{main}</>
+  if (layout !== 'desktop') return <>{mobileTop && <div className="mb-4 flex flex-col gap-3 empty:hidden">{mobileTop}</div>}{main}</>
   return (
     <div className="grid items-start gap-section xl:grid-cols-[minmax(0,1fr)_340px] min-[1600px]:grid-cols-[minmax(0,1fr)_380px]">
       <div className="order-2 min-w-0 xl:order-1">{main}</div>

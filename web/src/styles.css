@@ -574,3 +574,6 @@ h1, h2, h3 { text-wrap: balance; }
 .tick-chip-gold { background: var(--tick-gold-soft); color: var(--tick-gold-solid); }
 .tick-chip-black { background: var(--tick-black-soft); color: var(--c-ink); }
 .premium-fill { background: var(--premium); color: var(--premium-on); }
+
+/* HideableStack: a card that rendered nothing (only its × is left) takes no space. */
+.dismiss-wrap:not(:has(> :not(.dismiss-x))) { display: none; }

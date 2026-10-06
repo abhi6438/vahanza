@@ -439,3 +439,34 @@ export function Segmented<K extends string>({ value, onChange, options, label }:
     </div>
   )
 }
+
+// ---------------------------------------------------------------- hideable suggestion cards (Home)
+/**
+ * A stack of suggestion cards; each gets a small × in its corner to hide it for this visit.
+ * Hidden ones come back with one tap ("N छिपे · दिखाएँ") and on the next visit (state lives in the page).
+ * A card whose content renders nothing takes no space (CSS :has), so callers don't need to know.
+ */
+export function HideableStack({ items, className = '' }: { items: { id: string; node: ReactNode }[]; className?: string }) {
+  const { t } = useTranslation()
+  const [hidden, setHidden] = useState<string[]>([])
+  const shown = items.filter((i) => !hidden.includes(i.id))
+  return (
+    <div className={`flex flex-col gap-3 ${className}`}>
+      {shown.map((i) => (
+        <div key={i.id} className="dismiss-wrap relative">
+          {i.node}
+          <button type="button" onClick={() => setHidden((h) => [...h, i.id])} aria-label={t('home.hideCard')} title={t('home.hideCard')}
+            className="dismiss-x absolute -right-1.5 -top-1.5 z-[1] grid size-6 place-items-center rounded-full border border-border bg-surface text-text-2 shadow-sm hover:bg-surface-2 hover:text-text [&>svg]:size-3.5">
+            {Icon.close}
+          </button>
+        </div>
+      ))}
+      {hidden.length > 0 && (
+        <button type="button" onClick={() => setHidden([])}
+          className="flex items-center justify-center gap-1.5 self-center rounded-full px-3 py-1 text-xs font-semibold text-text-2 hover:bg-surface-2 [&>svg]:size-3.5">
+          {Icon.eye}{t('home.hiddenN', { n: hidden.length })}
+        </button>
+      )}
+    </div>
+  )
+}

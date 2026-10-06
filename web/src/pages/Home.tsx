@@ -8,7 +8,7 @@ import { JobItem } from '../components/jobs'
 import { AppShell, CardGrid, HeroBar, WithRail } from '../components/shell'
 import { CardMenu, RatePrompt } from '../components/trust'
 import { useToast } from '../components/toast'
-import { Badge, Button, ButtonLink, Card, CardSkeletons, EmptyState, ErrorState, Icon, SectionTitle, Switch } from '../components/ui'
+import { Badge, Button, ButtonLink, Card, CardSkeletons, EmptyState, ErrorState, Icon, SectionTitle, Switch, HideableStack } from '../components/ui'
 import { listDrivers, listJobs, recordView, setAvailability, type DriverListItem, type Job, type ListPage } from '../lib/api'
 import { cleared, EMPTY_DRIVERS, EMPTY_JOBS, isFiltered, useListQuery } from '../lib/search'
 import { SearchFilterBar } from '../components/search'
@@ -158,7 +158,8 @@ function OwnerHome() {
           <ButtonLink to={postTo} onClick={onPost} variant="action" size="lg" block icon={Icon.plus}>{t('home.post')}</ButtonLink>
         </>
       }>
-      <WithRail main={main} mobileTop={<><HomeRewardsCard /><RequestsCard n={reqs} /><PinNudge /><RatePrompt /></>}
+      <WithRail main={main} mobileTop={<HideableStack items={[{ id: 'premium', node: <HomeRewardsCard /> }, { id: 'requests', node: <RequestsCard n={reqs} /> },
+          { id: 'pin', node: <PinNudge /> }, { id: 'rate', node: <RatePrompt /> }]} />}
         rail={
           <>
             <HomeRewardsCard />
@@ -267,7 +268,8 @@ function DriverHome() {
         </>
       }>
       <WithRail main={main}
-        mobileTop={<>{hidden}<HomeRewardsCard /><HistoryNudge s={histSum} compact /><PinNudge /><PendingHires /><RatePrompt /><GrowthCard compact /></>}
+        mobileTop={<HideableStack items={[{ id: 'hidden', node: hidden }, { id: 'premium', node: <HomeRewardsCard /> }, { id: 'history', node: <HistoryNudge s={histSum} compact /> },
+          { id: 'pin', node: <PinNudge /> }, { id: 'hires', node: <PendingHires /> }, { id: 'rate', node: <RatePrompt /> }, { id: 'growth', node: <GrowthCard compact /> }]} />}
         rail={
           <>
             <AvailabilitySwitch />

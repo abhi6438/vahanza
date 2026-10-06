@@ -1437,12 +1437,14 @@
   "rw.home.on": "Premium on · till {{date}}",
   "rw.home.onDriver": "You're at the top of owners' lists",
   "rw.home.onOwner": "Full history, tick filter and more posts are on",
-  "rw.home.titleDriver": "Premium: owners see you first",
-  "rw.home.titleOwner": "Premium: see drivers' full history",
+  "rw.home.titleDriver": "Premium: be seen first",
+  "rw.home.titleOwner": "Premium: see full history",
   "rw.home.need": "{{n}} more points — then {{days}} days free",
   "rw.home.ready": "You have enough — take {{days}} days Premium",
   "rw.home.free": "Earn points, get Premium",
   "rw.home.earn": "Earn +{{n}}",
   "rw.home.take": "Take",
-  "growth.inviteShort": "Invite"
+  "growth.inviteShort": "Invite",
+  "home.hideCard": "Hide",
+  "home.hiddenN": "{{n}} hidden · show"
 }
