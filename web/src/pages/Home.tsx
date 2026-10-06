@@ -8,7 +8,7 @@ import { JobItem } from '../components/jobs'
 import { AppShell, CardGrid, HeroBar, WithRail } from '../components/shell'
 import { CardMenu, RatePrompt } from '../components/trust'
 import { useToast } from '../components/toast'
-import { Badge, Button, ButtonLink, Card, CardSkeletons, EmptyState, ErrorState, Icon, SectionTitle, Switch, HideableStack } from '../components/ui'
+import { Badge, Button, ButtonLink, Card, CardSkeletons, EmptyState, ErrorState, Icon, SectionTitle, Switch, HideableStack, HiddenChip, useHidden } from '../components/ui'
 import { listDrivers, listJobs, recordView, setAvailability, type DriverListItem, type Job, type ListPage } from '../lib/api'
 import { cleared, EMPTY_DRIVERS, EMPTY_JOBS, isFiltered, useListQuery } from '../lib/search'
 import { SearchFilterBar } from '../components/search'
@@ -105,6 +105,7 @@ function SafetyTips() {
 
 // ---------------------------------------------------------------- owner
 function OwnerHome() {
+  const hd = useHidden()
   const { t, i18n } = useTranslation()
   const { profile, fleet } = useAuth()
   const city = usePlaceName()
@@ -125,7 +126,7 @@ function OwnerHome() {
     <section aria-labelledby="list-title">
       <SectionTitle className="mb-3"
         title={<span id="list-title">{near ? t('sf.driversNear', { city: near }) : query.q.trim() ? t('sf.results') : city ? t('home.driversNearCity', { city }) : t('home.driversNear')}</span>}
-        right={list.items && <span className="shrink-0 text-sm text-text-2" aria-live="polite">{t(filtered ? 'sf.foundDrivers' : 'home.countDrivers', { n: list.total ?? list.items.length + (list.more ? '+' : ''), count: list.total ?? 2 })}</span>} />
+        right={<span className="flex shrink-0 items-center gap-2"><HiddenChip state={hd} />{list.items && <span className="shrink-0 text-sm text-text-2" aria-live="polite">{t(filtered ? 'sf.foundDrivers' : 'home.countDrivers', { n: list.total ?? list.items.length + (list.more ? '+' : ''), count: list.total ?? 2 })}</span>}</span>} />
       <SearchFilterBar kind="drivers" value={query} onChange={setQuery} count={(q) => listDrivers(q, { limit: 1 }).then((r) => r.total ?? r.items.length)} />
       <div className="mt-4">
         {list.error && <ErrorState onRetry={list.retry} />}
@@ -158,7 +159,7 @@ function OwnerHome() {
           <ButtonLink to={postTo} onClick={onPost} variant="action" size="lg" block icon={Icon.plus}>{t('home.post')}</ButtonLink>
         </>
       }>
-      <WithRail main={main} mobileTop={<HideableStack items={[{ id: 'premium', node: <HomeRewardsCard /> }, { id: 'requests', node: <RequestsCard n={reqs} /> },
+      <WithRail main={main} mobileTop={<HideableStack state={hd} items={[{ id: 'premium', node: <HomeRewardsCard /> }, { id: 'requests', node: <RequestsCard n={reqs} /> },
           { id: 'pin', node: <PinNudge /> }, { id: 'rate', node: <RatePrompt /> }]} />}
         rail={
           <>
@@ -223,6 +224,7 @@ function AvailabilitySwitch({ onDark }: { onDark?: boolean }) {
 }
 
 function DriverHome() {
+  const hd = useHidden()
   const { t } = useTranslation()
   const { profile, driver } = useAuth()
   const city = usePlaceName()
@@ -252,7 +254,7 @@ function DriverHome() {
       {desktop && hidden && <div className="mb-4">{hidden}</div>}
       <SectionTitle className="mb-3"
         title={<span id="list-title">{near ? t('sf.jobsNear', { city: near }) : query.q.trim() ? t('sf.results') : city ? t('home.jobsNearCity', { city }) : t('home.jobsNear')}</span>}
-        right={list.items && <span className="shrink-0 text-sm text-text-2" aria-live="polite">{t(filtered ? 'sf.foundJobs' : 'home.countJobs', { n: list.total ?? list.items.length + (list.more ? '+' : ''), count: list.total ?? 2 })}</span>} />
+        right={<span className="flex shrink-0 items-center gap-2"><HiddenChip state={hd} />{list.items && <span className="shrink-0 text-sm text-text-2" aria-live="polite">{t(filtered ? 'sf.foundJobs' : 'home.countJobs', { n: list.total ?? list.items.length + (list.more ? '+' : ''), count: list.total ?? 2 })}</span>}</span>} />
       <SearchFilterBar kind="jobs" value={query} onChange={setQuery} count={(q) => listJobs(q, { limit: 1 }).then((r) => r.total ?? r.items.length)} />
       <div className="mt-4">
         {list.error && <ErrorState onRetry={list.retry} />}
@@ -279,7 +281,7 @@ function DriverHome() {
         </>
       }>
       <WithRail main={main}
-        mobileTop={<HideableStack items={[{ id: 'hidden', node: hidden }, { id: 'premium', node: <HomeRewardsCard /> }, { id: 'history', node: <HistoryNudge s={histSum} compact /> },
+        mobileTop={<HideableStack state={hd} items={[{ id: 'hidden', node: hidden }, { id: 'premium', node: <HomeRewardsCard /> }, { id: 'history', node: <HistoryNudge s={histSum} compact /> },
           { id: 'pin', node: <PinNudge /> }, { id: 'hires', node: <PendingHires /> }, { id: 'rate', node: <RatePrompt /> }, { id: 'growth', node: <GrowthCard compact /> }]} />}
         rail={
           <>

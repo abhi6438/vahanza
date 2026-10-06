@@ -441,32 +441,45 @@ export function Segmented<K extends string>({ value, onChange, options, label }:
 }
 
 // ---------------------------------------------------------------- hideable suggestion cards (Home)
+/** Which Home cards are hidden this visit (state lives in the page, so they come back next time). */
+export function useHidden() {
+  const [hidden, setHidden] = useState<string[]>([])
+  return { hidden, hide: (id: string) => setHidden((h) => [...h, id]), show: () => setHidden([]) }
+}
+
 /**
  * A stack of suggestion cards; each gets a small × in its corner to hide it for this visit.
- * Hidden ones come back with one tap ("N छिपे · दिखाएँ") and on the next visit (state lives in the page).
  * A card whose content renders nothing takes no space (CSS :has), so callers don't need to know.
+ * The "show again" control is <HiddenChip>, placed by the page in a row that already exists (no extra row).
  */
-export function HideableStack({ items, className = '' }: { items: { id: string; node: ReactNode }[]; className?: string }) {
+export function HideableStack({ items, state, className = '' }: { items: { id: string; node: ReactNode }[]; state: ReturnType<typeof useHidden>; className?: string }) {
   const { t } = useTranslation()
-  const [hidden, setHidden] = useState<string[]>([])
-  const shown = items.filter((i) => !hidden.includes(i.id))
+  const shown = items.filter((i) => !state.hidden.includes(i.id))
+  if (!shown.length) return null
   return (
     <div className={`flex flex-col gap-3 ${className}`}>
       {shown.map((i) => (
         <div key={i.id} className="dismiss-wrap relative">
           {i.node}
-          <button type="button" onClick={() => setHidden((h) => [...h, i.id])} aria-label={t('home.hideCard')} title={t('home.hideCard')}
+          <button type="button" onClick={() => state.hide(i.id)} aria-label={t('home.hideCard')} title={t('home.hideCard')}
             className="dismiss-x absolute -right-1.5 -top-1.5 z-[1] grid size-6 place-items-center rounded-full border border-border bg-surface text-text-2 shadow-sm hover:bg-surface-2 hover:text-text [&>svg]:size-3.5">
             {Icon.close}
           </button>
         </div>
       ))}
-      {hidden.length > 0 && (
-        <button type="button" onClick={() => setHidden([])}
-          className={`flex items-center gap-1 self-end rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold text-text-3 hover:bg-surface-2 hover:text-text-2 [&>svg]:size-3 ${shown.length ? '-mt-1.5' : '-my-1'}`}>
-          {Icon.eye}{t('home.hiddenN', { n: hidden.length })}
-        </button>
-      )}
     </div>
+  )
+}
+
+/** Small "👁 4" next to a list heading: brings the hidden cards back. */
+export function HiddenChip({ state }: { state: ReturnType<typeof useHidden> }) {
+  const { t } = useTranslation()
+  const n = state.hidden.length
+  if (!n) return null
+  return (
+    <button type="button" onClick={state.show} aria-label={t('home.hiddenN', { n })} title={t('home.hiddenN', { n })}
+      className="press inline-flex h-7 shrink-0 items-center gap-1 rounded-full bg-surface-2 px-2 text-xs font-semibold text-text-2 ring-1 ring-inset ring-border hover:text-text [&>svg]:size-3.5">
+      {Icon.eye}{n}
+    </button>
   )
 }
