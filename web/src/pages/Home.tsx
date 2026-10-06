@@ -154,7 +154,7 @@ function OwnerHome() {
       heroTop={<HeroBar title={greeting} badge={<TestBadge />} />}
       hero={
         <>
-          <div className="mb-4 flex items-center justify-between gap-2 pt-0.5"><span className="min-w-0"><CityLine city={city} onDark /></span><HeroRewardChips /></div>
+          <div className="mb-2.5 flex items-center justify-between gap-2"><span className="min-w-0"><CityLine city={city} onDark /></span><HeroRewardChips /></div>
           <ButtonLink to={postTo} onClick={onPost} variant="action" size="lg" block icon={Icon.plus}>{t('home.post')}</ButtonLink>
         </>
       }>
@@ -207,7 +207,18 @@ function AvailabilitySwitch({ onDark }: { onDark?: boolean }) {
   }
   const sw = <Switch checked={available} disabled={busy} onChange={(v) => void toggle(v)}
     label={available ? t('home.available') : t('home.notAvailable')} sub={available ? t('home.availableSub') : t('home.notAvailableSub')} />
-  if (onDark) return <div className="rounded-lg bg-white/10 px-3.5 text-white ring-1 ring-inset ring-white/15 backdrop-blur-sm [&_.text-text-2]:text-white/75">{sw}</div>
+  // phone header: one slim line — dot + "available" + a small switch (the long explanation is on the toast / profile)
+  if (onDark) return (
+    <button type="button" role="switch" aria-checked={available} disabled={busy} onClick={() => void toggle(!available)}
+      className="press flex h-11 w-full items-center gap-2.5 rounded-lg bg-white/10 px-3 text-left text-white ring-1 ring-inset ring-white/15 backdrop-blur-sm disabled:opacity-70">
+      {available ? <span className="live-dot" /> : <span className="size-2.5 rounded-full bg-white/40" />}
+      <span className="min-w-0 flex-1 truncate text-[0.9375rem] font-semibold">{available ? t('home.available') : t('home.notAvailable')}</span>
+      <span className="shrink-0 text-xs text-white/70 max-[359px]:hidden">{available ? t('home.availableShort') : t('home.notAvailableShort')}</span>
+      <span className={`relative shrink-0 rounded-full transition-colors ${available ? 'bg-success' : 'bg-white/25'}`} style={{ width: 40, height: 24 }}>
+        <span className="absolute rounded-full bg-white shadow transition-[left]" style={{ width: 20, height: 20, top: 2, left: available ? 18 : 2 }} />
+      </span>
+    </button>
+  )
   return <Card className={available ? 'border-success/40 bg-[linear-gradient(135deg,var(--c-success-soft),var(--c-card)_70%)]' : ''}>{sw}</Card>
 }
 
@@ -263,7 +274,7 @@ function DriverHome() {
       heroTop={<HeroBar title={greeting} badge={<TestBadge />} />}
       hero={
         <>
-          <div className="mb-3 flex items-center justify-between gap-2 pt-0.5"><span className="min-w-0"><CityLine city={city} onDark /></span><HeroRewardChips /></div>
+          <div className="mb-2 flex items-center justify-between gap-2"><span className="min-w-0"><CityLine city={city} onDark /></span><HeroRewardChips /></div>
           <AvailabilitySwitch onDark />
         </>
       }>

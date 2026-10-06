@@ -463,7 +463,7 @@ export function HideableStack({ items, className = '' }: { items: { id: string; 
       ))}
       {hidden.length > 0 && (
         <button type="button" onClick={() => setHidden([])}
-          className="flex items-center justify-center gap-1.5 self-center rounded-full px-3 py-1 text-xs font-semibold text-text-2 hover:bg-surface-2 [&>svg]:size-3.5">
+          className={`flex items-center gap-1 self-end rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold text-text-3 hover:bg-surface-2 hover:text-text-2 [&>svg]:size-3 ${shown.length ? '-mt-1.5' : '-my-1'}`}>
           {Icon.eye}{t('home.hiddenN', { n: hidden.length })}
         </button>
       )}

@@ -259,7 +259,7 @@ function MobileShell({ title, heroTop, hero, back, mobileActions, adminQueue, ch
         {/* the rest of the teal header (city, main action) scrolls away under the fixed bar */}
         {!back && hero && (
           <div className="surface-hero surface-hero-cont -mt-px rounded-b-[1.75rem] shadow-md">
-            <div className={`mx-auto pb-4 ${container}`}>{hero}</div>
+            <div className={`mx-auto pb-3 ${container}`}>{hero}</div>
           </div>
         )}
         <main id="main" tabIndex={-1} className={`mx-auto w-full pb-6 pt-4 outline-none ${container}`}>{children}</main>
@@ -330,7 +330,7 @@ export function ProfileButton({ tone = 'plain' }: { tone?: 'plain' | 'onDark' })
  */
 export function WithRail({ main, rail, mobileTop }: { main: ReactNode; rail: ReactNode; mobileTop?: ReactNode }) {
   const layout = useLayout()
-  if (layout !== 'desktop') return <>{mobileTop && <div className="mb-4 flex flex-col gap-3 empty:hidden">{mobileTop}</div>}{main}</>
+  if (layout !== 'desktop') return <>{mobileTop && <div className="mb-3 flex flex-col gap-3 empty:hidden">{mobileTop}</div>}{main}</>
   return (
     <div className="grid items-start gap-section xl:grid-cols-[minmax(0,1fr)_340px] min-[1600px]:grid-cols-[minmax(0,1fr)_380px]">
       <div className="order-2 min-w-0 xl:order-1">{main}</div>

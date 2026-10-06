@@ -1446,5 +1446,7 @@
   "rw.home.take": "Take",
   "growth.inviteShort": "Invite",
   "home.hideCard": "Hide",
-  "home.hiddenN": "{{n}} hidden · show"
+  "home.hiddenN": "{{n}} hidden · show",
+  "home.availableShort": "owners can see you",
+  "home.notAvailableShort": "hidden"
 }

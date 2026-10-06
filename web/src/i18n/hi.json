@@ -1438,5 +1438,7 @@
   "rw.home.take": "लें",
   "growth.inviteShort": "बुलाओ",
   "home.hideCard": "छिपाएँ",
-  "home.hiddenN": "{{n}} सुझाव छिपे · दिखाएँ"
+  "home.hiddenN": "{{n}} छिपे · दिखाएँ",
+  "home.availableShort": "मालिक देख सकते हैं",
+  "home.notAvailableShort": "छिपे हुए"
 }

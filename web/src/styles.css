@@ -394,7 +394,7 @@ body {
 /* Devanagari needs a little more room above and below than Latin text */
 :lang(hi) { line-height: 1.65; }
 :lang(hi) h1, :lang(hi) h2, :lang(hi) h3 { line-height: 1.35; }
-h1, h2, h3 { text-wrap: balance; }
+@layer base { h1, h2, h3 { text-wrap: balance; } }   /* in the base layer so "truncate" etc. still win */
 
 /* keyboard focus ring; in a layer so a control that draws its own focus style (outline-none + ring) wins */
 @layer base {
