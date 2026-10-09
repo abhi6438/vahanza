@@ -2,6 +2,8 @@
 
 A white-label app for vehicle owners and drivers. One codebase serves the web/PWA, the Android APK and the API.
 
+> **New teammate or AI assistant?** Start with [`CLAUDE.md`](./CLAUDE.md) — the short map, rules and conventions. This README has the per-feature detail and go-live steps.
+
 | Part | Tech | Folder |
 |---|---|---|
 | App (web + PWA + APK) | React 19, Vite, TypeScript, Tailwind 4, Capacitor | `web/` |
